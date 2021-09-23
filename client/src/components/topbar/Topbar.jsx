@@ -1,22 +1,49 @@
 import "./topbar.css";
 import { Search, Person, Chat, Notifications } from "@material-ui/icons";
 import { Link } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useRef, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
-
+import {MessageArgsProps} from 'antd';
+import {showMessageError} from '../../helper/function'
+import { Modal, Button, Space } from 'antd';
+import 'antd/dist/antd.css';
 const Topbar = observer(() =>{
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
   const {user} = AuthStore;
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  const handleSetting = async (e) => {
+    const element = ref.current.getAttribute("class");
+    if(element.indexOf("hidden") != -1) {
+      ref.current.classList.remove("hidden");
+    } else ref.current.classList.add("hidden");
+    
+  }
+
+  const showModal = () => {
+    setVisible(true); 
+  }
+
+  const handleLogout = async () => {
+    await AuthStore.action_logout();
+    setVisible(false); 
+  }
+
+  const handleCancel = () => {
+    setVisible(false); 
+  }
   
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   return (
+    <>
     <div className="topbarContainer">
       <div className="topbarLeft">
         <Link to="/" style={{ textDecoration: "none" }}>
-          <span className="logo">Lamasocial</span>
+          <span className="logo">CHATTING</span>
         </Link>
       </div>
       <div className="topbarCenter">
@@ -29,37 +56,106 @@ const Topbar = observer(() =>{
         </div>
       </div>
       <div className="topbarRight">
-        <div className="topbarLinks">
-          <span className="topbarLink">Homepage</span>
-          <span className="topbarLink">Timeline</span>
+        <div className="topbarProfile">
+          <Link to={`/profile/${user?._id}`}>
+              <img
+                src={
+                  user?.profilePicture
+                    ?user?.profilePicture
+                    : PF + "person/noAvatar.png"
+                }
+                alt=""
+                className="topbarImg"
+              />
+              <span>{user.username}</span>
+            </Link>
+            
         </div>
+        
+       
         <div className="topbarIcons">
           <div className="topbarIconItem">
-            <Person />
-            <span className="topbarIconBadge">1</span>
+            {/* <Person /> */}
+            <img src="https://img.icons8.com/ios/25 /000000/user--v1.png" />
+            {/* <span className="topbarIconBadge"></span> */}
           </div>
           <div className="topbarIconItem">
-            <Link to="/messenger"><Chat /></Link> 
-            <span className="topbarIconBadge">2</span>
+            <Link to="/messenger"><img src="https://img.icons8.com/ios/25/000000/facebook-messenger--v1.png"/></Link> 
+            {/* <span className="topbarIconBadge"></span> */}
           </div>
           <div className="topbarIconItem">
-            <Notifications />
-            <span className="topbarIconBadge">1</span>
+            {/* <Notifications /> */}
+            <img src="https://img.icons8.com/material-outlined/25/000000/filled-appointment-reminders.png"/>
+            {/* <span className="topbarIconBadge"></span> */}
           </div>
+          <div className="topbarIconItem topbarExitMain" onClick={handleSetting}>
+            {/* <Notifications /> */}
+            <img src="https://img.icons8.com/ios-glyphs/25/000000/circled-chevron-down.png"/>
+            <div className="topbarExit" ref={ref}>
+                <ul>
+                  <li className="topbarExit_list-profile">
+                      <Link to={`/profile/${user?._id}`}>
+                        <img
+                          src={
+                            user?.profilePicture
+                              ?user?.profilePicture
+                              : PF + "person/noAvatar.png"
+                          }
+                          alt=""
+                          className="topbarImg topbarImgExit"
+                        />
+                        <div>
+                          <span>{user.username}</span>  
+                          <p>Xem trang cá nhân của bản</p>  
+                        </div>
+                        
+                     </Link>
+                  </li>
+                  <li className="topbarBorder">
+                    <img src="https://img.icons8.com/external-flatart-icons-solid-flatarticons/45/000000/external-error-message-chat-flatart-icons-solid-flatarticons.png"/>
+                    <span>Đóng góp ý kiến</span> 
+                  </li>
+                  <li>
+                    <img src="https://img.icons8.com/dotty/30/000000/user.png"/>
+                   
+                    <span>Chuyển tài khoản</span>  
+                  </li>
+                  <li>
+                    <img src="https://img.icons8.com/ios-glyphs/30/000000/settings--v1.png"/>
+                    <span>{`Cài đặt & quyền riêng tư`}</span>  
+                  </li>
+                  <li>
+                    <img src="https://img.icons8.com/material-sharp/30/000000/help.png"/>
+                    <span>{`Trợ giúp & hỗ trợ`}</span>  
+                  </li>
+                  <li>
+                    <img src="https://img.icons8.com/ios-glyphs/30/000000/moon-symbol.png"/>
+
+                    <span>{`Màn hình & trợ năng`}</span>  
+                    </li>
+                  <li onClick={showModal}>
+                    <img src="https://img.icons8.com/material-outlined/30/000000/exit.png"/>
+                    <span>Đăng xuất</span>      
+                  </li>
+                </ul>
+            </div>
+            {/* <span className="topbarIconBadge"></span> */}
+          </div>
+
+          
         </div>
-        <Link to={`/profile/${user?._id}`}>
-          <img
-            src={
-              user?.profilePicture
-                ?user?.profilePicture
-                : PF + "person/noAvatar.png"
-            }
-            alt=""
-            className="topbarImg"
-          />
-        </Link>
       </div>
     </div>
+
+      <Modal
+      title="Bạn có chắc muốn thoát!"
+      visible={visible}
+      onOk={handleLogout}
+      // confirmLoading={confirmLoading}
+      onCancel={handleCancel}
+      >
+      </Modal>
+      </>
   );
 }) 
   

@@ -13,3 +13,9 @@ export const CONFIG_URL = {
     NotLogin: false, 
   }
 
+  export const ROUTE = {
+   messenger: "/messenger",
+   profile: "/profile/:_id",
+   home: "/",
+  };
+

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import Post from "../post/Post";
 import Share from "../share/Share";
 import "./feed.css";
@@ -17,10 +17,10 @@ const Feed = observer(({ userId }) => {
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     
     fetchPosts();
-  }, [userId, user?._id]);
+  }, [userId, user?._id, ActionStore.statusPost]);
 
   const fetchPosts = async () => {
     // const res = userId
@@ -33,14 +33,14 @@ const Feed = observer(({ userId }) => {
           return new Date(p2.createdAt) - new Date(p1.createdAt);
         })
       );
-    
+    console.log(res);
   };
 
   return (
     <div className="feed">
       <div className="feedWrapper">
         {(!userId || userId === user._id) && <Share />}
-        {_.isEmpty(posts) && posts.map((p) => (
+        {!_.isEmpty(posts) && posts.map((p) => (
           <Post key={p._id} post={p} />
         ))}
       </div>

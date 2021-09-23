@@ -24,31 +24,31 @@ const Messenger = observer(() => {
   const {user} = AuthStore;
   const scrollRef = useRef();
 
-  // useEffect(() => {
-  //   socket.current = io("ws://localhost:8900");
-  //   socket.current.on("getMessage", (data) => {
-  //     setArrivalMessage({
-  //       sender: data.senderId,
-  //       text: data.text,
-  //       createdAt: Date.now(),
-  //     });
-  //   });
-  // }, []);
+  useEffect(() => {
+    socket.current = io("ws://localhost:8900");
+    socket.current.on("getMessage", (data) => {
+      setArrivalMessage({
+        sender: data.senderId,
+        text: data.text,
+        createdAt: Date.now(),
+      });
+    });
+  }, []);
 
-  // useEffect(() => {
-  //   arrivalMessage &&
-  //     currentChat?.members.includes(arrivalMessage.sender) &&
-  //     setMessages((prev) => [...prev, arrivalMessage]);
-  // }, [arrivalMessage, currentChat]);
+  useEffect(() => {
+    arrivalMessage &&
+      currentChat?.members.includes(arrivalMessage.sender) &&
+      setMessages((prev) => [...prev, arrivalMessage]);
+  }, [arrivalMessage, currentChat]);
 
-  // useEffect(() => {
-  //   socket.current.emit("addUser", user._id);
-  //   socket.current.on("getUsers", (users) => {
-  //     setOnlineUsers(
-  //       user.followings.filter((f) => users.some((u) => u.userId === f))
-  //     );
-  //   });
-  // }, [user]);
+  useEffect(() => {
+    socket.current.emit("addUser", user._id);
+    // socket.current.on("getUsers", (users) => {
+    //   setOnlineUsers(
+    //     user.followings.filter((f) => users.some((u) => u.userId === f))
+    //   );
+    // });
+  }, [user]);
 
   useEffect(() => {
     const getConversations = async () => {
@@ -77,6 +77,12 @@ const Messenger = observer(() => {
       console.log(err);
     }
   };
+  //Seaerch Frieng
+  const handleSearchFriend = () => {  
+    
+
+  }
+  //Send MEssage
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,6 +91,8 @@ const Messenger = observer(() => {
       text: newMessage,
       conversationId: currentChat._id,
     };
+
+    
 
     const receiverId = currentChat.members.find(
       (member) => member !== user._id
@@ -97,8 +105,9 @@ const Messenger = observer(() => {
     });
 
     try {
-      const res = await axios.post("/messages", message);
-      setMessages([...messages, res.data]);
+      // const res = await axios.post("/messages", message);
+      const res = await ActionStore.action_saveMessage(message);
+      setMessages([...messages, res]);
       setNewMessage("");
     } catch (err) {
       console.log(err);
@@ -115,7 +124,7 @@ const Messenger = observer(() => {
       <div className="messenger">
         <div className="chatMenu">
           <div className="chatMenuWrapper">
-            <input placeholder="Search for friends" className="chatMenuInput" />
+            <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend}/>
             {conversations.map((c) => (
               <div onClick={() => setCurrentChat(c)}>
                 <Conversation conversation={c} currentUser={user} />

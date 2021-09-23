@@ -5,9 +5,11 @@ export const WsCode = {
     getConversation: 'chat/conversation',
 
     getProfile: 'users',
-    getPost: "posts/profile",
+    getPost: "posts",
     getPostTimeLine: "posts/timeline",
     getListFriend: "users/friends",
     getConversation: "conversations",
-    getAllMessageOfConversation: "messages"
+    getAllMessageOfConversation: "messages",
+    savePost: "posts",
+    upload: "upload"
 }

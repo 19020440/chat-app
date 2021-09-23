@@ -16,6 +16,7 @@ const Conversation = observer(({ conversation, currentUser }) => {
       try {
         // const res = await axios("/users?userId=" + friendId);
         const res = await ActionStore.action_getProfile(friendId);
+        ActionStore.action_setProfileOfFriend(res);
         setUser(res);
       } catch (err) {
         console.log(err);

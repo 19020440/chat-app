@@ -1,26 +1,31 @@
 import "./post.css";
 import { MoreVert } from "@material-ui/icons";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import axios from "axios";
 import { format } from "timeago.js";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
-
-export default function Post({ post }) {
+import {useStore} from '../../hook';
+import {observer} from 'mobx-react-lite'
+const Post = observer(({ post }) => {
+  const AuthStore = useStore('AuthStore');
+  const ActionStore = useStore('ActionStore');
   const [like, setLike] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(false);
   const [user, setUser] = useState({});
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
-  const { user: currentUser } = useContext(AuthContext);
+  const currentUser  = AuthStore.user;
+  // const { user: currentUser } = useContext(AuthContext);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsLiked(post.likes.includes(currentUser._id));
   }, [currentUser._id, post.likes]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const fetchUser = async () => {
-      const res = await axios.get(`/users?userId=${post.userId}`);
-      setUser(res.data);
+      // const res = await axios.get(`/users?userId=${post._id}`);
+      const res = await ActionStore.action_getProfile(post.userId)
+
+      setUser(res);
     };
     fetchUser();
   }, [post.userId]);
@@ -37,12 +42,12 @@ export default function Post({ post }) {
       <div className="postWrapper">
         <div className="postTop">
           <div className="postTopLeft">
-            <Link to={`/profile/${user.username}`}>
+            <Link to={`/profile/${user._id}`}>
               <img
                 className="postProfileImg"
                 src={
                   user.profilePicture
-                    ? PF + user.profilePicture
+                    ? user.profilePicture
                     : PF + "person/noAvatar.png"
                 }
                 alt=""
@@ -82,4 +87,6 @@ export default function Post({ post }) {
       </div>
     </div>
   );
-}
+}) 
+  
+export default Post;

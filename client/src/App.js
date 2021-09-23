@@ -13,6 +13,8 @@ import { AuthContext } from "./context/AuthContext";
 import Messenger from "./pages/messenger/Messenger";
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
+import Loading from "./components/Loading/Loading";
+import PrRouter from "./pages/PrRouter";
 const App = observer(() => {
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
@@ -24,12 +26,13 @@ const App = observer(() => {
 
   const validLogin = async () => {
     const token = await sessionStorage.getItem('token');
+    !token && AuthStore.action_setLogin(0);
     token && await AuthStore.action_valdLogin();
   }
   return (
     <Router>
       <Switch>
-        <Route exact path="/">
+        {/* <Route exact path="/">
           {login ? <Home /> : <Register />}
         </Route>
         <Route path="/login">{login ? <Redirect to="/" /> : <Login />}</Route>
@@ -41,13 +44,37 @@ const App = observer(() => {
         </Route>
         <Route path="/profile/:_id">
           <Profile />
+        </Route> */}
+
+        <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
+        <Route path="/register">
+          {login == 1 ? <Redirect to="/" /> : <Register />}
         </Route>
+
+        <ProtectedRoute 
+          path="/"
+          component={PrRouter}
+          login={login}
+          />
+
       </Switch>
     </Router>
   );
 
 })
   
-
+const ProtectedRoute = ({login, component: Component,...rest}) => {
+  return (
+    <Route {...rest} render={(props) => {
+      if(login == 2) return <Loading isLoading={true} />
+      else if(login == 1) return <Component />
+      else return <Redirect  to={{
+        pathname: '/login',
+        state: { from: props.location },
+      }} />
+    }}
+    />
+  );
+}
 
 export default App;

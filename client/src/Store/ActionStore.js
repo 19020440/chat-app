@@ -5,14 +5,35 @@ import {CONFIG_URL} from "../helper/constant"
 import {Request} from "../helper/Request"
 export class ActionStore {
     
+    profileOfFriend = {};
+    posts = [];
+    statusPost = false;
 
     constructor() {
         makeAutoObservable(this, {
+            profileOfFriend: observable,
+            statusPost:observable,
+            possts: observable,
             action_getProfile: action,
             action_getPost: action,
             action_getPostTimeLine: action,
             action_getListFriend: action,
+            action_savePost: action,
+            action_setPosts: action,
+            action_setStatusPost: action
+
         })
+    }
+
+    action_setStatusPost() {
+        this.statusPost = !this.statusPost;
+    }
+    action_setPosts(data) {
+        this.posts = [...data,...this.posts];
+    }
+
+    async action_setProfileOfFriend(data) {
+        this.profileOfFriend = data;
     }
 
     async action_getProfile(userId) {
@@ -74,5 +95,47 @@ export class ActionStore {
             else return [];
         }
 
+    }
+
+    async action_saveMessage(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getAllMessageOfConversation}`;
+
+        const result = await Request.post(data, DOMAIN);
+
+        if(result) {
+            if(!_.isEmpty(result.content)) return result.content;
+            else return [];
+        }
+
+    }
+
+
+    async action_savePost(data) {
+
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.savePost}`;
+
+        const result = await Request.post(data, DOMAIN);
+
+        if(result) {
+            if(!_.isEmpty(result.content)) return result.content;
+            else return [];
+        }
+
+
+    }
+
+    async action_upload(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`;
+
+        const result = await Request.post(data, DOMAIN);
+
+        if(result) {
+            if(!_.isEmpty(result.content)) return result.content;
+            else return [];
+        }
+    }
+
+    async action_searchFriend(data) {
+        
     }
 }

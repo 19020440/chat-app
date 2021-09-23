@@ -6,22 +6,26 @@ import {
   EmojiEmotions,
   Cancel,
 } from "@material-ui/icons";
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook';
+
 const Share = observer(() => {
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
+  const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const desc = useRef();
   const [file, setFile] = useState(null);
 
+  // useEffect(() => {
+  //   console.log("oke chua");
+  // },[ActionStore.statusPost])
   const submitHandler = async (e) => {
     e.preventDefault();
-    console.log("aothat day");
     const newPost = {
       userId: user._id,
       desc: desc.current.value,
@@ -32,14 +36,17 @@ const Share = observer(() => {
       data.append("name", fileName);
       data.append("file", file);
       newPost.img = fileName;
-      console.log(newPost);
       try {
-        await axios.post("/upload", data);
+        // await axios.post("/upload", data);
+        await ActionStore.action_upload(data);
       } catch (err) {}
     }
     try {
-      await axios.post("/posts", newPost);
-      window.location.reload();
+      ActionStore.action_setStatusPost();
+      await ActionStore.action_savePost(newPost);
+      setFile(null);
+      desc.current.value = null
+      // window.location.reload();
     } catch (err) {}
   };
 
