@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
   const newPost = new Post(req.body);
   try {
     const savedPost = await newPost.save();
-    res.status(200).json(savedPost);
+    res.status(200).json({content: savedPost, status: 1});
   } catch (err) {
     res.status(500).json(err);
   }
@@ -63,8 +63,8 @@ router.put("/:id/like", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-    res.status(200).json(post);
+    const post = await Post.find({userId: req.params.id});
+    res.status(200).json({content: post, status: 1});
   } catch (err) {
     res.status(500).json(err);
   }
@@ -81,7 +81,7 @@ router.get("/timeline/:userId", async (req, res) => {
         return Post.find({ userId: friendId });
       })
     );
-    res.status(200).json(userPosts.concat(...friendPosts));
+    res.status(200).json({content: userPosts.concat(...friendPosts), status: 1});
   } catch (err) {
     res.status(500).json(err);
   }
