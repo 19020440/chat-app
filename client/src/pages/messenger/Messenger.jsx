@@ -26,7 +26,9 @@ const Messenger = observer(() => {
   const {user} = AuthStore;
   const scrollRef = useRef();
   const ref = useRef(null);
+  const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const {listSearch} = ActionStore;
+  const showRef = useRef(null);
 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
@@ -82,15 +84,32 @@ const Messenger = observer(() => {
   useEffect(() => {
     getConversationBySearch();
   },[currentChatSearch])
+ // GetAllMessageOfConversation
 
   useEffect(() => {
-    if(!_.isEmpty(currentChat))  getMessages();
+    if(!_.isEmpty(currentChat))  {
+      console.log("this is get mess");
+      getMessages();
+      profileFriend();
+    }
   }, [currentChat]);
 
-  // GetAllMessageOfConversation
+  const profileFriend = async () => {
+    // ActionStore.action_setProfileOfFriend("");
+    const friendId = currentChat.members.find((m) => m !== user._id); 
+      try {
+        const res = await ActionStore.action_getProfile(friendId);
+        console.log(res);
+        ActionStore.action_setProfileOfFriend(res);
+      } catch (err) {
+        console.log(err);
+      }
+  }
+  
+
+ 
   const getMessages = async () => {
     try {
-      // const res = await axios.get("/messages/" + currentChat?._id);
       const res = await ActionStore.action_getAllMessageOfConversation(currentChat._id)
       setMessages(res);
     } catch (err) {
@@ -161,32 +180,83 @@ const Messenger = observer(() => {
     setStartSeaerch(true);
   }
 
+  //Show rightbar
+  const handleShowRightBar = () => {
+      
+  }
+
   return (
     <>
       <Topbar />
       <div className="messenger">
+
         <div className="chatMenu">
           <div className="chatMenuWrapper">
-            <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend} onClick={handleStartSearch} ref={ref}/>
-            {startSearch ? listSearch.map((user) => (
-              <div onClick={() => setCurrentChatSearch(user)}>
-                <Search user={user} />
+            
+            <div className="chatMenuWrapper-toolbar row">
+              <div className="chatMenuWrapper-toolbar_room">
+                <span>CHAT</span>
+                <div>
+                  <img src="https://img.icons8.com/ios-glyphs/30/000000/ellipsis.png" className="imgCircle"/>
+                  <img src="https://img.icons8.com/ios-filled/30/000000/video.png" className="imgCircle"/>
+                  <img src="https://img.icons8.com/office/30/000000/note.png" className="imgCircle"/>
+                </div>
               </div>
-            ))
-            :conversations.map((c) => (
-              <div onClick={() => setCurrentChat(c)}>
-                <Conversation conversation={c} currentUser={user} />
+
+              <div className="chatMenuWrapper-toolbar_search">
+                <img src="https://img.icons8.com/ios-glyphs/15/000000/search--v1.png"/>
+                <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend} onClick={handleStartSearch} ref={ref}/>
               </div>
-            ))}
+             
+            </div>
+           
+           <div className="chatMenuWrapper-list">
+            {startSearch ? _.isEmpty(listSearch) ? null : listSearch.map((user) => (
+                <div onClick={() => setCurrentChatSearch(user)}>
+                  <Search user={user} />
+                </div>
+              ))
+              :conversations.map((c) => (
+                <div onClick={() => setCurrentChat(c)}>
+                  <Conversation conversation={c} currentUser={user} />
+                </div>
+              ))}
+           </div>
+           
           </div>
         </div>
+
+        
         <div className="chatBox">
           <div className="chatBoxWrapper">
+            
             {currentChat ? (
               <>
+              <div className="chatBoxWrapper-navbar">
+                <div className="conversation">
+                  <img
+                    className="conversationImg"
+                    src={
+                      user?.profilePicture
+                        ? user.profilePicture
+                        : PF + "person/noAvatar.png"
+                    }
+                    alt=""
+                  />
+                  <span className="conversationName">{user?.username}</span>
+               </div>
+
+               <div className="chatBoxWrapper-navbar_tool">
+                <img src="https://img.icons8.com/color/25/000000/phone-message--v2.png"/>
+                <img src="https://img.icons8.com/ultraviolet/25/000000/video-call.png"/>
+                <img src="https://img.icons8.com/ios-glyphs/25/000000/break.png" onClick={handleShowRightBar}/>
+               </div>
+              
+            </div>
+
                 <div className="chatBoxTop">
                   {messages.map((m) => (
-                    <div ref={scrollRef}>
+                    <div>
                       <Message message={m} own={m.sender === user._id} />
                     </div>
                   ))}
@@ -210,7 +280,7 @@ const Messenger = observer(() => {
             )}
           </div>
         </div>
-        <div className="chatOnline">
+        <div className="chatOnline" ref={showRef}>
           <div className="chatOnlineWrapper">
             {/* <ChatOnline
               onlineUsers={onlineUsers}

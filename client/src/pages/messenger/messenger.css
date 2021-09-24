@@ -1,17 +1,68 @@
 .messenger {
-  height: calc(100vh - 70px);
+  height: calc(100%-50px);
   display: flex;
+  /* margin-bottom: 50px; */
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin-top: 50px;
+  /* transform: translateY(50px); */
 }
 
 .chatMenu {
-  flex: 3.5;
+  width: 350px;
+  border-right: 1px solid black;
+}
+
+.imgCircle {
+  border-radius: 30px;
+}
+.chatMenuWrapper-toolbar_room {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chatMenuWrapper-toolbar_room span {
+  color: black;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 10px 0;
+}
+.chatMenuWrapper-toolbar_room div {
+  display: flex;
+  justify-content: space-between;
+  width: 32%;
+}
+
+.chatMenuWrapper-toolbar {
+  /* padding: 20px; */
+  padding-bottom: 20px;
+  border-bottom: solid 1px black;
+}
+.chatMenuWrapper-toolbar_search {
+  display: flex;
+  border-radius: 20px;
+  /* background-color: blanchedalmond; */
+  border: 1px solid black;
+  align-items: center;
+}
+.chatMenuWrapper-toolbar_search img {
+  padding-left: 2px;
+  width: 20px;
+  height: 20px;
 }
 
 .chatMenuInput {
-  width: 90%;
-  padding: 10px 0;
+  /* width: 100%; */
+  padding: 5px 0;
+  outline: none;
   border: none;
-  border-bottom: 1px solid gray;
+  /* border-bottom: 1px solid gray; */
+  /* border-radius: 20px; */
 }
 
 .chatBox {
@@ -39,16 +90,33 @@
 }
 
 .chatMessageInput {
-  width: 80%;
-  height: 90px;
+  width: 95%;
+  height: 30px;
   padding: 10px;
+  border-radius: 50px;
+  overflow-y: hidden;
+}
+.chatBoxWrapper-navbar_tool {
+  margin-right: 2%;
+  width: 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chatBoxWrapper-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: -10px;
+  background-color: whitesmoke;
+  box-shadow: 6px -17px 18px 9px rgb(0 0 0 / 13%), 0 1px 3px rgb(0 0 0 / 20%);
 }
 
 .chatSubmitButton {
   width: 70px;
   height: 40px;
   border: none;
-  border-radius: 5px;
+  border-radius: 50px;
   cursor: pointer;
   background-color: teal;
   color: white;
@@ -56,6 +124,15 @@
 
 .chatOnline {
   flex: 3;
+  /* display: none; */
+}
+.hid {
+  display: block;
+}
+.chatMenuWrapper-list {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: inherit;
 }
 
 .chatMenuWrapper,
@@ -63,6 +140,10 @@
 .chatOnlineWrapper {
   padding: 10px;
   height: 100%;
+}
+
+.chatMenuWrapper {
+  /* padding: 0 6px 6px 6px; */
 }
 
 .noConversationText {
@@ -82,11 +163,11 @@
     display: none;
   }
 
-  .chatBox{
+  .chatBox {
     flex: 10;
   }
 
-  .chatOnline{
+  .chatOnline {
     flex: 1px;
   }
 }

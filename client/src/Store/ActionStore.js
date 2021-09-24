@@ -26,6 +26,7 @@ export class ActionStore {
             action_setStatusPost: action,
             action_searchFriend: action,
             action_getCovBySearch: action,
+            action_setProfileOfFriend: action,
 
         })
     }
@@ -38,7 +39,8 @@ export class ActionStore {
     }
 
     async action_setProfileOfFriend(data) {
-        this.profileOfFriend = data;
+        if(data == "") this.profileOfFriend = {};
+        else this.profileOfFriend = data;
     }
 
     async action_getProfile(userId) {

@@ -16,7 +16,7 @@ const Conversation = observer(({ conversation, currentUser }) => {
       try {
         // const res = await axios("/users?userId=" + friendId);
         const res = await ActionStore.action_getProfile(friendId);
-        ActionStore.action_setProfileOfFriend(res);
+ 
         setUser(res);
       } catch (err) {
         console.log(err);
@@ -26,6 +26,8 @@ const Conversation = observer(({ conversation, currentUser }) => {
   }, [currentUser, conversation]);
 
   return (
+    <>
+    
     <div className="conversation">
       <img
         className="conversationImg"
@@ -38,6 +40,7 @@ const Conversation = observer(({ conversation, currentUser }) => {
       />
       <span className="conversationName">{user?.username}</span>
     </div>
+    </>
   );
 });
 export default Conversation;

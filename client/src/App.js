@@ -15,6 +15,7 @@ import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
 import PrRouter from "./pages/PrRouter";
+import Chat from './pages/chat/Chat'
 const App = observer(() => {
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
@@ -45,7 +46,7 @@ const App = observer(() => {
         <Route path="/profile/:_id">
           <Profile />
         </Route> */}
-
+        <Route path="/chat"><Chat /></Route>
         <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
         <Route path="/register">
           {login == 1 ? <Redirect to="/" /> : <Register />}
