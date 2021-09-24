@@ -1,5 +1,5 @@
 import {Modal, message} from 'antd'
-
+import _ from 'lodash';
 export const showMessageError = (msg, onOk) => {
     Modal.error({
       content: msg,
@@ -28,3 +28,12 @@ export const showMessageError = (msg, onOk) => {
   export const showMessageInfo = (msg) => {
     message.info(msg);
   };
+
+  export const getLessProfile = (data) => {
+    if(_.isEmpty(data)) return [];
+    const result = data.map((value) => {
+      const {isAdmin,status,password,...resData} = value;
+      return resData;
+    })
+    return result;
+  }

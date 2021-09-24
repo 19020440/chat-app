@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
+import Search from '../../components/searchFriend/search'
 const Messenger = observer(() => {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
@@ -18,11 +19,14 @@ const Messenger = observer(() => {
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const socket = useRef();
-  // const { user } = useContext(AuthContext);
+  const [startSearch, setStartSeaerch] = useState(false);
+  const [currentChatSearch, setCurrentChatSearch] = useState({});
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
   const scrollRef = useRef();
+  const ref = useRef(null);
+  const {listSearch} = ActionStore;
 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
@@ -52,16 +56,32 @@ const Messenger = observer(() => {
 
   useEffect(() => {
     const getConversations = async () => {
-      try {
-        // const res = await axios.get("/conversations/" + user._id);
-        const res = await ActionStore.action_getConversation(user._id);
-        setConversations(res);
-      } catch (err) {
-        console.log(err);
+      if(!_.isEmpty(user)) {
+        try {
+          // const res = await axios.get("/conversations/" + user._id);
+          const res = await ActionStore.action_getConversation(user._id);
+          setConversations(res);
+        } catch (err) {
+          console.log(err);
+        } 
       }
+      
     };
     getConversations();
-  }, [user._id]);
+  }, [user]);
+
+  //getConersationBySeaerch
+
+  const getConversationBySearch = async () => {
+    if(!_.isEmpty(currentChatSearch) && !_.isEmpty(user)) {
+      const result = await ActionStore.action_getCovBySearch(user._id, currentChatSearch._id);
+      if(!_.isEmpty(result)) setCurrentChat(result)
+    }
+  }
+
+  useEffect(() => {
+    getConversationBySearch();
+  },[currentChatSearch])
 
   useEffect(() => {
     if(!_.isEmpty(currentChat))  getMessages();
@@ -78,8 +98,8 @@ const Messenger = observer(() => {
     }
   };
   //Seaerch Frieng
-  const handleSearchFriend = () => {  
-    
+  const handleSearchFriend = async (e) => {  
+    await ActionStore.action_searchFriend(e.target.value);
 
   }
   //Send MEssage
@@ -113,10 +133,33 @@ const Messenger = observer(() => {
       console.log(err);
     }
   };
+  //Handle Click OUstside
+  // useEffect(() => {
+  //   const checkIfClickedOutside = async (e) => {
+  //     // If the menu is open and the clicked target is not within the menu,
+  //     // then close the menu
+  //     setStartSeaerch(false)
+  //     if (startSearch && ref.current && !ref.current.contains(e.target)) {
+  //       console.log("end");
+  //       setStartSeaerch(false)
+  //     }
+  //   }
+
+  //   document.addEventListener("mousedown", checkIfClickedOutside)
+
+  //   return () => {
+  //     // Cleanup the event listener
+  //     document.removeEventListener("mousedown", checkIfClickedOutside)
+  //   }
+  // }, [startSearch])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleStartSearch = () => {
+    setStartSeaerch(true);
+  }
 
   return (
     <>
@@ -124,8 +167,13 @@ const Messenger = observer(() => {
       <div className="messenger">
         <div className="chatMenu">
           <div className="chatMenuWrapper">
-            <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend}/>
-            {conversations.map((c) => (
+            <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend} onClick={handleStartSearch} ref={ref}/>
+            {startSearch ? listSearch.map((user) => (
+              <div onClick={() => setCurrentChatSearch(user)}>
+                <Search user={user} />
+              </div>
+            ))
+            :conversations.map((c) => (
               <div onClick={() => setCurrentChat(c)}>
                 <Conversation conversation={c} currentUser={user} />
               </div>

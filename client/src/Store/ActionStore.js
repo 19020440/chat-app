@@ -3,15 +3,18 @@ import {observable, makeAutoObservable, action} from 'mobx'
 import {WsCode} from '../helper/Wscode'
 import {CONFIG_URL} from "../helper/constant"
 import {Request} from "../helper/Request"
+import {getLessProfile} from '../helper/function';
 export class ActionStore {
     
     profileOfFriend = {};
     posts = [];
     statusPost = false;
+    listSearch = [];
 
     constructor() {
         makeAutoObservable(this, {
             profileOfFriend: observable,
+            listSearch: observable,
             statusPost:observable,
             possts: observable,
             action_getProfile: action,
@@ -20,7 +23,9 @@ export class ActionStore {
             action_getListFriend: action,
             action_savePost: action,
             action_setPosts: action,
-            action_setStatusPost: action
+            action_setStatusPost: action,
+            action_searchFriend: action,
+            action_getCovBySearch: action,
 
         })
     }
@@ -136,6 +141,29 @@ export class ActionStore {
     }
 
     async action_searchFriend(data) {
-        
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.searchFriend}`;
+        const json = {
+            "word": data,
+        }
+        const result = await Request.post(json, DOMAIN);
+        if(result) {
+            if(!_.isEmpty(result.content)) {
+                const res = getLessProfile(result.content);
+                this.listSearch = res;
+                return res;
+            }
+            else return [];
+        }
+    }
+
+    async action_getCovBySearch(userId, searchUserId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.searchCov}/${userId}/${searchUserId}`;
+
+        const result = await Request.get({}, DOMAIN);
+
+        if(result) {
+            if(!_.isEmpty(result.content)) return result.content;
+            else return {};
+        }
     }
 }
