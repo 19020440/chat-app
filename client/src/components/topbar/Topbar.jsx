@@ -9,6 +9,7 @@ import {MessageArgsProps} from 'antd';
 import {showMessageError} from '../../helper/function'
 import { Modal, Button, Space } from 'antd';
 import 'antd/dist/antd.css';
+import _ from 'lodash'
 const Topbar = observer(() =>{
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
@@ -29,6 +30,8 @@ const Topbar = observer(() =>{
   }
 
   const handleLogout = async () => {
+    !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", AuthStore.user._id);
+    
     await AuthStore.action_logout();
     setVisible(false); 
   }

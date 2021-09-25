@@ -7,8 +7,11 @@ router.post("/register", AuthController.register);
 //LOGIN
 router.post("/login", AuthController.login);
 
-//ValidLogin
+//ValidLogin    
 router.get("/valid",authenicate, AuthController.valid);
+
+//LOgout
+router.post('/logout', AuthController.logout)
 
 
 

@@ -29,10 +29,21 @@ const Messenger = observer(() => {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const {listSearch} = ActionStore;
   const showRef = useRef(null);
+  const currentLastText = useRef(null);
 
   useEffect(() => {
-    socket.current = io("ws://localhost:8900");
+    socket.current = io("http://localhost:8800");
+    AuthStore.action_setSocket(io("http://localhost:8800"));
     socket.current.on("getMessage", (data) => {
+      ActionStore.action_setLastTextByIndex(
+        {_id: currentChat?._id,
+           lastText: {
+            sender: data.senderId,
+            text: data.text,
+           }
+          
+        }, currentLastText.current);
+        console.log(currentLastText.current);
       setArrivalMessage({
         sender: data.senderId,
         text: data.text,
@@ -48,6 +59,7 @@ const Messenger = observer(() => {
   }, [arrivalMessage, currentChat]);
 
   useEffect(() => {
+    console.log(socket.current);
     socket.current.emit("addUser", user._id);
     // socket.current.on("getUsers", (users) => {
     //   setOnlineUsers(
@@ -55,13 +67,14 @@ const Messenger = observer(() => {
     //   );
     // });
   }, [user]);
-
+  // GETCONVERSATION
   useEffect(() => {
     const getConversations = async () => {
       if(!_.isEmpty(user)) {
         try {
           // const res = await axios.get("/conversations/" + user._id);
           const res = await ActionStore.action_getConversation(user._id);
+          ActionStore.action_setLastText(res);
           setConversations(res);
         } catch (err) {
           console.log(err);
@@ -88,7 +101,6 @@ const Messenger = observer(() => {
 
   useEffect(() => {
     if(!_.isEmpty(currentChat))  {
-      console.log("this is get mess");
       getMessages();
       profileFriend();
     }
@@ -130,6 +142,9 @@ const Messenger = observer(() => {
       text: newMessage,
       conversationId: currentChat._id,
     };
+    const {conversationId,...lastText} = message;
+    console.log(currentLastText);
+    if(currentLastText.current !== null) ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
 
     
 
@@ -182,7 +197,10 @@ const Messenger = observer(() => {
 
   //Show rightbar
   const handleShowRightBar = () => {
-      
+    const element = showRef.current.getAttribute("class");
+    if(element.indexOf("hid") != -1) {
+      showRef.current.classList.remove("hid");
+    } else showRef.current.classList.add("hid");
   }
 
   return (
@@ -204,6 +222,7 @@ const Messenger = observer(() => {
               </div>
 
               <div className="chatMenuWrapper-toolbar_search">
+                <img src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/15/000000/external-back-arrow-basic-ui-elements-flatart-icons-outline-flatarticons.png" className="chatMenuWrapper-toolbar_search_back"/>
                 <img src="https://img.icons8.com/ios-glyphs/15/000000/search--v1.png"/>
                 <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend} onClick={handleStartSearch} ref={ref}/>
               </div>
@@ -216,9 +235,13 @@ const Messenger = observer(() => {
                   <Search user={user} />
                 </div>
               ))
-              :conversations.map((c) => (
-                <div onClick={() => setCurrentChat(c)}>
-                  <Conversation conversation={c} currentUser={user} />
+              :conversations.map((c, index) => (
+                <div onClick={() => {
+                  setCurrentChat(c);
+                  currentLastText.current = index;
+                }
+                }>
+                  <Conversation conversation={c} currentUser={user} index={index}/>
                 </div>
               ))}
            </div>
@@ -233,17 +256,18 @@ const Messenger = observer(() => {
             {currentChat ? (
               <>
               <div className="chatBoxWrapper-navbar">
-                <div className="conversation">
+                {console.log(ActionStore.profileOfFriend?.status)}
+                <div className={`conversation ${ActionStore.profileOfFriend?.status ? "conversationTrue" : ""}`}>
                   <img
                     className="conversationImg"
                     src={
-                      user?.profilePicture
-                        ? user.profilePicture
+                      ActionStore.profileOfFriend.profilePicture
+                        ?ActionStore.profileOfFriend.profilePicture
                         : PF + "person/noAvatar.png"
                     }
                     alt=""
                   />
-                  <span className="conversationName">{user?.username}</span>
+                  <span className="conversationName">{ActionStore.profileOfFriend.username}</span>
                </div>
 
                <div className="chatBoxWrapper-navbar_tool">

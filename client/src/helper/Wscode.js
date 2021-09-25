@@ -1,5 +1,6 @@
 export const WsCode = {
     login: 'auth/login',
+    logout: 'auth/logout',
     register: 'register',
     valid: "auth/valid",
     getConversation: 'chat/conversation',

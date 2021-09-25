@@ -15,7 +15,8 @@ module.exports  = new class AuthController {
                 !validPassword && res.status(200).json({login: false, content: "Wrong password",status:0})
                 const token = jwt.sign({email: result[0]._doc.email}, "secrettoken")
                 const {password, ...dataResponse} = result[0]._doc;
-                res.status(200).json({content: dataResponse,status: 1, token});
+                const updateStatus = await User.findOneAndUpdate({email}, {status: true});
+                updateStatus &&  res.status(200).json({content: dataResponse,status: 1, token});
             } catch(err) {
                 res.status(500).json(err);
             }
@@ -47,5 +48,20 @@ module.exports  = new class AuthController {
         !findUser && res.status(500).json({content: "email is not exist !", status: 0});
         const {password,...dataResponse} = findUser[0]._doc;
         res.status(200).json({content: dataResponse, status: 1});
+    }
+
+    //LOGOUT
+    async logout(req, res) {
+        const {email} = req.body;
+        try {
+            const result = await User.find({email});
+            !result && res.status(500).json({content: "Can not find user", status: 0});
+            const updateStatus = await User.findOneAndUpdate({email}, {status: false});
+            updateStatus &&  res.status(200).json({content: "updateStatus success !",status: 1});
+
+        } catch(err) {
+            res.status(500).json({content: err, status: 0});
+        }
+        
     }
 }

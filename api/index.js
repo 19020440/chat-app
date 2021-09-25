@@ -12,7 +12,18 @@ const conversationRoute = require("./routes/conversations");
 const messageRoute = require("./routes/messages");
 const router = express.Router();
 const path = require("path");
-const cors = require('cors')
+const cors = require('cors');
+const http = require('http');
+const {Server} = require('socket.io');
+const server = http.createServer(app);
+const User = require('./models/User')
+
+const io  = new Server(server, {
+  cors: {
+      origin: 'http://localhost:3000',
+      methods: ["get", "post", "delete"]
+  }
+})
 
 dotenv.config();
 
@@ -63,6 +74,74 @@ app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
 
 
-app.listen(8800, () => {
+//SOCKETIO
+let users = [];
+
+const addUser = (userId, socketId) => {
+  !users.some((user) => user.userId === userId) &&
+    users.push({ userId, socketId });
+};
+
+const removeUser = (socketId) => {
+  users = users.filter((user) => user.socketId !== socketId);
+};
+
+const getUser = (userId) => {
+  return users.find((user) => user.userId === userId);
+};
+
+io.on("connection", (socket) => {
+  //when ceonnect
+  console.log("a user connected.", socket.id);
+
+  //take userId and socketId from user
+  socket.on("addUser", async (userId) => {
+    // console.log(userId);
+    try {
+      const updateSocketId = await User.findByIdAndUpdate(userId, {socketId: socket.id});
+    } catch(err) {
+      console.log(err);
+    }
+    
+    // addUser(userId, socket.id);
+    // io.emit("getUsers", users);
+  });
+
+  //send and get message
+  socket.on("sendMessage", async ({ senderId, receiverId, text }) => {
+    // const user = getUser(receiverId);
+    try {
+      const user = await User.findById(receiverId).exec();
+      io.to(user.socketId).emit("getMessage", {
+        senderId,
+        text,
+      });
+    }catch(err) {
+
+    }
+    
+  });
+
+  socket.on("userOffline", async(userId) => {
+    console.log("this is offline :" ,userId);
+    io.emit("setUserOffline", userId);
+  })
+
+  //when disconnect
+  socket.on("disconnect", async () => {
+    console.log("a user disconnected!");
+    removeUser(socket.id);
+    io.emit("getUsers", users);
+    try { 
+      const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: ""});
+      console.log(removeSocketId);
+    }catch(err) {
+
+    }
+  });
+});
+
+
+server.listen(8800, () => {
   console.log("Backend server is running!");
 });

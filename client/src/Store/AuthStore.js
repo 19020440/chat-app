@@ -7,12 +7,16 @@ export  class AuthStore {
 
     login = 2;
     user = {};
+    socket;
     constructor() {
         makeAutoObservable(this,{
             login: observable,
+            socket: observable,
             user: observable,
             action_login:action,
             action_setLogin: action,
+            action_logout: action,
+            action_setSocket: action,
 
         })
     }
@@ -20,6 +24,9 @@ export  class AuthStore {
     async action_setLogin(value) {
         this.login = value;
     }
+    action_setSocket(data) {
+        this.socket = data;
+    } 
 
     async action_login(data) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.login}`
@@ -46,8 +53,17 @@ export  class AuthStore {
     }
 
     async action_logout() {
-        await sessionStorage.removeItem("token");
-        this.login = 0;
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.logout}`
+
+        const result = await Request.post({email: this.user?.email}, DOMAIN);
+
+        if(result) {
+            this.login = 0;
+            await sessionStorage.removeItem("token");
+            
+        }
+
+        
     }
 
 }

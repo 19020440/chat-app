@@ -10,10 +10,14 @@ export class ActionStore {
     posts = [];
     statusPost = false;
     listSearch = [];
+    lastText = [];
+    offlineStatus = false;
 
     constructor() {
         makeAutoObservable(this, {
             profileOfFriend: observable,
+            offlineStatus: observable,
+            lastText: observable,
             listSearch: observable,
             statusPost:observable,
             possts: observable,
@@ -27,8 +31,20 @@ export class ActionStore {
             action_searchFriend: action,
             action_getCovBySearch: action,
             action_setProfileOfFriend: action,
+            action_setLastText: action,
+            action_setLastTextByIndex: action,
+            action_setOfflientStatus: action,
 
         })
+    }
+    action_setOfflientStatus() {
+        this.offlineStatus = !this.offlineStatus;
+    }
+    action_setLastText(data) {
+        this.lastText = data;
+    }
+    action_setLastTextByIndex(data, index) {
+        this.lastText[index] = data;
     }
 
     action_setStatusPost() {
@@ -81,13 +97,14 @@ export class ActionStore {
             else return [];
         }
     }
-
+    // GET CONVERSATION
     async action_getConversation(userId) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getConversation}/${userId}`;
 
         const result = await Request.get({}, DOMAIN);
 
         if(result) {
+            console.log(result);
             if(!_.isEmpty(result.content)) return result.content;
             else return [];
         }
