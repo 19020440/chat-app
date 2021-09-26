@@ -94,6 +94,10 @@ io.on("connection", (socket) => {
   //when ceonnect
   console.log("a user connected.", socket.id);
 
+  socket.on("validLogin", () => {
+    socket.emit("setvalidLogin", socket.id);
+  })
+
   //take userId and socketId from user
   socket.on("addUser", async (userId) => {
     // console.log(userId);
@@ -121,23 +125,31 @@ io.on("connection", (socket) => {
     }
     
   });
-
+//OOFLINE
   socket.on("userOffline", async(userId) => {
     console.log("this is offline :" ,userId);
     io.emit("setUserOffline", userId);
   })
 
+  //ONLINE
+  socket.on("online", async ({email, id}) => {
+    const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
+    io.emit('setOnline')
+  })
+
   //when disconnect
   socket.on("disconnect", async () => {
-    console.log("a user disconnected!");
-    removeUser(socket.id);
-    io.emit("getUsers", users);
+    console.log("a user disconnected!", socket.id);
+    // removeUser(socket.id);
+    // io.emit("getUsers", users);
     try { 
-      const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: ""});
+      const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: "",status: false});
       console.log(removeSocketId);
+      // const updateStatus = await User.findOneAndUpdate({socketId: socket.id}, {status: false});
     }catch(err) {
 
     }
+    io.emit("setUserOffline");
   });
 });
 

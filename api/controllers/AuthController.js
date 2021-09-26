@@ -44,10 +44,17 @@ module.exports  = new class AuthController {
 
     //ValidLogin
     async valid(req, res, next) {
-        const findUser = await User.find({email: req.email}).exec();
-        !findUser && res.status(500).json({content: "email is not exist !", status: 0});
-        const {password,...dataResponse} = findUser[0]._doc;
-        res.status(200).json({content: dataResponse, status: 1});
+        try {
+            const findUser = await User.find({email: req.email}).exec();
+            !findUser && res.status(500).json({content: "email is not exist !", status: 0});
+            const {password,...dataResponse} = findUser[0]._doc;
+            const updateStatus = await User.findOneAndUpdate({email: req.email}, {status: true});
+            updateStatus &&  res.status(200).json({content: dataResponse, status: 1});
+
+        } catch(err) {
+            res.status(500).json({content: "fail", status: 0})
+        }
+        
     }
 
     //LOGOUT

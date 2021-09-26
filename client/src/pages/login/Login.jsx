@@ -6,20 +6,19 @@ import { CircularProgress } from "@material-ui/core";
 import {Link} from 'react-router-dom'
 import {useStore} from '../../hook'
 import {observer} from 'mobx-react-lite'
-
+import _, { isEmpty } from 'lodash'
+import { AuthStore } from "../../Store/AuthStore";
 const  Login = observer(() => {
-  const AuthtStore = useStore('AuthStore');
+  const AuthStore = useStore('AuthStore');
   const email = useRef();
   const password = useRef();
   const { isFetching, dispatch } = useContext(AuthContext);
 
   const handleClick = async (e) => {
     e.preventDefault();
-    // loginCall(
-    //   { email: email.current.value, password: password.current.value },
-    //   dispatch
-    // );
-    await AuthtStore.action_login( { email: email.current.value, password: password.current.value });
+    !_.isEmpty(AuthStore.socket) && AuthStore.socket?.emit("online",{email: email.current.value, id :AuthStore.socket.id});
+    await AuthStore.action_login( { email: email.current.value, password: password.current.value });
+    // console.log(AuthStore.socket.id);
 
   };
 

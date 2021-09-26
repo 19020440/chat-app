@@ -40,7 +40,10 @@ const Conversation = observer(({ conversation, currentUser,index }) => {
   useEffect(() => {
     console.log( AuthStore.socket);
     AuthStore.socket?.on("setUserOffline", (userId) => {
-      console.log(userId);
+
+     ActionStore.action_setOfflientStatus();
+    })
+    AuthStore.socket?.on("setOnline", () => {
      ActionStore.action_setOfflientStatus();
     })
    

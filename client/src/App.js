@@ -16,19 +16,32 @@ import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
 import PrRouter from "./pages/PrRouter";
 import Chat from './pages/chat/Chat'
+import _ from 'lodash';
+import io from 'socket.io-client'
+const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
   const {user, login} = AuthStore;
 
   useLayoutEffect(() => {
+    AuthStore.action_setSocket(socket)
     validLogin();
   },[])
 
+  useEffect(() => {
+    AuthStore.socket?.emit('validLogin');
+    AuthStore.socket?.on('setvalidLogin', (socketId) => {
+      AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id : socketId});
+    })
+  },[AuthStore.socket])
+
   const validLogin = async () => {
+    
     const token = await sessionStorage.getItem('token');
     !token && AuthStore.action_setLogin(0);
     token && await AuthStore.action_valdLogin();
+    
   }
   return (
     <Router>

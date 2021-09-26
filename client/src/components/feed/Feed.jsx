@@ -16,7 +16,6 @@ const Feed = observer(({ userId }) => {
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
-
   useLayoutEffect(() => {
     
     fetchPosts();

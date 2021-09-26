@@ -32,9 +32,10 @@ const Messenger = observer(() => {
   const currentLastText = useRef(null);
 
   useEffect(() => {
-    socket.current = io("http://localhost:8800");
-    AuthStore.action_setSocket(io("http://localhost:8800"));
-    socket.current.on("getMessage", (data) => {
+    
+    //AuthStore.socket? = io("http://localhost:8800");
+    // AuthStore.action_setSocket(io("http://localhost:8800"));
+   AuthStore.socket?.on("getMessage", (data) => {
       ActionStore.action_setLastTextByIndex(
         {_id: currentChat?._id,
            lastText: {
@@ -60,8 +61,8 @@ const Messenger = observer(() => {
 
   useEffect(() => {
     console.log(socket.current);
-    socket.current.emit("addUser", user._id);
-    // socket.current.on("getUsers", (users) => {
+   AuthStore.socket?.emit("addUser", user._id);
+    //AuthStore.socket?.on("getUsers", (users) => {
     //   setOnlineUsers(
     //     user.followings.filter((f) => users.some((u) => u.userId === f))
     //   );
@@ -152,7 +153,7 @@ const Messenger = observer(() => {
       (member) => member !== user._id
     );
 
-    socket.current.emit("sendMessage", {
+   AuthStore.socket?.emit("sendMessage", {
       senderId: user._id,
       receiverId,
       text: newMessage,
@@ -194,6 +195,10 @@ const Messenger = observer(() => {
   const handleStartSearch = () => {
     setStartSeaerch(true);
   }
+  // CANCEL SEARCH
+  const handleCancelSearch = () =>  {
+    setStartSeaerch(false);
+  }
 
   //Show rightbar
   const handleShowRightBar = () => {
@@ -222,8 +227,8 @@ const Messenger = observer(() => {
               </div>
 
               <div className="chatMenuWrapper-toolbar_search">
-                <img src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/15/000000/external-back-arrow-basic-ui-elements-flatart-icons-outline-flatarticons.png" className="chatMenuWrapper-toolbar_search_back"/>
-                <img src="https://img.icons8.com/ios-glyphs/15/000000/search--v1.png"/>
+                <img src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/15/000000/external-back-arrow-basic-ui-elements-flatart-icons-outline-flatarticons.png" className="chatMenuWrapper-toolbar_search_back" hidden={!startSearch} onClick={handleCancelSearch}/>
+                <img src="https://img.icons8.com/ios-glyphs/15/000000/search--v1.png" hidden={startSearch}/>
                 <input placeholder="Search for friends" className="chatMenuInput" onChange={handleSearchFriend} onClick={handleStartSearch} ref={ref}/>
               </div>
              

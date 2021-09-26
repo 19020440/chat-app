@@ -63,7 +63,10 @@ export class ActionStore {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getProfile}`;
         const result = await Request.get({userId}, DOMAIN);
         if(result) {
-            if(!_.isEmpty(result.content)) return result.content;
+            if(!_.isEmpty(result.content)) {
+                this.profileOfFriend = result.content;
+                return result.content;
+            }
             else return null;
         }
     }
