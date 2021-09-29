@@ -16,7 +16,9 @@ const cors = require('cors');
 const http = require('http');
 const {Server} = require('socket.io');
 const server = http.createServer(app);
-const User = require('./models/User')
+const User = require('./models/User');
+const Messenger = require('./models/Message');
+const Conversation = require("./models/Conversation");
 
 const io  = new Server(server, {
   cors: {
@@ -98,6 +100,28 @@ io.on("connection", (socket) => {
     socket.emit("setvalidLogin", socket.id);
   })
 
+  //join room
+  socket.on("join_room", async ({socketId, conversationId,receiveId}) => {
+    console.log("thíis is recevei: ", receiveId);
+    try {
+      const updateStatusSeen = await Messenger.updateMany(
+        {$and:[{sender: receiveId},{seens:false}, {conversationId}]},
+         {seens: true});
+         const updateConversation = await Conversation.update(
+           {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
+            {'lastText.seens': true })
+    } catch(err) {
+      console.log(err);
+    }
+   
+    socket.to(socketId).emit("setJoin_room", conversationId);
+  })
+
+  //out ROOM
+  socket.on("out_room", ({socketId, conversationId}) => {
+    socket.to(socketId).emit("setout_room", conversationId);
+  })
+
   //take userId and socketId from user
   socket.on("addUser", async (userId) => {
     // console.log(userId);
@@ -112,13 +136,16 @@ io.on("connection", (socket) => {
   });
 
   //send and get message
-  socket.on("sendMessage", async ({ senderId, receiverId, text }) => {
+  socket.on("sendMessage", async ({ senderId, receiverId, text,updatedAt,conversationId,seens }) => {
     // const user = getUser(receiverId);
     try {
       const user = await User.findById(receiverId).exec();
       io.to(user.socketId).emit("getMessage", {
         senderId,
         text,
+        updatedAt,
+        conversationId,
+        seens
       });
     }catch(err) {
 
@@ -133,8 +160,10 @@ io.on("connection", (socket) => {
 
   //ONLINE
   socket.on("online", async ({email, id}) => {
+    console.log("email is: ", email);
     const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
-    io.emit('setOnline')
+    
+    io.emit('setOnline', "done")
   })
 
   //when disconnect

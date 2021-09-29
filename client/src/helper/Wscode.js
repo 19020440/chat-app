@@ -14,5 +14,6 @@ export const WsCode = {
     savePost: "posts",
     upload: "upload",
     searchFriend: "users/search",
-    searchCov: 'conversations/find'
+    searchCov: 'conversations/find',
+    updateConversation: "conversations/update",
 }

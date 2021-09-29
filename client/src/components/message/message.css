@@ -23,6 +23,19 @@
   color: black;
   max-width: 300px;
 }
+.massafeTextAndSeen {
+  position: relative;
+}
+
+.massafeTextAndSeen img {
+  width: 12px;
+  height: 12px;
+  border-radius: 50px;
+  position: absolute;
+  top: 38px;
+  right: -3px;
+  border: black 1px solid;
+}
 
 .messageBottom {
   font-size: 12px;

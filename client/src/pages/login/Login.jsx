@@ -16,8 +16,8 @@ const  Login = observer(() => {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    !_.isEmpty(AuthStore.socket) && AuthStore.socket?.emit("online",{email: email.current.value, id :AuthStore.socket.id});
     await AuthStore.action_login( { email: email.current.value, password: password.current.value });
+    
     // console.log(AuthStore.socket.id);
 
   };

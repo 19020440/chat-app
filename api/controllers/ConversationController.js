@@ -49,5 +49,16 @@ module.exports  = new class ConversationController {
               res.status(500).json(err);
             }
     }
+    //updateConversation
+    async update(req, res) {
+      const {id, lastText} = req.body;
+      try {
+        const updateConversation = await Conversation.findByIdAndUpdate(id, {lastText});
+        !updateConversation && res.status(500).json({content: "update fail", status: 0})
+        res.status(200).json({content: "update sucees !", status: 1}); 
+      } catch(err) {
+        res.status(500).json({content: err, status:0})
+      }
+    }
 
 }

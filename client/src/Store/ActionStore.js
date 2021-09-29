@@ -3,7 +3,7 @@ import {observable, makeAutoObservable, action} from 'mobx'
 import {WsCode} from '../helper/Wscode'
 import {CONFIG_URL} from "../helper/constant"
 import {Request} from "../helper/Request"
-import {getLessProfile} from '../helper/function';
+import {getLessProfile, countTextNotSeen,findIndexFromArrayLodash,sortConversationByUpdateAt} from '../helper/function';
 export class ActionStore {
     
     profileOfFriend = {};
@@ -12,10 +12,18 @@ export class ActionStore {
     listSearch = [];
     lastText = [];
     offlineStatus = false;
+    conversations = [];
+    preventCallApi=true;
+    currentStatus = {};
+    countTextNotSeen = 0;
 
     constructor() {
         makeAutoObservable(this, {
             profileOfFriend: observable,
+            countTextNotSeen: observable,
+            currentStatus: observable,
+            preventCallApi: observable,
+            conversations: observable,
             offlineStatus: observable,
             lastText: observable,
             listSearch: observable,
@@ -34,8 +42,88 @@ export class ActionStore {
             action_setLastText: action,
             action_setLastTextByIndex: action,
             action_setOfflientStatus: action,
-
+            action_setConversations: action,
+            action_setPreventCallApi: action,
+            action_updateStatusSeenConversation: action,
+            action_updateStatusSeenSelf: action,
+            action_setConverSationByIndex: action,
+            action_updateConversationSeenOutRoomSeft: action,
+            action_updateConversationSeenOutRoom: action,
+            action_updateConnversationById: action,
+            action_countTextNotSeen: action,
         })
+    }
+
+    action_countTextNotSeen(data) { 
+        this.countTextNotSeen = countTextNotSeen(data);
+    }
+    ///update Status
+    action_updateStatusSeenConversation(covId, string) {
+        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
+        if(result != -1) {
+            try {
+                if(string == "join") this.conversations[result].lastText.receiveSeen = true;
+                else  this.conversations[result].lastText.receiveSeen = false;
+                console.log(result);
+            } catch(err) {
+                console.log(err);
+            }
+        }
+    }
+
+    action_updateConversationSeenOutRoomSeft(index) {
+        this.conversations[index].lastText.sendSeen = false;
+    }
+
+    action_updateConversationSeenOutRoom(index) {
+        this.conversations[index].lastText.receiveSeen = false;
+    }
+    action_updateStatusSeenSelf(covId) {
+        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
+        if(result != -1) {
+            try {
+                this.conversations[result].lastText.sendSeen = true;
+                if(this.conversations[result].lastText.seens != undefined) this.conversations[result].lastText.seens = true;
+                
+            } catch(err) {
+                console.log(err);
+            }
+        }
+        
+        console.log(this.conversations[result]);
+    }
+
+    action_setConverSationByIndex(data, index) {
+        try {
+            const receiveSeen = this.conversations[index].lastText.receiveSeen
+            if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+            this.conversations[index] = {...this.conversations[index],updatedAt: data.updatedAt};
+            this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
+        } catch(err) {
+            console.log(err);
+        }
+        
+    }
+    action_updateConnversationById(data,covId) {
+        const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
+        if(index != -1) {
+            try {
+                const receiveSeen = this.conversations[index].lastText.receiveSeen
+                if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+                this.conversations[index].updatedAt = data.updatedAt;
+                this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
+            } catch(err) {
+                console.log(err);
+            }
+        }
+
+    }
+    action_setPreventCallApi(data) {
+        this.preventCallApi = data;
+    }
+
+    action_setConversations(data) {
+        this.conversations = data;
     }
     action_setOfflientStatus() {
         this.offlineStatus = !this.offlineStatus;
@@ -64,7 +152,7 @@ export class ActionStore {
         const result = await Request.get({userId}, DOMAIN);
         if(result) {
             if(!_.isEmpty(result.content)) {
-                this.profileOfFriend = result.content;
+                // this.profileOfFriend = result.content;
                 return result.content;
             }
             else return null;
@@ -107,8 +195,11 @@ export class ActionStore {
         const result = await Request.get({}, DOMAIN);
 
         if(result) {
-            console.log(result);
-            if(!_.isEmpty(result.content)) return result.content;
+            if(!_.isEmpty(result.content)) {
+                this.conversations = sortConversationByUpdateAt(result.content);
+                // this.action_countTextNotSeen(result.content);
+                return result.content;
+            }
             else return [];
         }
     }
@@ -186,6 +277,17 @@ export class ActionStore {
         if(result) {
             if(!_.isEmpty(result.content)) return result.content;
             else return {};
+        }
+    }
+    //Update Conversation 
+    async action_updateConversation(data){
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateConversation}`;
+        
+        const result = await Request.post(data, DOMAIN);
+
+        if(result) {
+            if(!_.isEmpty(result.content)) return result.content;
+            
         }
     }
 }

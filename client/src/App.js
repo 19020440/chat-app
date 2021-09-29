@@ -22,19 +22,36 @@ const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
+  const ActionStore = useStore('ActionStore');
   const {user, login} = AuthStore;
 
   useLayoutEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
-  },[])
+  },[]) 
 
   useEffect(() => {
-    AuthStore.socket?.emit('validLogin');
-    AuthStore.socket?.on('setvalidLogin', (socketId) => {
-      AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id : socketId});
+   
+  },[]);
+  useEffect(() => {
+    AuthStore.socket?.on("setUserOffline", (userId) => {
+
+     ActionStore.action_setOfflientStatus();
     })
-  },[AuthStore.socket])
+    AuthStore.socket?.on("setOnline", (data) => {
+     ActionStore.action_setOfflientStatus();
+    })
+
+    AuthStore.socket?.on("setJoin_room", (conversationId) => {
+      ActionStore.action_updateStatusSeenConversation(conversationId, "join");
+      AuthStore.action_setSatusSeenText();
+    })
+
+    AuthStore.socket?.on("setout_room", (conversationId) => {
+      ActionStore.action_updateStatusSeenConversation(conversationId, "out")
+    })
+   
+ },[]);
 
   const validLogin = async () => {
     

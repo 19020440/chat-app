@@ -2,7 +2,7 @@ import "./messenger.css";
 import Topbar from "../../components/topbar/Topbar";
 import Conversation from "../../components/conversations/Conversation";
 import Message from "../../components/message/Message";
-import ChatOnline from "../../components/chatOnline/ChatOnline";
+import {findIndexLastTextSeen,sortConversationByUpdateAt} from '../../helper/function'
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
@@ -11,14 +11,12 @@ import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import Search from '../../components/searchFriend/search'
+
 const Messenger = observer(() => {
-  const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]);
-  const socket = useRef();
   const [startSearch, setStartSeaerch] = useState(false);
   const [currentChatSearch, setCurrentChatSearch] = useState({});
   const AuthStore = useStore('AuthStore');
@@ -30,21 +28,38 @@ const Messenger = observer(() => {
   const {listSearch} = ActionStore;
   const showRef = useRef(null);
   const currentLastText = useRef(null);
+  const out_room = useRef(null);
+  const socket_before = useRef(null);
+  const conversations = sortConversationByUpdateAt(ActionStore.conversations);
 
   useEffect(() => {
     
     //AuthStore.socket? = io("http://localhost:8800");
     // AuthStore.action_setSocket(io("http://localhost:8800"));
    AuthStore.socket?.on("getMessage", (data) => {
-      ActionStore.action_setLastTextByIndex(
-        {_id: currentChat?._id,
-           lastText: {
-            sender: data.senderId,
-            text: data.text,
-           }
+      // ActionStore.action_setLastTextByIndex(
+      //   {_id: currentChat?._id,
+      //      lastText: {
+      //       sender: data.senderId,
+      //       text: data.text,
+      //      }
           
-        }, currentLastText.current);
-        console.log(currentLastText.current);
+      //   }, currentLastText.current);
+      //   ActionStore.action_setConverSationByIndex({
+          // updatedAt:data.updatedAt,
+          // lastText: {
+          //   sender: data.senderId,
+          //   text: data.text,
+          // }
+      //   }, currentLastText.current);
+      ActionStore.action_updateConnversationById({
+        updatedAt:Date(data.updatedAt),
+        lastText: {
+          sender: data.senderId,
+          text: data.text,
+          seens: data.seens,
+        }
+      }, data.conversationId);
       setArrivalMessage({
         sender: data.senderId,
         text: data.text,
@@ -60,7 +75,6 @@ const Messenger = observer(() => {
   }, [arrivalMessage, currentChat]);
 
   useEffect(() => {
-    console.log(socket.current);
    AuthStore.socket?.emit("addUser", user._id);
     //AuthStore.socket?.on("getUsers", (users) => {
     //   setOnlineUsers(
@@ -68,23 +82,8 @@ const Messenger = observer(() => {
     //   );
     // });
   }, [user]);
-  // GETCONVERSATION
-  useEffect(() => {
-    const getConversations = async () => {
-      if(!_.isEmpty(user)) {
-        try {
-          // const res = await axios.get("/conversations/" + user._id);
-          const res = await ActionStore.action_getConversation(user._id);
-          ActionStore.action_setLastText(res);
-          setConversations(res);
-        } catch (err) {
-          console.log(err);
-        } 
-      }
-      
-    };
-    getConversations();
-  }, [user]);
+ 
+  
 
   //getConersationBySeaerch
 
@@ -103,20 +102,26 @@ const Messenger = observer(() => {
   useEffect(() => {
     if(!_.isEmpty(currentChat))  {
       getMessages();
-      profileFriend();
+      
     }
-  }, [currentChat]);
+  }, [currentChat,AuthStore.statusSeenText]);
+
+  useEffect(() => {
+    profileFriend();
+  },[currentChat,ActionStore.offlineStatus])
 
   const profileFriend = async () => {
     // ActionStore.action_setProfileOfFriend("");
-    const friendId = currentChat.members.find((m) => m !== user._id); 
+    if(!_.isEmpty(currentChat)) {
+      const friendId = currentChat.members.find((m) => m !== user._id); 
       try {
         const res = await ActionStore.action_getProfile(friendId);
-        console.log(res);
         ActionStore.action_setProfileOfFriend(res);
       } catch (err) {
         console.log(err);
       }
+    }
+    
   }
   
 
@@ -138,30 +143,40 @@ const Messenger = observer(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const statusSeen = ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen ? true:false;
+
     const message = {
       sender: user._id,
       text: newMessage,
       conversationId: currentChat._id,
+      seens: statusSeen,
     };
     const {conversationId,...lastText} = message;
-    console.log(currentLastText);
-    if(currentLastText.current !== null) ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
-
+    if(currentLastText.current !== null){
+      // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+      ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, currentLastText.current);
+    }
     
 
     const receiverId = currentChat.members.find(
       (member) => member !== user._id
     );
+    // AuthStore.socket?.emit("update_conversation", )
 
    AuthStore.socket?.emit("sendMessage", {
       senderId: user._id,
       receiverId,
       text: newMessage,
+      updatedAt: Date.now(),
+      conversationId: currentChat?._id,
+      seens: statusSeen,
     });
 
     try {
       // const res = await axios.post("/messages", message);
+      // console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen);
       const res = await ActionStore.action_saveMessage(message);
+      
       setMessages([...messages, res]);
       setNewMessage("");
     } catch (err) {
@@ -187,7 +202,7 @@ const Messenger = observer(() => {
   //     document.removeEventListener("mousedown", checkIfClickedOutside)
   //   }
   // }, [startSearch])
-
+  
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -206,6 +221,35 @@ const Messenger = observer(() => {
     if(element.indexOf("hid") != -1) {
       showRef.current.classList.remove("hid");
     } else showRef.current.classList.add("hid");
+  }
+  //Join Room 
+  const handleJoinRoom = async (conversation) => {
+       try {
+        const friendId = conversation.members.find((m) => m !== user._id);
+        const res = await ActionStore.action_getProfile(friendId);
+        AuthStore.socket?.emit("join_room", {socketId: res?.socketId, conversationId: conversation._id, receiveId: res?._id})
+        ActionStore.action_updateStatusSeenSelf(conversation._id); 
+        
+      } catch (err) {
+        console.log(err);
+      }
+      if(out_room.current !== null){
+        try {
+          const conversations = ActionStore.conversations[out_room.current];
+          const friendId = conversations.members.find((m) => m !== user._id);
+          const res = await ActionStore.action_getProfile(friendId);
+          ActionStore.action_updateConversationSeenOutRoomSeft(out_room.current);
+          AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
+
+        } catch(err) {
+          console.log(err);
+        }
+        
+      }
+      
+    
+    
+    
   }
 
   return (
@@ -241,12 +285,14 @@ const Messenger = observer(() => {
                 </div>
               ))
               :conversations.map((c, index) => (
-                <div onClick={() => {
+                <div onClick={async () => {
                   setCurrentChat(c);
                   currentLastText.current = index;
+                 await handleJoinRoom(c);
+                 out_room.current = index;
                 }
                 }>
-                  <Conversation conversation={c} currentUser={user} index={index}/>
+                  <Conversation conversation={c} currentUser={AuthStore.user} index={index} seen={c.lastText?.seens?true:false}/>
                 </div>
               ))}
            </div>
@@ -261,7 +307,6 @@ const Messenger = observer(() => {
             {currentChat ? (
               <>
               <div className="chatBoxWrapper-navbar">
-                {console.log(ActionStore.profileOfFriend?.status)}
                 <div className={`conversation ${ActionStore.profileOfFriend?.status ? "conversationTrue" : ""}`}>
                   <img
                     className="conversationImg"
@@ -284,9 +329,14 @@ const Messenger = observer(() => {
             </div>
 
                 <div className="chatBoxTop">
-                  {messages.map((m) => (
+                  {console.log(console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen))}
+                  {messages.map((m,index) => (
                     <div>
-                      <Message message={m} own={m.sender === user._id} />
+                      <Message message={m} own={m.sender === user._id} 
+                      // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
+                      seen={m.seens}
+                      lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
+                      />
                     </div>
                   ))}
                 </div>

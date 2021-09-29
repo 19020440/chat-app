@@ -8,6 +8,7 @@ export  class AuthStore {
     login = 2;
     user = {};
     socket;
+    statusSeenText = false;
     constructor() {
         makeAutoObservable(this,{
             login: observable,
@@ -17,8 +18,12 @@ export  class AuthStore {
             action_setLogin: action,
             action_logout: action,
             action_setSocket: action,
+            action_setSatusSeenText: action,
 
         })
+    }
+    action_setSatusSeenText() {
+        this.statusSeenText = !this.statusSeenText;
     }
 
     async action_setLogin(value) {
@@ -35,6 +40,7 @@ export  class AuthStore {
         if(result) {
             this.user = result.content;
             this.login  = 1;
+            !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
         }
 
@@ -47,6 +53,10 @@ export  class AuthStore {
             if(! _.isEmpty(result.content)) {
                 this.login = 1;
                 this.user = result.content;
+                this.socket?.emit('validLogin');
+                this.socket?.on('setvalidLogin', (socketId) => {
+                  this.socket?.emit("online",{email: this.user?.email, id : socketId});
+                })
             }
         }
 

@@ -12,5 +12,7 @@ router.get("/:userId", ConversationController.getCovOfUser);
 // get conv includes two userId
 
 router.get("/find/:firstUserId/:secondUserId", ConversationController.findCovByTwoId);
+//update
+router.post('/update', ConversationController.update)
 
 module.exports = router;

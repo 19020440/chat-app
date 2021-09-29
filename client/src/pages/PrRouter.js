@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ROUTE} from '../helper/constant'
 import Home from "../pages/home/Home";
 import Profile from "./profile/Profile";
@@ -9,7 +9,9 @@ import {
   Redirect,
 } from "react-router-dom";
 import Messenger from "./messenger/Messenger";
-
+import {observer} from 'mobx-react-lite';
+import {useStore} from '../hook'
+import _ from 'lodash'
 const routes = [
     {
       exact: true,
@@ -32,7 +34,27 @@ const routes = [
     
   ];
 
-function PrRouter(props) {
+  
+
+const PrRouter = observer((props) => {
+  const ActionStore = useStore('ActionStore')
+  const AuthStore = useStore('AuthStore')
+  useEffect(() => {
+    const getConversations = async () => {
+      if(!_.isEmpty(AuthStore.user) && _.isEmpty(ActionStore.conversations)) {
+        try {
+          // const res = await axios.get("/conversations/" + user._id);
+          const res = await ActionStore.action_getConversation(AuthStore.user?._id);
+          // ActionStore.action_setLastText(res);
+        } catch (err) {
+          console.log(err);
+        } 
+      }
+      
+    };
+    getConversations();
+  }, []);
+
     return (
         <Switch>
             {routes.map((route, idx) => {
@@ -50,6 +72,7 @@ function PrRouter(props) {
 
         </Switch>
     );
-}
+
+}) 
 
 export default PrRouter;

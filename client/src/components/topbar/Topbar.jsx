@@ -6,16 +6,18 @@ import { AuthContext } from "../../context/AuthContext";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
 import {MessageArgsProps} from 'antd';
-import {showMessageError} from '../../helper/function'
+import {showMessageError,countTextNotSeen} from '../../helper/function'
 import { Modal, Button, Space } from 'antd';
 import 'antd/dist/antd.css';
 import _ from 'lodash'
 const Topbar = observer(() =>{
   // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
+  const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const count = countTextNotSeen(ActionStore.conversations, AuthStore.user?._id);
 
   const handleSetting = async (e) => {
     const element = ref.current.getAttribute("class");
@@ -84,7 +86,12 @@ const Topbar = observer(() =>{
           </div>
           <div className="topbarIconItem">
             <Link to="/messenger"><img src="https://img.icons8.com/ios/25/000000/facebook-messenger--v1.png"/></Link> 
-            {/* <span className="topbarIconBadge"></span> */}
+            {count != 0 && 
+              <>
+                 <span className="topbarIconBadge">{count}</span>
+              </>
+            }
+           
           </div>
           <div className="topbarIconItem">
             {/* <Notifications /> */}
