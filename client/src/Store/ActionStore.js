@@ -16,10 +16,12 @@ export class ActionStore {
     preventCallApi=true;
     currentStatus = {};
     countTextNotSeen = 0;
+    currentConversation = null;
 
     constructor() {
         makeAutoObservable(this, {
             profileOfFriend: observable,
+            currentConversation: observable,
             countTextNotSeen: observable,
             currentStatus: observable,
             preventCallApi: observable,
@@ -51,7 +53,12 @@ export class ActionStore {
             action_updateConversationSeenOutRoom: action,
             action_updateConnversationById: action,
             action_countTextNotSeen: action,
+            action_setCurrentConversation: action,
         })
+    }
+
+    action_setCurrentConversation(index) {
+        this.currentConversation = index;
     }
 
     action_countTextNotSeen(data) { 
@@ -62,9 +69,14 @@ export class ActionStore {
         const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
         if(result != -1) {
             try {
-                if(string == "join") this.conversations[result].lastText.receiveSeen = true;
-                else  this.conversations[result].lastText.receiveSeen = false;
-                console.log(result);
+                if(string == "join") {
+                    this.conversations[result].lastText.receiveSeen = true;
+                    console.log("join room with ID: ",result);
+                }
+                else  {
+                    this.conversations[result].lastText.receiveSeen = false;
+                    console.log("out room with ID: ",result);}
+                
             } catch(err) {
                 console.log(err);
             }
@@ -84,6 +96,7 @@ export class ActionStore {
             try {
                 this.conversations[result].lastText.sendSeen = true;
                 if(this.conversations[result].lastText.seens != undefined) this.conversations[result].lastText.seens = true;
+                console.log("this is result: ", result);
                 
             } catch(err) {
                 console.log(err);

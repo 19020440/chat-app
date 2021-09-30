@@ -59,13 +59,11 @@ export const showMessageError = (msg, onOk) => {
   export const sortConversationByUpdateAt = (conversations) => {
 
     const result =  _.orderBy(conversations.slice(), [(obj) => new Date(obj.updatedAt)], ['desc'])
-    console.log(result);
     return result;
   }
   
   export const countTextNotSeen = (conversations, userId) => {
     let count = 0;
-    console.log(userId);
     try {
       conversations.map((value) => {
         if(value?.lastText?.seens === false && value.lastText?.sender != userId) count++;

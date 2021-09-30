@@ -9,13 +9,12 @@ import {
   Redirect,
 } from "react-router-dom";
 import { useContext, useEffect, useLayoutEffect } from "react";
-import { AuthContext } from "./context/AuthContext";
-import Messenger from "./pages/messenger/Messenger";
+
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
 import PrRouter from "./pages/PrRouter";
-import Chat from './pages/chat/Chat'
+
 import _ from 'lodash';
 import io from 'socket.io-client'
 const socket = io.connect("http://localhost:8800");
@@ -76,7 +75,7 @@ const App = observer(() => {
         <Route path="/profile/:_id">
           <Profile />
         </Route> */}
-        <Route path="/chat"><Chat /></Route>
+
         <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
         <Route path="/register">
           {login == 1 ? <Redirect to="/" /> : <Register />}

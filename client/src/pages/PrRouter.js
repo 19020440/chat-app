@@ -14,7 +14,7 @@ import {useStore} from '../hook'
 import _ from 'lodash'
 const routes = [
     {
-      exact: true,
+
       path: ROUTE.messenger,
       name: "Messenger",
       component: Messenger,

@@ -79,10 +79,10 @@ app.use("/api/messages", messageRoute);
 //SOCKETIO
 let users = [];
 
-const addUser = (userId, socketId) => {
-  !users.some((user) => user.userId === userId) &&
-    users.push({ userId, socketId });
-};
+// const addUser = (userId, socketId) => {
+//   !users.some((user) => user.userId === userId) &&
+//     users.push({ userId, socketId });
+// };
 
 const removeUser = (socketId) => {
   users = users.filter((user) => user.socketId !== socketId);
@@ -137,7 +137,7 @@ io.on("connection", (socket) => {
 
   //send and get message
   socket.on("sendMessage", async ({ senderId, receiverId, text,updatedAt,conversationId,seens }) => {
-    // const user = getUser(receiverId);
+    console.log(conversationId);
     try {
       const user = await User.findById(receiverId).exec();
       io.to(user.socketId).emit("getMessage", {

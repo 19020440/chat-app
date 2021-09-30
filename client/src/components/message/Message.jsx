@@ -10,9 +10,6 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   const ActionStore = useStore('ActionStore');  
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
 
-  useEffect(() => {
-    console.log(ActionStore.profilePicture);
-  },[]);
   return (
     <div className={own ? "message own" : "message"}>
       <div className="messageTop">

@@ -4,13 +4,15 @@ import Conversation from "../../components/conversations/Conversation";
 import Message from "../../components/message/Message";
 import {findIndexLastTextSeen,sortConversationByUpdateAt} from '../../helper/function'
 import { useContext, useEffect, useRef, useState } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { Switch, Route,Link, useParams} from "react-router-dom";
 import axios from "axios";
 import { io } from "socket.io-client";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import Search from '../../components/searchFriend/search'
+import ChatBox from '../../components/ChatBox/Chat'
+import ChatEmpty from "../../components/ChatEmpty/ChatEmpty";
 
 const Messenger = observer(() => {
   const [currentChat, setCurrentChat] = useState(null);
@@ -32,56 +34,47 @@ const Messenger = observer(() => {
   const socket_before = useRef(null);
   const conversations = sortConversationByUpdateAt(ActionStore.conversations);
 
+  // set Current_out_room
   useEffect(() => {
+    if(ActionStore.currentConversation!=null||ActionStore.currentConversation != -1) {
+      out_room.current = ActionStore.currentConversation;
+      currentLastText.current = ActionStore.currentConversation;
+    }
     
-    //AuthStore.socket? = io("http://localhost:8800");
-    // AuthStore.action_setSocket(io("http://localhost:8800"));
-   AuthStore.socket?.on("getMessage", (data) => {
-      // ActionStore.action_setLastTextByIndex(
-      //   {_id: currentChat?._id,
-      //      lastText: {
-      //       sender: data.senderId,
-      //       text: data.text,
-      //      }
-          
-      //   }, currentLastText.current);
-      //   ActionStore.action_setConverSationByIndex({
-          // updatedAt:data.updatedAt,
-          // lastText: {
-          //   sender: data.senderId,
-          //   text: data.text,
-          // }
-      //   }, currentLastText.current);
-      ActionStore.action_updateConnversationById({
-        updatedAt:Date(data.updatedAt),
-        lastText: {
-          sender: data.senderId,
-          text: data.text,
-          seens: data.seens,
-        }
-      }, data.conversationId);
-      setArrivalMessage({
-        sender: data.senderId,
-        text: data.text,
-        createdAt: Date.now(),
-      });
-    });
-  }, []);
 
-  useEffect(() => {
-    arrivalMessage &&
-      currentChat?.members.includes(arrivalMessage.sender) &&
-      setMessages((prev) => [...prev, arrivalMessage]);
-  }, [arrivalMessage, currentChat]);
+  },[ActionStore.currentConversation])
+  // useEffect(() => {
+  //  AuthStore.socket?.on("getMessage", (data) => {
+  //     ActionStore.action_updateConnversationById({
+  //       updatedAt:Date(data.updatedAt),
+  //       lastText: {
+  //         sender: data.senderId,
+  //         text: data.text,
+  //         seens: data.seens,
+  //       }
+  //     }, data.conversationId);
+      // setArrivalMessage({
+      //   sender: data.senderId,
+      //   text: data.text,
+      //   createdAt: Date.now(),
+      // });
+  //   });
+  // }, []);
 
-  useEffect(() => {
-   AuthStore.socket?.emit("addUser", user._id);
-    //AuthStore.socket?.on("getUsers", (users) => {
-    //   setOnlineUsers(
-    //     user.followings.filter((f) => users.some((u) => u.userId === f))
-    //   );
-    // });
-  }, [user]);
+  // useEffect(() => {
+  //   arrivalMessage &&
+  //     currentChat?.members.includes(arrivalMessage.sender) &&
+  //     setMessages((prev) => [...prev, arrivalMessage]);
+  // }, [arrivalMessage, currentChat]);
+
+  // useEffect(() => {
+  //  AuthStore.socket?.emit("addUser", user._id);
+  //   //AuthStore.socket?.on("getUsers", (users) => {
+  //   //   setOnlineUsers(
+  //   //     user.followings.filter((f) => users.some((u) => u.userId === f))
+  //   //   );
+  //   // });
+  // }, [user]);
  
   
 
@@ -99,12 +92,12 @@ const Messenger = observer(() => {
   },[currentChatSearch])
  // GetAllMessageOfConversation
 
-  useEffect(() => {
-    if(!_.isEmpty(currentChat))  {
-      getMessages();
+  // useEffect(() => {
+  //   if(!_.isEmpty(currentChat))  {
+  //     getMessages();
       
-    }
-  }, [currentChat,AuthStore.statusSeenText]);
+  //   }
+  // }, [currentChat,AuthStore.statusSeenText]);
 
   useEffect(() => {
     profileFriend();
@@ -126,14 +119,14 @@ const Messenger = observer(() => {
   
 
  
-  const getMessages = async () => {
-    try {
-      const res = await ActionStore.action_getAllMessageOfConversation(currentChat._id)
-      setMessages(res);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  // const getMessages = async () => {
+  //   try {
+  //     const res = await ActionStore.action_getAllMessageOfConversation(currentChat._id)
+  //     setMessages(res);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
   //Seaerch Frieng
   const handleSearchFriend = async (e) => {  
     await ActionStore.action_searchFriend(e.target.value);
@@ -141,48 +134,48 @@ const Messenger = observer(() => {
   }
   //Send MEssage
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const statusSeen = ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen ? true:false;
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const statusSeen = ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen ? true:false;
 
-    const message = {
-      sender: user._id,
-      text: newMessage,
-      conversationId: currentChat._id,
-      seens: statusSeen,
-    };
-    const {conversationId,...lastText} = message;
-    if(currentLastText.current !== null){
-      // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
-      ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, currentLastText.current);
-    }
+  //   const message = {
+  //     sender: user._id,
+  //     text: newMessage,
+  //     conversationId: currentChat._id,
+  //     seens: statusSeen,
+  //   };
+  //   const {conversationId,...lastText} = message;
+  //   if(currentLastText.current !== null){
+  //     // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+  //     ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, currentLastText.current);
+  //   }
     
 
-    const receiverId = currentChat.members.find(
-      (member) => member !== user._id
-    );
-    // AuthStore.socket?.emit("update_conversation", )
+  //   const receiverId = currentChat.members.find(
+  //     (member) => member !== user._id
+  //   );
+  //   // AuthStore.socket?.emit("update_conversation", )
 
-   AuthStore.socket?.emit("sendMessage", {
-      senderId: user._id,
-      receiverId,
-      text: newMessage,
-      updatedAt: Date.now(),
-      conversationId: currentChat?._id,
-      seens: statusSeen,
-    });
+  //  AuthStore.socket?.emit("sendMessage", {
+  //     senderId: user._id,
+  //     receiverId,
+  //     text: newMessage,
+  //     updatedAt: Date.now(),
+  //     conversationId: currentChat?._id,
+  //     seens: statusSeen,
+  //   });
 
-    try {
-      // const res = await axios.post("/messages", message);
-      // console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen);
-      const res = await ActionStore.action_saveMessage(message);
+  //   try {
+  //     // const res = await axios.post("/messages", message);
+  //     // console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen);
+  //     const res = await ActionStore.action_saveMessage(message);
       
-      setMessages([...messages, res]);
-      setNewMessage("");
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  //     setMessages([...messages, res]);
+  //     setNewMessage("");
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
   //Handle Click OUstside
   // useEffect(() => {
   //   const checkIfClickedOutside = async (e) => {
@@ -203,9 +196,9 @@ const Messenger = observer(() => {
   //   }
   // }, [startSearch])
   
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [messages]);
 
   const handleStartSearch = () => {
     setStartSeaerch(true);
@@ -214,7 +207,7 @@ const Messenger = observer(() => {
   const handleCancelSearch = () =>  {
     setStartSeaerch(false);
   }
-
+  console.log("re-render");
   //Show rightbar
   const handleShowRightBar = () => {
     const element = showRef.current.getAttribute("class");
@@ -222,18 +215,12 @@ const Messenger = observer(() => {
       showRef.current.classList.remove("hid");
     } else showRef.current.classList.add("hid");
   }
-  //Join Room 
+  // //Join Room 
   const handleJoinRoom = async (conversation) => {
-       try {
-        const friendId = conversation.members.find((m) => m !== user._id);
-        const res = await ActionStore.action_getProfile(friendId);
-        AuthStore.socket?.emit("join_room", {socketId: res?.socketId, conversationId: conversation._id, receiveId: res?._id})
-        ActionStore.action_updateStatusSeenSelf(conversation._id); 
-        
-      } catch (err) {
-        console.log(err);
-      }
-      if(out_room.current !== null){
+      console.log("out_room is: ", out_room.current);
+      console.log("currentLatTest is: ",currentLastText.current);
+      if(out_room.current !== currentLastText.current && out_room.current != null){
+        console.log("OUt room");
         try {
           const conversations = ActionStore.conversations[out_room.current];
           const friendId = conversations.members.find((m) => m !== user._id);
@@ -253,6 +240,7 @@ const Messenger = observer(() => {
   }
 
   return (
+    
     <>
       <Topbar />
       <div className="messenger">
@@ -285,15 +273,16 @@ const Messenger = observer(() => {
                 </div>
               ))
               :conversations.map((c, index) => (
-                <div onClick={async () => {
-                  setCurrentChat(c);
+                <Link onClick={async () => {
+                  // setCurrentChat(c);
                   currentLastText.current = index;
                  await handleJoinRoom(c);
                  out_room.current = index;
                 }
-                }>
+                }
+                to={`/messenger/${c._id}`}>
                   <Conversation conversation={c} currentUser={AuthStore.user} index={index} seen={c.lastText?.seens?true:false}/>
-                </div>
+                </Link>
               ))}
            </div>
            
@@ -303,8 +292,16 @@ const Messenger = observer(() => {
         
         <div className="chatBox">
           <div className="chatBoxWrapper">
-            
-            {currentChat ? (
+
+              <Switch>
+                
+                <Route path="/messenger" exact component={ChatEmpty}/>
+                <Route  path={`/messenger/:conversationId`}  exact >
+                    <ChatBox conversations={conversations}/>
+                </Route>
+              </Switch>
+
+            {/* {currentChat ? (
               <>
               <div className="chatBoxWrapper-navbar">
                 <div className={`conversation ${ActionStore.profileOfFriend?.status ? "conversationTrue" : ""}`}>
@@ -329,7 +326,6 @@ const Messenger = observer(() => {
             </div>
 
                 <div className="chatBoxTop">
-                  {console.log(console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen))}
                   {messages.map((m,index) => (
                     <div>
                       <Message message={m} own={m.sender === user._id} 
@@ -356,7 +352,7 @@ const Messenger = observer(() => {
               <span className="noConversationText">
                 Open a conversation to start a chat.
               </span>
-            )}
+            )} */}
           </div>
         </div>
         <div className="chatOnline" ref={showRef}>
@@ -370,6 +366,7 @@ const Messenger = observer(() => {
         </div>
       </div>
     </>
+    
   );
 }) 
 
