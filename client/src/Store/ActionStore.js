@@ -106,7 +106,7 @@ export class ActionStore {
         console.log(this.conversations[result]);
     }
 
-    action_setConverSationByIndex(data, index) {
+    async action_setConverSationByIndex(data, index) {
         try {
             const receiveSeen = this.conversations[index].lastText.receiveSeen
             if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
@@ -115,9 +115,9 @@ export class ActionStore {
         } catch(err) {
             console.log(err);
         }
-        
+        await this.action_setConversations(sortConversationByUpdateAt(this.conversations))
     }
-    action_updateConnversationById(data,covId) {
+    async action_updateConnversationById(data,covId) {
         const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
         if(index != -1) {
             try {
@@ -129,6 +129,7 @@ export class ActionStore {
                 console.log(err);
             }
         }
+        await this.action_setConversations(sortConversationByUpdateAt(this.conversations))
 
     }
     action_setPreventCallApi(data) {

@@ -6,7 +6,7 @@ import _ from 'lodash'
 import './chat.css';
 import {findIndexFromArrayLodash, findIndexLastTextSeen} from '../../helper/function'
 import Message from '../message/Message';
-const Chat = observer(({conversations}) => {
+const Chat = observer(() => {
     const AuthStore = useStore('AuthStore')
     const ActionStore = useStore('ActionStore');
     const [messages, setMessages] = useState([]);
@@ -17,7 +17,6 @@ const Chat = observer(({conversations}) => {
     const currentConversation = ActionStore.conversations[indexConversation];
     const showRef = useRef(null);
     const [newMessage, setNewMessage] = useState("");
-    const [profile, setProfile] = useState({});
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
 
@@ -26,12 +25,12 @@ const Chat = observer(({conversations}) => {
       if(findIndexFromArrayLodash != -1) {
         ActionStore.action_setCurrentConversation(indexConversation);
       }
-      
     },[indexConversation])
+
     /// get message
     useEffect(() => {
           getMessages(); 
-      }, [conversationId,ActionStore.conversations]);
+      }, [conversationId,AuthStore.statusSeenText]);
       const getMessages = async () => {
         try {
           const res = await ActionStore.action_getAllMessageOfConversation(conversationId)
@@ -40,6 +39,7 @@ const Chat = observer(({conversations}) => {
           console.log(err);
         }
       };
+
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -126,23 +126,7 @@ const Chat = observer(({conversations}) => {
     } else showRef.current.classList.add("hid");
   }
 
-  useEffect(() => {
-    AuthStore.socket?.on("getMessage", (data) => {
-       ActionStore.action_updateConnversationById({
-         updatedAt:Date(data.updatedAt),
-         lastText: {
-           sender: data.senderId,
-           text: data.text,
-           seens: data.seens,
-         }
-       }, data.conversationId);
-    //    setArrivalMessage({
-    //      sender: data.senderId,
-    //      text: data.text,
-    //      createdAt: Date.now(),
-    //    });
-     });
-   }, []);
+
 
     //Join Room 
     useEffect(() => {

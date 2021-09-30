@@ -137,7 +137,7 @@ io.on("connection", (socket) => {
 
   //send and get message
   socket.on("sendMessage", async ({ senderId, receiverId, text,updatedAt,conversationId,seens }) => {
-    console.log(conversationId);
+    console.log("this is id: ",conversationId);
     try {
       const user = await User.findById(receiverId).exec();
       io.to(user.socketId).emit("getMessage", {

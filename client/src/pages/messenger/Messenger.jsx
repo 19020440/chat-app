@@ -16,68 +16,31 @@ import ChatEmpty from "../../components/ChatEmpty/ChatEmpty";
 
 const Messenger = observer(() => {
   const [currentChat, setCurrentChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [arrivalMessage, setArrivalMessage] = useState(null);
   const [startSearch, setStartSeaerch] = useState(false);
   const [currentChatSearch, setCurrentChatSearch] = useState({});
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;
-  const scrollRef = useRef();
   const ref = useRef(null);
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const {listSearch} = ActionStore;
   const showRef = useRef(null);
   const currentLastText = useRef(null);
   const out_room = useRef(null);
-  const socket_before = useRef(null);
-  const conversations = sortConversationByUpdateAt(ActionStore.conversations);
+  const {conversations} = ActionStore;
+  const conversationss = sortConversationByUpdateAt(conversations);
 
+  console.log("this is conversation:", conversationss);
   // set Current_out_room
   useEffect(() => {
     if(ActionStore.currentConversation!=null||ActionStore.currentConversation != -1) {
-      out_room.current = ActionStore.currentConversation;
       currentLastText.current = ActionStore.currentConversation;
     }
     
 
   },[ActionStore.currentConversation])
-  // useEffect(() => {
-  //  AuthStore.socket?.on("getMessage", (data) => {
-  //     ActionStore.action_updateConnversationById({
-  //       updatedAt:Date(data.updatedAt),
-  //       lastText: {
-  //         sender: data.senderId,
-  //         text: data.text,
-  //         seens: data.seens,
-  //       }
-  //     }, data.conversationId);
-      // setArrivalMessage({
-      //   sender: data.senderId,
-      //   text: data.text,
-      //   createdAt: Date.now(),
-      // });
-  //   });
-  // }, []);
-
-  // useEffect(() => {
-  //   arrivalMessage &&
-  //     currentChat?.members.includes(arrivalMessage.sender) &&
-  //     setMessages((prev) => [...prev, arrivalMessage]);
-  // }, [arrivalMessage, currentChat]);
-
-  // useEffect(() => {
-  //  AuthStore.socket?.emit("addUser", user._id);
-  //   //AuthStore.socket?.on("getUsers", (users) => {
-  //   //   setOnlineUsers(
-  //   //     user.followings.filter((f) => users.some((u) => u.userId === f))
-  //   //   );
-  //   // });
-  // }, [user]);
  
   
-
   //getConersationBySeaerch
 
   const getConversationBySearch = async () => {
@@ -92,19 +55,12 @@ const Messenger = observer(() => {
   },[currentChatSearch])
  // GetAllMessageOfConversation
 
-  // useEffect(() => {
-  //   if(!_.isEmpty(currentChat))  {
-  //     getMessages();
-      
-  //   }
-  // }, [currentChat,AuthStore.statusSeenText]);
 
   useEffect(() => {
     profileFriend();
   },[currentChat,ActionStore.offlineStatus])
 
   const profileFriend = async () => {
-    // ActionStore.action_setProfileOfFriend("");
     if(!_.isEmpty(currentChat)) {
       const friendId = currentChat.members.find((m) => m !== user._id); 
       try {
@@ -116,89 +72,12 @@ const Messenger = observer(() => {
     }
     
   }
-  
 
- 
-  // const getMessages = async () => {
-  //   try {
-  //     const res = await ActionStore.action_getAllMessageOfConversation(currentChat._id)
-  //     setMessages(res);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
   //Seaerch Frieng
   const handleSearchFriend = async (e) => {  
     await ActionStore.action_searchFriend(e.target.value);
 
   }
-  //Send MEssage
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const statusSeen = ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen ? true:false;
-
-  //   const message = {
-  //     sender: user._id,
-  //     text: newMessage,
-  //     conversationId: currentChat._id,
-  //     seens: statusSeen,
-  //   };
-  //   const {conversationId,...lastText} = message;
-  //   if(currentLastText.current !== null){
-  //     // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
-  //     ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, currentLastText.current);
-  //   }
-    
-
-  //   const receiverId = currentChat.members.find(
-  //     (member) => member !== user._id
-  //   );
-  //   // AuthStore.socket?.emit("update_conversation", )
-
-  //  AuthStore.socket?.emit("sendMessage", {
-  //     senderId: user._id,
-  //     receiverId,
-  //     text: newMessage,
-  //     updatedAt: Date.now(),
-  //     conversationId: currentChat?._id,
-  //     seens: statusSeen,
-  //   });
-
-  //   try {
-  //     // const res = await axios.post("/messages", message);
-  //     // console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen);
-  //     const res = await ActionStore.action_saveMessage(message);
-      
-  //     setMessages([...messages, res]);
-  //     setNewMessage("");
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-  //Handle Click OUstside
-  // useEffect(() => {
-  //   const checkIfClickedOutside = async (e) => {
-  //     // If the menu is open and the clicked target is not within the menu,
-  //     // then close the menu
-  //     setStartSeaerch(false)
-  //     if (startSearch && ref.current && !ref.current.contains(e.target)) {
-  //       console.log("end");
-  //       setStartSeaerch(false)
-  //     }
-  //   }
-
-  //   document.addEventListener("mousedown", checkIfClickedOutside)
-
-  //   return () => {
-  //     // Cleanup the event listener
-  //     document.removeEventListener("mousedown", checkIfClickedOutside)
-  //   }
-  // }, [startSearch])
-  
-  // useEffect(() => {
-  //   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages]);
 
   const handleStartSearch = () => {
     setStartSeaerch(true);
@@ -216,10 +95,10 @@ const Messenger = observer(() => {
     } else showRef.current.classList.add("hid");
   }
   // //Join Room 
-  const handleJoinRoom = async (conversation) => {
+  const handleOutRoom = async (conversation) => {
       console.log("out_room is: ", out_room.current);
       console.log("currentLatTest is: ",currentLastText.current);
-      if(out_room.current !== currentLastText.current && out_room.current != null){
+      if(out_room.current !== currentLastText.current){
         console.log("OUt room");
         try {
           const conversations = ActionStore.conversations[out_room.current];
@@ -233,10 +112,7 @@ const Messenger = observer(() => {
         }
         
       }
-      
-    
-    
-    
+ 
   }
 
   return (
@@ -272,11 +148,11 @@ const Messenger = observer(() => {
                   <Search user={user} />
                 </div>
               ))
-              :conversations.map((c, index) => (
+              :conversationss.map((c, index) => (
                 <Link onClick={async () => {
                   // setCurrentChat(c);
                   currentLastText.current = index;
-                 await handleJoinRoom(c);
+                 await handleOutRoom(c);
                  out_room.current = index;
                 }
                 }
@@ -292,67 +168,11 @@ const Messenger = observer(() => {
         
         <div className="chatBox">
           <div className="chatBoxWrapper">
-
               <Switch>
-                
                 <Route path="/messenger" exact component={ChatEmpty}/>
-                <Route  path={`/messenger/:conversationId`}  exact >
-                    <ChatBox conversations={conversations}/>
-                </Route>
+                <Route  path={`/messenger/:conversationId`}  exact component={ChatBox}/>
+
               </Switch>
-
-            {/* {currentChat ? (
-              <>
-              <div className="chatBoxWrapper-navbar">
-                <div className={`conversation ${ActionStore.profileOfFriend?.status ? "conversationTrue" : ""}`}>
-                  <img
-                    className="conversationImg"
-                    src={
-                      ActionStore.profileOfFriend.profilePicture
-                        ?ActionStore.profileOfFriend.profilePicture
-                        : PF + "person/noAvatar.png"
-                    }
-                    alt=""
-                  />
-                  <span className="conversationName">{ActionStore.profileOfFriend.username}</span>
-               </div>
-
-               <div className="chatBoxWrapper-navbar_tool">
-                <img src="https://img.icons8.com/color/25/000000/phone-message--v2.png"/>
-                <img src="https://img.icons8.com/ultraviolet/25/000000/video-call.png"/>
-                <img src="https://img.icons8.com/ios-glyphs/25/000000/break.png" onClick={handleShowRightBar}/>
-               </div>
-              
-            </div>
-
-                <div className="chatBoxTop">
-                  {messages.map((m,index) => (
-                    <div>
-                      <Message message={m} own={m.sender === user._id} 
-                      // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
-                      seen={m.seens}
-                      lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="chatBoxBottom">
-                  <textarea
-                    className="chatMessageInput"
-                    placeholder="write something..."
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    value={newMessage}
-                  ></textarea>
-                  <button className="chatSubmitButton" onClick={handleSubmit}>
-                    Send
-                  </button>
-                </div>
-              </>
-            ) : (
-              <span className="noConversationText">
-                Open a conversation to start a chat.
-              </span>
-            )} */}
           </div>
         </div>
         <div className="chatOnline" ref={showRef}>
