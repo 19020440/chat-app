@@ -43,9 +43,7 @@ const PrRouter = observer((props) => {
     const getConversations = async () => {
       if(!_.isEmpty(AuthStore.user) && _.isEmpty(ActionStore.conversations)) {
         try {
-          // const res = await axios.get("/conversations/" + user._id);
           const res = await ActionStore.action_getConversation(AuthStore.user?._id);
-          // ActionStore.action_setLastText(res);
         } catch (err) {
           console.log(err);
         } 

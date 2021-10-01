@@ -16,7 +16,11 @@ import Loading from "./components/Loading/Loading";
 import PrRouter from "./pages/PrRouter";
 
 import _ from 'lodash';
-import io from 'socket.io-client'
+import io from 'socket.io-client';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import { faCheckSquare, faCoffee,faBell, faEllipsisH, faCaretDown, faSun, faMoon, faPhone,faInfoCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+library.add( fab,faCheckSquare, faCoffee,faBell, faEllipsisH,faCaretDown,faSun,faMoon,faPhone,faInfoCircle,faPlusCircle) 
 const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
   // const { user } = useContext(AuthContext);

@@ -62,10 +62,3 @@
     display: none;
   }
 }
-.color-text_blue {
-  color: hsl(214deg 89% 52%);
-}
-.color-text_while {
-  color: gray;
-  font-weight: 400;
-}
