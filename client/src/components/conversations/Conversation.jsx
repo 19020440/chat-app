@@ -19,15 +19,17 @@ const Conversation = observer(() => {
     const AuthStore = useStore('AuthStore');      
     const conversations = sortConversationByUpdateAt(ActionStore.conversations);
     const history = useHistory();
-  // useEffect(() => {
-  //   if(!_.isEmpty(user)) {
-  //     user?.status ? ref.current.classList.add("conversationTrue") : ref.current.classList.remove("conversationTrue");
+    const beforeConversation = useRef(null);
+    const currentConversation = useRef(null);
 
-  //   }
-  // },[user]);
+    useEffect(() => {
+        currentConversation.current = ActionStore.currentConversation;
+    },[ActionStore.currentConversation])
   const handlePassPage = (conversation) => {
-      console.log("click click");
-    history.push(`/messenger/${conversation._id}`)
+    history.push(`/messenger/${conversation._id}`);
+    if(beforeConversation.current != currentConversation.current) {
+        
+    }
   }
 
   
