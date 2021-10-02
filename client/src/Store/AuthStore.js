@@ -9,8 +9,10 @@ export  class AuthStore {
     user = {};
     socket;
     statusSeenText = false;
+    themePage = true;
     constructor() {
         makeAutoObservable(this,{
+            themePage: observable,
             login: observable,
             socket: observable,
             user: observable,
@@ -19,8 +21,11 @@ export  class AuthStore {
             action_logout: action,
             action_setSocket: action,
             action_setSatusSeenText: action,
-
+            action_setTheme: action,
         })
+    }
+    action_setTheme() {
+        this.themePage = !this.themePage;
     }
     action_setSatusSeenText() {
         this.statusSeenText = !this.statusSeenText;

@@ -1,16 +1,60 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import './header.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-function header(props) {
+import {observer} from 'mobx-react-lite'
+import {useStore} from '../../hook'
+import { Link } from 'react-router-dom';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import _ from 'lodash'
+import {Modal} from 'antd'
+import { faChevronRight, faCog, faExclamation, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight) 
+const header = observer((props) => {
+    const AuthStore = useStore('AuthStore');
+    const {user} = AuthStore;
+    const [visible, setVisible] = useState(false);
+    const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+    const ref = useRef(null);
+    const [action, set_action] = useState(true);
+    console.log("header");
+    const handleTheme = async () => {
+        
+        await AuthStore.action_setTheme();
+        // set_action(!action);
+    }
+    const handleLogOut = async () => {
+        !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", AuthStore.user._id);
+        
+        await AuthStore.action_logout();
+        setVisible(false); 
+      }
+    
+      const handleCancel = () => {
+        setVisible(false); 
+      }
+
+      const showModal = () => {
+        setVisible(true); 
+      }
+
+      const handleSetting = async (e) => {
+        const element = ref.current.getAttribute("class");
+        if(element.indexOf("hidden") != -1) {
+          ref.current.classList.remove("hidden");
+        } else ref.current.classList.add("hidden");
+        
+      }
     return (
+        <>
         <header className="header">
                 <div className="header-grid">
                     <div className="header-left">
-                        <a href="./home.html">
+                        <Link to="/">
                             <div className="header-left__logo">
                                 <FontAwesomeIcon icon="fa-brands fa-facebook" className="header-left__icon-logo"/>
                             </div>
-                        </a>
+                        </Link>
                         <div className="header-left__search">
                             <div className="header-left__search-icon">
                                 <i className="fal fa-search"></i>
@@ -45,7 +89,7 @@ function header(props) {
 
                     <div className="header-switch switch-mode-mess">
 
-                        <div className="header-switch__box">
+                        <div className={`header-switch__box${AuthStore.themePage? "":" dark"}`} onClick={handleTheme}>
                             <div  className="header-switch-icon switch-moon">
                             <FontAwesomeIcon icon="fa-solid fa-moon" />
                             </div>
@@ -58,8 +102,12 @@ function header(props) {
 
                     <ul className="header-right">
                         <li className="header-right__profile nav-wall">
-                            <img src="" alt="" className="header-profile__img avt" />
-                            <span className="header-profile__name last-name">Hồ</span>
+                            <img src={
+                                    user?.profilePicture
+                                        ? user?.profilePicture
+                                        : PF + "person/noAvatar.png"
+                                    } alt="" className="header-profile__img avt" />
+                            <span className="header-profile__name last-name">{user?.username}</span>
                         </li>
                         
                         <li className="header-right__item">
@@ -100,15 +148,19 @@ function header(props) {
                                 </div>
                             </div>
                         </li>
-                        <li className="header-right__item">
+                        <li className="header-right__item" onClick={handleSetting}>
                             {/* <i className="fas fa-caret-down header-right__item-caret-down"></i> */}
                             <FontAwesomeIcon icon="fa-solid fa-caret-down" className="header-right__item-caret-down"/>
-                            <div className="header-right__item-more header-right__setting">
+                            <div className="header-right__item-more header-right__setting" ref={ref}>
                                 <div className="setting-head nav-wall">
-                                    <img src="" alt="" className="avt setting-head__avatar" />
+                                    <img src={
+                                    user?.profilePicture
+                                        ? user?.profilePicture
+                                        : PF + "person/noAvatar.png"
+                                    } alt="" className="avt setting-head__avatar" />
                                     <div className="setting-head__content">
                                         <p className="setting-head__content-name full-name">
-                                            Lê Hồ
+                                            {user?.username}
                                         </p>
                                         <p className="setting-head__content-note">
                                             Xem trang cá nhân của bạn
@@ -118,7 +170,8 @@ function header(props) {
                                 <div className="setting__respond">
                                     <div>
                                         <div className="setting__respond-img">
-                                            <i className="fas fa-exclamation-circle"></i>
+                                        <FontAwesomeIcon icon="fa-solid fa-exclamation" />
+                                            {/* faExclamation */}
                                         </div>
                                         <div className="setting__respond-content">
                                             <p className="setting__respond-title">
@@ -133,40 +186,40 @@ function header(props) {
                                 <ul className="setting__list">
                                     <li className="setting__item">
                                         <div className="setting__item-img">
-                                            <i className="fas fa-cogs"></i>
+                                            <FontAwesomeIcon icon={faCog} />
                                         </div>
                                         <p className="setting__item-content">
                                            {` Cài đặt & quyền riêng tư`}
                                         </p>
-                                        <i className="fas fa-chevron-right"></i>
+                                        
                                     </li>
                                     <li className="setting__item">
                                         <div className="setting__item-img">
-                                            <i className="fas fa-question-circle"></i>
+                                            <FontAwesomeIcon icon={faQuestionCircle} />
                                         </div>
                                         <p className="setting__item-content">
                                             {`Trợ giúp & hỗ trợ`}
                                         </p>
-                                        <i className="fas fa-chevron-right"></i>
+                                        
                                     </li>
                                     <li className="setting__item">
                                         <div className="setting__item-img">
-                                            <i className="fas fa-moon"></i>
+                                            <FontAwesomeIcon icon={faMoon} />
                                         </div>
                                         <p className="setting__item-content">
                                             {`Màn hình & trợ năng`}
                                         </p>
-                                        <i className="fas fa-chevron-right"></i>
+                                        
                                     </li>
-                                    <li className="setting__item nav-logout">
-                                        <a href="index.html">
+                                    <li className="setting__item nav-logout" onClick={showModal }>
+
                                             <div className="setting__item-img">
-                                                <i className="fas fa-sign-out-alt"></i>
+                                             <FontAwesomeIcon icon={faSignOutAlt} />
                                             </div>
                                             <p className="setting__item-content">
                                                     Đăng xuất
                                             </p>
-                                        </a>
+
                                     </li>
                                 </ul>
                                 <footer className="setting__footer">
@@ -199,7 +252,16 @@ function header(props) {
 
                 
             </header>
+            <Modal
+                title="Bạn có chắc muốn thoát!"
+                visible={visible}
+                onOk={handleLogOut}
+                // confirmLoading={confirmLoading}
+                onCancel={handleCancel}
+                >
+            </Modal>
+            </>
     );
-}
+});
 
 export default header;

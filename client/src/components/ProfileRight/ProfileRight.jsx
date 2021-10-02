@@ -29,7 +29,9 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                         : PF + "person/noAvatar.png"
                                     } alt="" className="container-left__item-avatar-img"/>
                                 </div>
+                                
                                 <div className="container-left__item-info">
+                                    <span className={user?.status ? "status_active" : " "}></span>
                                     <div className="container-left__item-info-name">
                                         {user?.username}
                                     </div>

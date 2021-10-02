@@ -93,6 +93,7 @@ const ContrainerMess = observer((props) => {
           console.log(err);
         }
 
+
       };
       // set arrives message
       useEffect(() => {
@@ -184,6 +185,7 @@ const profileFriend = async () => {
                                         : PF + "person/noAvatar.png"
                                     } alt="" />
                             </div>
+                            <span className={ActionStore.profileOfFriend?.status ? "status_active1":""}></span>
                             <div className="container-main__head-left-info">
                                 <div className="container-main__head-left-info__name name-mess">
                                     {ActionStore.profileOfFriend?.username}
@@ -210,11 +212,15 @@ const profileFriend = async () => {
                     <div className="container-main__body">
                         <div className="container-main__list--no-content">
                             <div className="no-content__avt">
-                                <img src="" alt="" className="no-content__img avt-mess" />
+                                <img src={
+                                    ActionStore.profileOfFriend?.profilePicture
+                                        ? ActionStore.profileOfFriend?.profilePicture
+                                        : PF + "person/noAvatar.png"
+                                    } alt="" className="no-content__img avt-mess" />
                             </div>
                             <div className="no-content__info">
                                 <div className="no-content__info-name name-mess">
-                                    User
+                                {ActionStore.profileOfFriend?.username} 
                                 </div>
                                 <div className="no-content__info-sub">
                                     Facebook
@@ -224,16 +230,18 @@ const profileFriend = async () => {
                             </div>
                         </div>
                             <ul className="container-main__list">
-                                {messages.map((message) => {
+                                {messages.map((m, index) => {
                                     return (
-                                        // <li>    
-                                            <Message 
-                                            own={user?._id != ActionStore.profileOfFriend?._id} 
-                                            message={message}/>
-                                        // </li>
+                                        <li className="container-main__item1">
+                                            <Message message={m} own={m.sender === user._id} 
+                                                // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
+                                                seen={m.seens}
+                                                lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
+                                            />
+                                        </li>
                                     );
                                 })}
-                                <li className="container-main__item isReaction">
+                                {/* <li className="container-main__item isReaction">
                                     <div className="container-main__item-avt">
                                         <img src="" alt="" className="container-main__item-avt__img" />
                                     </div>
@@ -336,7 +344,7 @@ const profileFriend = async () => {
                                             <i className="fad fa-trash-alt"></i>
                                         </div>
                                     </div>
-                                </li>
+                                </li> */}
                                  
                             </ul>
                     </div>
@@ -359,7 +367,10 @@ const profileFriend = async () => {
                             </div>
                         </div>
                         <div className="container-main__bottom-search">
-                            <input type="text" placeholder="Aa" className="container-main__bottom-search-input" />
+                            <input type="text" placeholder="Aa" className="container-main__bottom-search-input"  
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            value={newMessage}
+                            />
                             <div className="container-main__bottom-search__icon">
                                 <i className="fas fa-smile-wink"></i>
                                 <div className="container-main__bottom-search__list-icon">
@@ -394,7 +405,7 @@ const profileFriend = async () => {
                             <div className="container-main__bottom-thumb-up">
                                 <FontAwesomeIcon icon={faThumbsUp} />
                             </div>
-                            <div className="container-main__bottom-send">
+                            <div className="container-main__bottom-send"  onClick={handleSubmit}>
                                 <FontAwesomeIcon icon={faArrowAltCircleRight} />
                             </div>
                         </div>

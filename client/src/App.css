@@ -666,6 +666,7 @@ footer span:hover {
   overflow: hidden;
   border: 1px solid var(--border-color);
   flex-shrink: 0;
+  position: relative;
 }
 
 .container-left__item-avatar-img {
@@ -675,6 +676,7 @@ footer span:hover {
 .container-left__item-info {
   margin-left: 8px;
   margin-right: 8px;
+  position: relative;
 }
 
 .container-left__item-info-name {
@@ -758,6 +760,7 @@ footer span:hover {
 .container-main__head-left {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .container-main__head-left-avt {
@@ -1120,7 +1123,7 @@ footer span:hover {
 }
 
 .container-main__bottom-send {
-  display: none;
+  /* display: none; */
 }
 
 /* --------------------------------- */
@@ -1318,4 +1321,25 @@ footer span:hover {
 .color-text_while {
   color: gray;
   font-weight: 400;
+}
+.status_active {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  right: 152px;
+}
+.status_active1 {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  border-radius: 50%;
+  position: absolute;
+  left: 30px;
+  bottom: 3px;
+}
+.hidden {
+  display: block;
 }
