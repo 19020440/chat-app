@@ -57,8 +57,8 @@ export class ActionStore {
         })
     }
 
-    action_setCurrentConversation(index) {
-        this.currentConversation = index;
+    action_setCurrentConversation(convId) {
+        this.currentConversation = convId;
     }
 
     action_countTextNotSeen(data) { 
@@ -83,7 +83,8 @@ export class ActionStore {
         }
     }
 
-    action_updateConversationSeenOutRoomSeft(index) {
+    action_updateConversationSeenOutRoomSeft(covId) {
+        const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
         this.conversations[index].lastText.sendSeen = false;
     }
 

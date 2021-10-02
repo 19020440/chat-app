@@ -5,11 +5,11 @@ import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
 import { Link } from 'react-router-dom';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { fab } from '@fortawesome/free-brands-svg-icons'
+import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
 import {Modal} from 'antd'
 import { faChevronRight, faCog, faExclamation, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
-library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight) 
+library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight,faFacebookMessenger) 
 const header = observer((props) => {
     const AuthStore = useStore('AuthStore');
     const {user} = AuthStore;
@@ -17,7 +17,6 @@ const header = observer((props) => {
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const ref = useRef(null);
     const [action, set_action] = useState(true);
-    console.log("header");
     const handleTheme = async () => {
         
         await AuthStore.action_setTheme();
@@ -108,6 +107,13 @@ const header = observer((props) => {
                                         : PF + "person/noAvatar.png"
                                     } alt="" className="header-profile__img avt" />
                             <span className="header-profile__name last-name">{user?.username}</span>
+                        </li>
+
+                        <li className="header-right__item">
+                            <span className="header-right__item-count">
+                                1
+                            </span>
+                            <FontAwesomeIcon icon={faFacebookMessenger} className="header-right__item-notify"/>
                         </li>
                         
                         <li className="header-right__item">

@@ -10,6 +10,7 @@ import { Switch, Route,Link, useParams} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
+import ScrollToBottom from 'react-scroll-to-bottom'
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
 
 const ContrainerMess = observer((props) => {
@@ -25,7 +26,7 @@ const ContrainerMess = observer((props) => {
     const [newMessage, setNewMessage] = useState("");
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
-
+    const scrollRef = useRef(null);
 
     useEffect(() => {
       if(findIndexFromArrayLodash != -1) {
@@ -173,6 +174,10 @@ const profileFriend = async () => {
   }
   
 }
+
+useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
     return (
         <>
             <div className="container-main">
@@ -230,17 +235,19 @@ const profileFriend = async () => {
                             </div>
                         </div>
                             <ul className="container-main__list">
-                                {messages.map((m, index) => {
-                                    return (
-                                        <li className="container-main__item1">
-                                            <Message message={m} own={m.sender === user._id} 
-                                                // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
-                                                seen={m.seens}
-                                                lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
-                                            />
-                                        </li>
-                                    );
-                                })}
+                                {/* <div > */}
+                                    {messages.map((m, index) => {
+                                        return (
+                                            <li className="container-main__item1" ref={scrollRef}>
+                                                <Message message={m} own={m.sender === user._id} 
+                                                    // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
+                                                    seen={m.seens}
+                                                    lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
+                                                />
+                                            </li>
+                                        );
+                                    })}
+                                {/* </div> */}
                                 {/* <li className="container-main__item isReaction">
                                     <div className="container-main__item-avt">
                                         <img src="" alt="" className="container-main__item-avt__img" />

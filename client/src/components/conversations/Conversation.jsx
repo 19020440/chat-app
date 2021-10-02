@@ -5,7 +5,7 @@ import "./conversation.css";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash'
-import {sortConversationByUpdateAt} from '../../helper/function'
+import {sortConversationByUpdateAt,findObjectFromArrayLodash} from '../../helper/function'
 import ProfileRight from '../ProfileRight/ProfileRight'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -25,10 +25,19 @@ const Conversation = observer(() => {
     useEffect(() => {
         currentConversation.current = ActionStore.currentConversation;
     },[ActionStore.currentConversation])
-  const handlePassPage = (conversation) => {
+  const handlePassPage = async (conversation) => {
     history.push(`/messenger/${conversation._id}`);
     if(beforeConversation.current != currentConversation.current) {
-        
+        try {
+            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: beforeConversation.current});
+            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
+            const res = await ActionStore.action_getProfile(friendId);
+            ActionStore.action_updateConversationSeenOutRoomSeft(beforeConversation.current);
+            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
+  
+          } catch(err) {
+            console.log(err);
+          }
     }
   }
 
@@ -67,7 +76,12 @@ const Conversation = observer(() => {
                                 {conversations.map((conversation,index) => {
                                     return (
                                         < >
-                                        <li className="container-left__item" onClick={() => handlePassPage(conversation)}>
+                                        <li className="container-left__item" onClick={async () => {
+                                            currentConversation.current = conversation?._id
+                                            await handlePassPage(conversation);
+                                            beforeConversation.current = conversation?._id;
+                                            
+                                        }}>
                                             <ProfileRight conversation={conversation} seen={conversation.lastText?.seens?true:false}/>
                                         </li>
                                         </>
