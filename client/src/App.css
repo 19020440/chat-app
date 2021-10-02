@@ -820,6 +820,7 @@ footer span:hover {
 .container-main__body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .container-main__body::-webkit-scrollbar {
@@ -1328,8 +1329,15 @@ footer span:hover {
   background-color: green;
   border-radius: 50%;
   position: absolute;
-  bottom: 0;
-  right: 152px;
+  bottom: 2px;
+  left: 45px;
+}
+.status {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .status_active1 {
   width: 10px;

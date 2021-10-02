@@ -53,6 +53,18 @@ const App = observer(() => {
     AuthStore.socket?.on("setout_room", (conversationId) => {
       ActionStore.action_updateStatusSeenConversation(conversationId, "out")
     })
+
+    AuthStore.socket?.on("getMessage", (data) => {
+      console.log("this is text: ", data.text);
+     ActionStore.action_updateConnversationById({
+       updatedAt:Date(data.updatedAt),
+       lastText: {
+         sender: data.senderId,
+         text: data.text,
+         seens: data.seens,
+       }
+     }, data.conversationId);
+    })
    
  },[]);
 

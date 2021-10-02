@@ -119,6 +119,7 @@ io.on("connection", (socket) => {
 
   //out ROOM
   socket.on("out_room", ({socketId, conversationId}) => {
+    console.log("out room with socket: ", {socketId, conversationId});
     socket.to(socketId).emit("setout_room", conversationId);
   })
 
@@ -137,9 +138,10 @@ io.on("connection", (socket) => {
 
   //send and get message
   socket.on("sendMessage", async ({ senderId, receiverId, text,updatedAt,conversationId,seens }) => {
-    console.log("this is id: ",conversationId);
+
     try {
       const user = await User.findById(receiverId).exec();
+      console.log("this is user: ",user);
       io.to(user.socketId).emit("getMessage", {
         senderId,
         text,

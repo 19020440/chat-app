@@ -24,15 +24,39 @@ const Conversation = observer(() => {
 
     useEffect(() => {
         currentConversation.current = ActionStore.currentConversation;
+        beforeConversation.current = ActionStore.currentConversation;
     },[ActionStore.currentConversation])
-  const handlePassPage = async (conversation) => {
+  const handlePassPage =  (conversation) => {
     history.push(`/messenger/${conversation._id}`);
+    handleOutRoom();
+  }
+
+  const handleOutRoom = async () => {
+      
     if(beforeConversation.current != currentConversation.current) {
+        console.log("this is before: ", beforeConversation.current);
+         console.log("this is current: ", currentConversation.current);
         try {
             const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: beforeConversation.current});
             const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
             const res = await ActionStore.action_getProfile(friendId);
+
+            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
             ActionStore.action_updateConversationSeenOutRoomSeft(beforeConversation.current);
+  
+          } catch(err) {
+            console.log(err);
+          }
+    }
+  }
+
+  const handleOutComponent = async () => {
+    if(currentConversation.current !== null) {
+        try {
+            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: currentConversation.current});
+            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
+            const res = await ActionStore.action_getProfile(friendId);
+            ActionStore.action_updateConversationSeenOutRoomSeft(currentConversation.current);
             AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
   
           } catch(err) {
@@ -40,6 +64,13 @@ const Conversation = observer(() => {
           }
     }
   }
+
+  useEffect(() => {
+    return () => {
+        handleOutComponent();
+        console.log("out room");
+    }
+  },[])
 
   
   return (

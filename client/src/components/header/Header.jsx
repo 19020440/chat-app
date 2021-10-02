@@ -8,19 +8,20 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
 import {Modal} from 'antd'
+import {countTextNotSeen} from '../../helper/function'
 import { faChevronRight, faCog, faExclamation, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight,faFacebookMessenger) 
 const header = observer((props) => {
     const AuthStore = useStore('AuthStore');
+    const ActionStore = useStore('ActionStore');
     const {user} = AuthStore;
     const [visible, setVisible] = useState(false);
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const ref = useRef(null);
-    const [action, set_action] = useState(true);
+    const count = countTextNotSeen(ActionStore.conversations, AuthStore.user?._id);
     const handleTheme = async () => {
         
         await AuthStore.action_setTheme();
-        // set_action(!action);
     }
     const handleLogOut = async () => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", AuthStore.user._id);
@@ -110,9 +111,15 @@ const header = observer((props) => {
                         </li>
 
                         <li className="header-right__item">
-                            <span className="header-right__item-count">
-                                1
-                            </span>
+                            {count !=0 &&
+                                <>
+                                    <span className="header-right__item-count">
+                                        {count}
+                                    </span>
+                                </>
+                            
+                            }
+                            
                             <FontAwesomeIcon icon={faFacebookMessenger} className="header-right__item-notify"/>
                         </li>
                         

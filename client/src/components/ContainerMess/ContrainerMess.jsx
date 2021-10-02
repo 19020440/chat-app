@@ -10,6 +10,7 @@ import { Switch, Route,Link, useParams} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
+import ContainerRight from '../containerRight/ContainerRight'
 import ScrollToBottom from 'react-scroll-to-bottom'
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
 
@@ -30,9 +31,10 @@ const ContrainerMess = observer((props) => {
 
     useEffect(() => {
       if(findIndexFromArrayLodash != -1) {
-        ActionStore.action_setCurrentConversation(indexConversation);
+          console.log("this is current COV");
+        ActionStore.action_setCurrentConversation(covId);
       }
-    },[indexConversation])
+    },[])
 
     /// get message
     useEffect(() => {
@@ -65,6 +67,7 @@ const ContrainerMess = observer((props) => {
           ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
         }
         
+        
     
         const receiverId = currentConversation.members.find(
           (member) => member !== user._id
@@ -96,6 +99,10 @@ const ContrainerMess = observer((props) => {
 
 
       };
+
+      const handleShowRightConversation = () => {
+        AuthStore.action_setActiveContainer();
+        }
       // set arrives message
       useEffect(() => {
         arrivalMessage &&
@@ -105,14 +112,15 @@ const ContrainerMess = observer((props) => {
 
       useEffect(() => {
         AuthStore.socket?.on("getMessage", (data) => {
-           ActionStore.action_updateConnversationById({
-             updatedAt:Date(data.updatedAt),
-             lastText: {
-               sender: data.senderId,
-               text: data.text,
-               seens: data.seens,
-             }
-           }, data.conversationId);
+            console.log("this is text: ", data.text);
+        //    ActionStore.action_updateConnversationById({
+        //      updatedAt:Date(data.updatedAt),
+        //      lastText: {
+        //        sender: data.senderId,
+        //        text: data.text,
+        //        seens: data.seens,
+        //      }
+        //    }, data.conversationId);
            setArrivalMessage({
              sender: data.senderId,
              text: data.text,
@@ -209,7 +217,7 @@ useEffect(() => {
                             <div className="container-main__head-right-btn">
                                 <FontAwesomeIcon icon="fa-solid fa-video" />
                             </div>
-                            <div className="container-main__head-right-btn more-info-btn">
+                            <div className="container-main__head-right-btn more-info-btn" onClick={handleShowRightConversation}>
                                 <FontAwesomeIcon icon={faInfoCircle} />
                             </div>
                         </div>
@@ -418,6 +426,8 @@ useEffect(() => {
                         </div>
                     </div>
                 </div>
+        
+                                <ContainerRight />
         </>
     );
 })

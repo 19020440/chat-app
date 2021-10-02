@@ -85,19 +85,24 @@ export class ActionStore {
 
     action_updateConversationSeenOutRoomSeft(covId) {
         const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
-        this.conversations[index].lastText.sendSeen = false;
+        if(!this.conversations[index].lastText) this.conversations[index].lastText = {sendSeen: false}
+        else this.conversations[index].lastText.sendSeen = false;
+       
     }
 
     action_updateConversationSeenOutRoom(index) {
-        this.conversations[index].lastText.receiveSeen = false;
+        if(!this.conversations[index].lastText) this.conversations[index].lastText = {receiveSeen: false}
+        else this.conversations[index].lastText.receiveSeen = false;
     }
     action_updateStatusSeenSelf(covId) {
         const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
+        console.log("this is result: ",  this.conversations[result]);
         if(result != -1) {
             try {
-                this.conversations[result].lastText.sendSeen = true;
+                if(!this.conversations[result].lastText) this.conversations[result].lastText = {sendSeen: true}
+                else this.conversations[result].lastText.sendSeen = true;
                 if(this.conversations[result].lastText.seens != undefined) this.conversations[result].lastText.seens = true;
-                console.log("this is result: ", result);
+                
                 
             } catch(err) {
                 console.log(err);

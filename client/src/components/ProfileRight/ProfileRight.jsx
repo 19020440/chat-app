@@ -21,17 +21,18 @@ const ProfileRight = observer(({conversation, seen}) =>{
       getUser();
     }, [ conversation,ActionStore.offlineStatus]);
     return (
-        <>
-        <div className="container-left__item-avatar">
+        <div className="status">
+                                <div className="container-left__item-avatar">
                                     <img src={
                                     user?.profilePicture
                                         ? user.profilePicture
                                         : PF + "person/noAvatar.png"
                                     } alt="" className="container-left__item-avatar-img"/>
+                                    
                                 </div>
-                                
+                                <span className={user?.status ? "status_active" : " "}></span>
                                 <div className="container-left__item-info">
-                                    <span className={user?.status ? "status_active" : " "}></span>
+                                    
                                     <div className="container-left__item-info-name">
                                         {user?.username}
                                     </div>
@@ -67,7 +68,7 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                         <i className="fas fa-check-circle"></i>
                                     </div>
                                 </div>
-                                </>
+            </div>
     );
 });
    
