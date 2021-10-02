@@ -22,6 +22,7 @@
   background-color: rgb(245, 241, 241);
   color: black;
   max-width: 300px;
+  word-break: break-word;
 }
 .massafeTextAndSeen {
   position: relative;
@@ -31,9 +32,9 @@
   width: 12px;
   height: 12px;
   border-radius: 50px;
-  position: absolute;
-  top: 38px;
-  right: -3px;
+  /* position: absolute; */
+  /* top: 38px; */
+  /* right: -3px; */
   border: black 1px solid;
 }
 

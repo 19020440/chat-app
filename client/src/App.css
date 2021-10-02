@@ -677,6 +677,7 @@ footer span:hover {
   margin-left: 8px;
   margin-right: 8px;
   position: relative;
+  width: 70%;
 }
 
 .container-left__item-info-name {
@@ -1350,4 +1351,9 @@ footer span:hover {
 }
 .hidden {
   display: block;
+}
+.image_text {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
