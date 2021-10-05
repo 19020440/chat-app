@@ -184,7 +184,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 8800;
-server.listen( process.env.PORT || PORT, () => {
+
+server.listen( process.env.PORT || 8800, () => {
   console.log("Backend server is running!");
 });
