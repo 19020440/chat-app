@@ -10,6 +10,7 @@ import { Switch, Route,Link, useParams} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
+import Peer from "simple-peer"
 import ContainerRight from '../containerRight/ContainerRight'
 import ScrollToBottom from 'react-scroll-to-bottom'
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
@@ -28,10 +29,11 @@ const ContrainerMess = observer((props) => {
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
     const scrollRef = useRef(null);
+    const [stream, setStream] = useState();
+    const myVideo = useRef()
 
     useEffect(() => {
       if(findIndexFromArrayLodash != -1) {
-          console.log("this is current COV");
         ActionStore.action_setCurrentConversation(covId);
       }
     },[])
@@ -48,23 +50,34 @@ const ContrainerMess = observer((props) => {
           console.log(err);
         }
       };
+      
+      //call video
+      const handleCallVideo =  () => {
+            window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=${0}`)
+      }
 
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
         const statusSeen = ActionStore.conversations[indexConversation]?.lastText?.receiveSeen ? true:false;
         console.log(covId);
-        try {
+
+
+
           const message = {
             sender: user._id,
             text: newMessage,
-            conversationId: covId,
+            conversationId: conversationId,
             seens: statusSeen,
           };
+
+          const res = await ActionStore.action_saveMessage(message);
+
           const {conversationId,...lastText} = message;
+          
         if(indexConversation !== null){
-          // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
-          ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+            // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+            ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
         }
         
         
@@ -72,7 +85,7 @@ const ContrainerMess = observer((props) => {
         const receiverId = currentConversation.members.find(
           (member) => member !== user._id
         );
-        // AuthStore.socket?.emit("update_conversation", )
+
     
        AuthStore.socket?.emit("sendMessage", {
           senderId: user._id,
@@ -83,19 +96,13 @@ const ContrainerMess = observer((props) => {
           seens: statusSeen,
         });
     
-        try {
-          // const res = await axios.post("/messages", message);
-          // console.log(ActionStore.conversations[currentLastText.current]?.lastText?.receiveSeen);
-          const res = await ActionStore.action_saveMessage(message);
+
+          
           
           setMessages([...messages, res]);
           setNewMessage("");
-        } catch (err) {
-          console.log(err);
-        }
-        } catch(err) {
-          console.log(err);
-        }
+
+
 
 
       };
@@ -134,15 +141,6 @@ const ContrainerMess = observer((props) => {
          });
        }, []);
       
-  //Show rightbar
-  const handleShowRightBar = () => {
-    const element = showRef.current.getAttribute("class");
-    if(element.indexOf("hid") != -1) {
-      showRef.current.classList.remove("hid");
-    } else showRef.current.classList.add("hid");
-  }
-
-
 
     //Join Room 
     useEffect(() => {
@@ -162,7 +160,7 @@ const ContrainerMess = observer((props) => {
    }
      
 }
-console.log("re-render");
+
 
 //get Profile
 useEffect(() => {
@@ -214,7 +212,7 @@ useEffect(() => {
                             <div className="container-main__head-right-btn">
                                 <FontAwesomeIcon icon={faPhone} />
                             </div>
-                            <div className="container-main__head-right-btn">
+                            <div className="container-main__head-right-btn" onClick={handleCallVideo}>
                                 <FontAwesomeIcon icon="fa-solid fa-video" />
                             </div>
                             <div className="container-main__head-right-btn more-info-btn" onClick={handleShowRightConversation}>
@@ -426,6 +424,7 @@ useEffect(() => {
                         </div>
                     </div>
                 </div>
+                {stream &&  <video playsInline muted ref={myVideo} autoPlay style={{ width: "300px" }} />}
         
                                 <ContainerRight />
         </>

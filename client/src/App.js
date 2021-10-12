@@ -1,14 +1,16 @@
-import Home from "./pages/home/Home";
+
 import Login from "./pages/login/Login";
-import Profile from "./pages/profile/Profile";
+
 import Register from "./pages/register/Register";
+import {Modal} from 'antd'
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect,
+  useLocation
 } from "react-router-dom";
-import { useContext, useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
@@ -24,18 +26,23 @@ library.add( fab,faCheckSquare, faCoffee,faBell, faEllipsisH,faCaretDown,faSun,f
 const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
   // const { user } = useContext(AuthContext);
+  const [visible, setVisible] = useState(false);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user, login} = AuthStore;
+  const [userCall, setUserCall] = useState();
+  // const location = useLocation();
+  const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+  
 
   useLayoutEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
   },[]) 
 
-  useEffect(() => {
-   
-  },[]);
+  // useEffect(() => {
+  //  console.log(location);
+  // },[]);
   useEffect(() => {
     AuthStore.socket?.on("setUserOffline", (userId) => {
 
@@ -65,6 +72,12 @@ const App = observer(() => {
        }
      }, data.conversationId);
     })
+
+    ActionStore.socket?.on('callUser', async (data) => {
+      console.log(data);
+      setUserCall(data.from)
+      setVisible(true);
+    })
    
  },[]);
 
@@ -75,36 +88,52 @@ const App = observer(() => {
     token && await AuthStore.action_valdLogin();
     
   }
+  // accept call
+  const handleOk = async () => {
+     window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=1`, "_blank")
+  }
+
+  // tu choi call video
+  const handleCancel = () => {
+    AuthStore.action_setCallStatus("cancel");
+  }
   return (
-    <Router>
-      <Switch>
-        {/* <Route exact path="/">
-          {login ? <Home /> : <Register />}
-        </Route>
-        <Route path="/login">{login ? <Redirect to="/" /> : <Login />}</Route>
-        <Route path="/register">
-          {login ? <Redirect to="/" /> : <Register />}
-        </Route>
-        <Route path="/messenger">
-          {!login ? <Redirect to="/" /> : <Messenger />}
-        </Route>
-        <Route path="/profile/:_id">
-          <Profile />
-        </Route> */}
+    <>
+      <Router>
+        <Switch>
+          <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
+          <Route path="/register">
+            {login == 1 ? <Redirect to="/" /> : <Register />}
+          </Route>
 
-        <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
-        <Route path="/register">
-          {login == 1 ? <Redirect to="/" /> : <Register />}
-        </Route>
+          <ProtectedRoute 
+            path="/"
+            component={PrRouter}
+            login={login}
+            />
 
-        <ProtectedRoute 
-          path="/"
-          component={PrRouter}
-          login={login}
-          />
+        </Switch>
+      </Router>
 
-      </Switch>
-    </Router>
+      <Modal
+        title="Call Video"
+        visible={visible}
+        onOk={handleOk}
+        // confirmLoading={confirmLoading}
+        onCancel={handleCancel}
+        okText="Trả lời"
+        cancelText="Từ chối"
+      >
+      <img src={
+          userCall?.profilePicture
+              ? userCall?.profilePicture
+              : PF + "person/noAvatar.png"
+          } alt="" className="header-profile__img avt" />
+
+          <span>{userCall?.username}</span>
+
+      </Modal>
+    </>
   );
 
 })

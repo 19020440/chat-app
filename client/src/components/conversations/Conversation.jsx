@@ -34,8 +34,6 @@ const Conversation = observer(() => {
   const handleOutRoom = async () => {
       
     if(beforeConversation.current != currentConversation.current) {
-        console.log("this is before: ", beforeConversation.current);
-         console.log("this is current: ", currentConversation.current);
         try {
             const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: beforeConversation.current});
             const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);

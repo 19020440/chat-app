@@ -17,5 +17,6 @@ export const CONFIG_URL = {
    messenger: "/messenger",
    profile: "/profile/:_id",
    home: "/",
+   callvideo: '/callvideo'
   };
 

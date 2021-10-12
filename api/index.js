@@ -30,7 +30,7 @@ const io  = new Server(server, {
 dotenv.config();
 
 mongoose.connect(
-  'mongodb+srv://chatapp:thangthien26-01@chatapp.taojd.mongodb.net/chatting',
+  'mongodb://localhost:27017/chatting',
   { useNewUrlParser: true, useUnifiedTopology: true },
   () => {
     console.log("Connected to MongoDB");
@@ -169,7 +169,8 @@ io.on("connection", (socket) => {
   })
 
   //when disconnect
-  socket.on("disconnect", async () => {
+  socket.on("disconnect", async (data) => {
+    console.log("callVideo dis: ", data);
     console.log("a user disconnected!", socket.id);
     // removeUser(socket.id);
     // io.emit("getUsers", users);
@@ -182,6 +183,16 @@ io.on("connection", (socket) => {
     }
     io.emit("setUserOffline");
   });
+
+  //call video
+  socket.on("callUser", (data) => {
+    console.log("callUser: ", data);
+		io.to(data.userToCall).emit("callUser", { signal: data.signalData, from: data.from})
+	})
+
+	socket.on("answerCall", (data) => {
+		io.to(data.to).emit("callAccepted", data.signal)
+	})  
 });
 
 

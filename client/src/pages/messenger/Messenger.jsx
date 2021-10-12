@@ -4,7 +4,7 @@ import Conversation from "../../components/conversations/Conversation";
 import Message from "../../components/message/Message";
 import {findIndexLastTextSeen,sortConversationByUpdateAt} from '../../helper/function'
 import { useContext, useEffect, useRef, useState } from "react";
-import { Switch, Route,Link, useParams} from "react-router-dom";
+import { Switch, Route,Link, useParams,useHistory} from "react-router-dom";
 import axios from "axios";
 import { io } from "socket.io-client";
 import {useStore} from '../../hook';
@@ -22,9 +22,10 @@ import ContrainerMess from "../../components/ContainerMess/ContrainerMess";
 
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
 
-const Messenger = observer(() => {
+  const Messenger = observer(() => {
   const AuthStore = useStore('AuthStore');
-
+    const history = useHistory();
+    console.log(history);
   return (
 
     <div className={`app${AuthStore.themePage?"": " dark"}`}>
