@@ -101,7 +101,7 @@ const ContrainerMess = observer((props) => {
       };
 
       const handleCallVideo =  () => {
-        window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=${0}`)
+        window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${covId}&status=${0}`)
   }
 
       const handleShowRightConversation = () => {

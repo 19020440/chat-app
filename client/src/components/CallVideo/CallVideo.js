@@ -15,7 +15,7 @@ library.add(fab,faPhone,faMicrophone)
 const  CallVideo = observer((props) => {
     const search = useLocation().search;
     const from = new URLSearchParams(search).get('from');
-    const to = new URLSearchParams(search).get('to');
+    const room = new URLSearchParams(search).get('room');
     const signal = new URLSearchParams(search).get('signal');
     const sif = new URLSearchParams(search).get('sif');
     const status = new URLSearchParams(search).get('status');
