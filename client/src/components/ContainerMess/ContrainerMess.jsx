@@ -100,6 +100,10 @@ const ContrainerMess = observer((props) => {
 
       };
 
+      const handleCallVideo =  () => {
+        window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=${0}`)
+  }
+
       const handleShowRightConversation = () => {
         AuthStore.action_setActiveContainer();
         }
@@ -214,7 +218,7 @@ useEffect(() => {
                             <div className="container-main__head-right-btn">
                                 <FontAwesomeIcon icon={faPhone} />
                             </div>
-                            <div className="container-main__head-right-btn">
+                            <div className="container-main__head-right-btn" onClick={handleCallVideo}>
                                 <FontAwesomeIcon icon="fa-solid fa-video" />
                             </div>
                             <div className="container-main__head-right-btn more-info-btn" onClick={handleShowRightConversation}>

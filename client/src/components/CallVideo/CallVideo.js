@@ -16,6 +16,8 @@ const  CallVideo = observer((props) => {
     const search = useLocation().search;
     const from = new URLSearchParams(search).get('from');
     const to = new URLSearchParams(search).get('to');
+    const signal = new URLSearchParams(search).get('signal');
+    const sif = new URLSearchParams(search).get('sif');
     const status = new URLSearchParams(search).get('status');
     const AuthStore = useStore('AuthStore');
     const ActionStore = useStore('ActionStore')
@@ -24,7 +26,7 @@ const  CallVideo = observer((props) => {
     const {profileOfFriend} = ActionStore;
     const {user} = AuthStore;
 	const [ receivingCall, setReceivingCall ] = useState(false)
-	const [ caller, setCaller ] = useState("")
+	const [ caller, setCaller ] = useState()
 	const [ callerSignal, setCallerSignal ] = useState()
 	const [ callAccepted, setCallAccepted ] = useState(false)
 	const [ idToCall, setIdToCall ] = useState("")
@@ -38,16 +40,23 @@ const  CallVideo = observer((props) => {
 			setStream(stream)
 				myVideo.current.srcObject = stream
 		})
+    // AuthStore?.socket.on("callUser", (data) => {
+		// 	// setReceivingCall(true)
+    //   console.log(data);
+		// 	setCaller(data.from)
+		// 	setCallerSignal(data.signal)
+		// })
     },[])
     
     useEffect(() => {
-      console.log(status);
+
       if(status == 0) callUser();
     },[])
 
 
     useEffect(() => {
           if(status == 1) {
+            const signals = JSON.parse(signal);
             setCallAccepted(true)
             const peer = new Peer({
               initiator: false,
@@ -55,40 +64,41 @@ const  CallVideo = observer((props) => {
               stream: stream
             })
             peer.on("signal", (data) => {
-
-              AuthStore?.socket.emit("answerCall", { signal: data, to: caller })
+              console.log("this is socketid: ", sif); 
+              AuthStore?.socket.emit("answerCall", { signal: data, to: sif })
             })
             peer.on("stream", (stream) => {
               
               userVideo.current.srcObject = stream
             })
 
-            peer.signal(callerSignal)
+            peer.signal(signals)
             connectionRef.current = peer
         }
       },[])
 
       const callUser = async () => {
-
           const peer = new Peer({
             initiator: true,
             trickle: false,
             stream: stream
           })
           peer.on("signal", (data) => {
-            console.log("this is callUser Signal");
+            console.log(data);
             AuthStore?.socket.emit("callUser", {
-              userToCall: profileOfFriend.socketId,
+              userToCall: to,
               signalData: data,
-              from: user,
+              from: from,
+              fromSK: AuthStore.CallVideoSocketId,
             })
-          })
-          peer.on("stream", (stream) => {
-            console.log("this is callUser Stream");
-              userVideo.current.srcObject = stream
+          }) 
+          // peer.on("stream", (stream) => {
+
+          //     userVideo.current.srcObject = stream
             
-          })
+          // })
           AuthStore?.socket.on("callAccepted", (signal) => {
+            console.log(signal);
             setCallAccepted(true)
             peer.signal(signal)
           })
@@ -102,11 +112,11 @@ const  CallVideo = observer((props) => {
         
     }
 
-    useEffect(() => {
-      return () => {
-        AuthStore?.socket.emit("disconnect", "callVideo")
-      }
-    },[])
+    // useEffect(() => {
+    //   return () => {
+    //     AuthStore?.socket.emit("disconnect", "callVideo")
+    //   }
+    // },[])
     return (
         <div className="container_video">
         <div className="header_video">
@@ -128,14 +138,18 @@ const  CallVideo = observer((props) => {
         </div>
 
           <div className="video_container-another-user">
-            {/* {stream &&  <video playsInline muted ref={myVideo} autoPlay />} */}
+          {callAccepted ?
+					<video playsInline ref={userVideo} autoPlay style={{ width: "300px"}} />:
+					null}
           </div>
+          {console.log(userVideo)}
 
         <div className="footer_video-me">
           <div className="footer_click" onClick={handleCloseVideo}>
             <img src="https://img.icons8.com/external-those-icons-lineal-those-icons/24/000000/external-right-arrows-those-icons-lineal-those-icons-3.png"/>
           </div>
           <div className="footer_video-of-me">
+            {console.log(myVideo)}
             {stream &&  <video playsInline muted ref={myVideo} autoPlay style={{ width: "300px" }} />}
           </div>
         </div>

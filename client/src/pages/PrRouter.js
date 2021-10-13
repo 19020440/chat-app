@@ -12,6 +12,7 @@ import Messenger from "./messenger/Messenger";
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../hook'
 import _ from 'lodash'
+import CallVideo from '../components/CallVideo/CallVideo';
 const routes = [
     {
 
@@ -31,6 +32,12 @@ const routes = [
         name: "Profile",
         component: Home,
     },
+  //   {
+  //     exact: true,
+  //     path: ROUTE.callvideo,
+  //     name: "CallVideo",
+  //     component: CallVideo,
+  // },
     
   ];
 

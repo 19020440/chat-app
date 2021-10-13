@@ -2,13 +2,15 @@ import Home from "./pages/home/Home";
 import Login from "./pages/login/Login";
 import Profile from "./pages/profile/Profile";
 import Register from "./pages/register/Register";
+import { Modal } from "antd";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect,
+  
 } from "react-router-dom";
-import { useContext, useEffect, useLayoutEffect } from "react";
+import {  useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
@@ -20,21 +22,27 @@ import io from 'socket.io-client';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import { faCheckSquare, faCoffee,faBell, faEllipsisH, faCaretDown, faSun, faMoon, faPhone,faInfoCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import CallVideo from "./components/CallVideo/CallVideo";
 library.add( fab,faCheckSquare, faCoffee,faBell, faEllipsisH,faCaretDown,faSun,faMoon,faPhone,faInfoCircle,faPlusCircle) 
 const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
-  // const { user } = useContext(AuthContext);
+  const [visible, setVisible] = useState(false);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user, login} = AuthStore;
-
+  const from = useRef();
+  const [userCall, setUserCall] = useState();
+  const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+  const signal = useRef();
   useLayoutEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
   },[]) 
 
   useEffect(() => {
-   
+    socket.on("connect", () => {
+      AuthStore.action_setCallVideoSocketId(socket.id)
+    });
   },[]);
   useEffect(() => {
     AuthStore.socket?.on("setUserOffline", (userId) => {
@@ -55,7 +63,7 @@ const App = observer(() => {
     })
 
     AuthStore.socket?.on("getMessage", (data) => {
-      console.log("this is text: ", data.text);
+
      ActionStore.action_updateConnversationById({
        updatedAt:Date(data.updatedAt),
        lastText: {
@@ -65,17 +73,41 @@ const App = observer(() => {
        }
      }, data.conversationId);
     })
+
+    AuthStore.socket?.on('callUser', async (data) => {
+      signal.current = JSON.stringify(data.signal);
+      from.current = data.fromSK;
+      setUserCall(data.from)
+      setVisible(true);
+    })
    
  },[]);
 
   const validLogin = async () => {
-    
-    const token = await sessionStorage.getItem('token');
-    !token && AuthStore.action_setLogin(0);
-    token && await AuthStore.action_valdLogin();
+    if(window.location.pathname != '/callvideo') {
+      const token = await sessionStorage.getItem('token');
+      !token && AuthStore.action_setLogin(0);
+      token && await AuthStore.action_valdLogin();
+    } else {
+      const token = await sessionStorage.getItem('token');
+      token && await sessionStorage.removeItem('token');
+    }
+  }
+
+   // accept call
+   const handleOk = async () => {
+    setVisible(false);
+    window.open(`http://localhost:3000/callvideo?from=${userCall?.socketId}&to=${user?._id}&status=1&signal=${signal.current}&sif=${from.current}`, "_blank")
     
   }
+
+ // tu choi call video
+ const handleCancel = () => {
+  setVisible(false);
+   
+ }
   return (
+    <>
     <Router>
       <Switch>
         {/* <Route exact path="/">
@@ -96,6 +128,7 @@ const App = observer(() => {
         <Route path="/register">
           {login == 1 ? <Redirect to="/" /> : <Register />}
         </Route>
+        <Route path="/callvideo" component={CallVideo} exact/>
 
         <ProtectedRoute 
           path="/"
@@ -105,6 +138,26 @@ const App = observer(() => {
 
       </Switch>
     </Router>
+
+            <Modal
+                title="Call Video"
+                visible={visible}
+                onOk={handleOk}
+                // confirmLoading={confirmLoading}
+                onCancel={handleCancel}
+                okText="Trả lời"
+                cancelText="Từ chối"
+            >
+              <img src={
+                userCall?.profilePicture
+                    ? userCall?.profilePicture
+                    : PF + "person/noAvatar.png"
+                } alt="" className="header-profile__img avt" />
+
+                <span>{userCall?.username}</span>
+
+          </Modal>
+          </>
   );
 
 })

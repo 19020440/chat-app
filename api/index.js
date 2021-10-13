@@ -168,6 +168,26 @@ io.on("connection", (socket) => {
     io.emit('setOnline', "done")
   })
 
+  //call video
+  socket.on("callUser", async (data) => {
+    try {
+      const userFrom = await User.findById(data.from).exec();
+      const userTo = await User.findById(data.userToCall).exec();
+      !userTo && socket.emit('logBug', "User Call Is Not Exist");
+      !userFrom && socket.emit('logBug', "User Call Is Not Exist");
+      io.to(userTo.socketId).emit("callUser", { signal: data.signalData, from: userFrom, fromSK: data.fromSK})
+    } catch(err) {
+      console.log(err);
+    }
+    
+    
+  })
+
+	socket.on("answerCall", (data) => {
+    console.log("anserCall: ", data.to);
+		io.to(data.to).emit("callAccepted", data.signal)
+	})  
+
   //when disconnect
   socket.on("disconnect", async () => {
     console.log("a user disconnected!", socket.id);
