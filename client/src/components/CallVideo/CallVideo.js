@@ -78,35 +78,7 @@ const  CallVideo = observer((props) => {
       },[])
 
       const callUser = async () => {
-          const peer = new Peer({
-            initiator: true,
-            trickle: false,
-            stream: stream
-          })
-          peer.on("signal", (data) => {
-            console.log(data);
-            AuthStore?.socket.emit("callUser", {
-              userToCall: to,
-              signalData: data,
-              from: from,
-              fromSK: AuthStore.CallVideoSocketId,
-            })
-          }) 
-          // peer.on("stream", (stream) => {
-
-          //     userVideo.current.srcObject = stream
-            
-          // })
-          AuthStore?.socket.on("callAccepted", (signal) => {
-            console.log(signal);
-            setCallAccepted(true)
-            peer.signal(signal)
-          })
-
-          connectionRef.current = peer
-
-
-
+        
     }
     const handleCloseVideo = () => {
         
