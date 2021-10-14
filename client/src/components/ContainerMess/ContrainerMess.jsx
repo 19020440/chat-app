@@ -107,6 +107,10 @@ const ContrainerMess = observer((props) => {
 
       };
 
+      const handleCallVideo =  () => {
+        window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${covId}&status=${0}`)
+  }
+
       const handleShowRightConversation = () => {
         AuthStore.action_setActiveContainer();
         }

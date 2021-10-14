@@ -15,143 +15,120 @@ library.add(fab,faPhone,faMicrophone)
 const  CallVideo = observer((props) => {
     const search = useLocation().search;
     const from = new URLSearchParams(search).get('from');
-    const to = new URLSearchParams(search).get('to');
+    const roomID = new URLSearchParams(search).get('room');
     const status = new URLSearchParams(search).get('status');
     const AuthStore = useStore('AuthStore');
     const ActionStore = useStore('ActionStore')
     const myVideo = useRef();
-    const [ stream, setStream ] = useState();
-    const {profileOfFriend} = ActionStore;
-    const {user} = AuthStore;
-	const [ receivingCall, setReceivingCall ] = useState(false)
-	const [ caller, setCaller ] = useState("")
-	const [ callerSignal, setCallerSignal ] = useState()
-	const [ callAccepted, setCallAccepted ] = useState(false)
-	const [ idToCall, setIdToCall ] = useState("")
-	const [ callEnded, setCallEnded] = useState(false)
-	const [ name, setName ] = useState("")
-	const userVideo = useRef()
-	const connectionRef= useRef()
+    const [peers, setPeers] = useState([]);
+    const peersRef = useRef([]);
 
+
+    useEffect(() => {
+        console.log("this is socketId: ",AuthStore.socket);
+    },[])
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-			setStream(stream)
-				myVideo.current.srcObject = stream
-		})
-    },[])
+          AuthStore?.socket.emit("join room", {roomID,from});
+				  myVideo.current.srcObject = stream;
+
+         
+
+           AuthStore?.socket.on("all users", users => {
+                const peers = [];
+                users.forEach(userID => {
+                    console.log("part 2:",AuthStore.socket.id );
+                    const peer = createPeer(userID,AuthStore?.socket.id, stream);
+                    peersRef.current.push({
+                        peerID: userID,
+                        peer,
+                    })
+                    peers.push(peer);
+                })
+                setPeers(peers);
+            })
+
+           AuthStore?.socket.on("user joined", payload => {
+                const peer = addPeer(payload.signal, payload.callerID, stream);
+                peersRef.current.push({
+                    peerID: payload.callerID,
+                    peer,
+                })
+
+                setPeers(users => [...users, peer]);
+            });
+
+           AuthStore?.socket.on("receiving returned signal", payload => {
+                const item = peersRef.current.find(p => p.peerID === payload.id);
+                item.peer.signal(payload.signal);
+            });
+       
+		    })
+   
+    },[]);
+
+    function createPeer(userToSignal, callerID, stream) {
+      const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream,
+      });
+
+      peer.on("signal", signal => {
+         AuthStore?.socket.emit("sending signal", { userToSignal, callerID, signal })
+      })
+
+      return peer;
+  }
+
+  function addPeer(incomingSignal, callerID, stream) {
+      const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream,
+      })
+
+      peer.on("signal", signal => {
+         AuthStore?.socket.emit("returning signal", { signal, callerID })
+      })
+
+      peer.signal(incomingSignal);
+
+      return peer;
+  }
     
-    useEffect(() => {
-      console.log(status);
-      if(status == 0) callUser();
-    },[])
+   
 
 
-    useEffect(() => {
-          if(status == 1) {
-            setCallAccepted(true)
-            const peer = new Peer({
-              initiator: false,
-              trickle: false,
-              stream: stream
-            })
-            peer.on("signal", (data) => {
-
-              AuthStore?.socket.emit("answerCall", { signal: data, to: caller })
-            })
-            peer.on("stream", (stream) => {
-              
-              userVideo.current.srcObject = stream
-            })
-
-            peer.signal(callerSignal)
-            connectionRef.current = peer
-        }
-      },[])
-
-      const callUser = async () => {
-
-          const peer = new Peer({
-            initiator: true,
-            trickle: false,
-            stream: stream
-          })
-          peer.on("signal", (data) => {
-            console.log("this is callUser Signal");
-            AuthStore?.socket.emit("callUser", {
-              userToCall: profileOfFriend.socketId,
-              signalData: data,
-              from: user,
-            })
-          })
-          peer.on("stream", (stream) => {
-            console.log("this is callUser Stream");
-              userVideo.current.srcObject = stream
-            
-          })
-          AuthStore?.socket.on("callAccepted", (signal) => {
-            setCallAccepted(true)
-            peer.signal(signal)
-          })
-
-          connectionRef.current = peer
-
-
-
-    }
-    const handleCloseVideo = () => {
-        
-    }
-
-    useEffect(() => {
-      return () => {
-        AuthStore?.socket.emit("disconnect", "callVideo")
-      }
-    },[])
+    
     return (
-        <div className="container_video">
-        <div className="header_video">
-          {/* <div className="header_video-call-again">
-            <div>
-              <img src="https://img.icons8.com/ios/25/000000/video-call.png"/>
-            </div>
-           
-            <p>gọi lại</p>
-          </div>
-
-          <div className="header_video-close">
-            <div>
-              <img src="https://img.icons8.com/material-outlined/25/000000/delete-sign.png"/>
-            </div>
-            
-            <p>Đóng</p>
-          </div> */}
-
-        </div>
-
-          <div className="video_container-another-user">
-            {/* {stream &&  <video playsInline muted ref={myVideo} autoPlay />} */}
-          </div>
-
-        <div className="footer_video-me">
-          <div className="footer_click" onClick={handleCloseVideo}>
-            <img src="https://img.icons8.com/external-those-icons-lineal-those-icons/24/000000/external-right-arrows-those-icons-lineal-those-icons-3.png"/>
-          </div>
-          <div className="footer_video-of-me">
-            {stream &&  <video playsInline muted ref={myVideo} autoPlay style={{ width: "300px" }} />}
-          </div>
-        </div>
-
-        <div className="footer_video">
-          <div>
-            <img src="https://img.icons8.com/ios/25/000000/video-call.png"/>
-            <FontAwesomeIcon icon="fa-solid fa-microphone" />
-            <FontAwesomeIcon icon="fa-solid fa-phone" />
-          </div>
-          
-        </div>
-    </div>
+      <>
+      <video muted ref={myVideo} autoPlay playsInline />
+         {peers.map((peer, index) => {
+                return (
+                    <Video key={index} peer={peer} />
+                );
+            })}
+      </>
      
     );
 })
+
+
+const Video = (props) => {
+  const ref = useRef();
+
+  useEffect(() => {
+      props.peer.on("stream", stream => {
+          ref.current.srcObject = stream;
+      })
+  }, []);
+
+  return (
+      <video playsInline autoPlay ref={ref} />
+  );
+}
+
+
 
 export default CallVideo;

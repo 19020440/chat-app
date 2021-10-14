@@ -11,9 +11,11 @@ export  class AuthStore {
     statusSeenText = false;
     themePage = true;
     activeContainer = false;
+    CallVideoSocketId = "";
     constructor() {
         makeAutoObservable(this,{
             themePage: observable,
+            CallVideoSocketId: observable,
             activeContainer: observable,
             login: observable,
             socket: observable,
@@ -24,7 +26,11 @@ export  class AuthStore {
             action_setSocket: action,
             action_setSatusSeenText: action,
             action_setTheme: action,
+            action_setCallVideoSocketId: action,
         })
+    }
+    action_setCallVideoSocketId(data) {
+        this.CallVideoSocketId = data;
     }
     action_setActiveContainer() {
         this.activeContainer = !this.activeContainer;

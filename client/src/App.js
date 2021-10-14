@@ -2,15 +2,15 @@
 import Login from "./pages/login/Login";
 
 import Register from "./pages/register/Register";
-import {Modal} from 'antd'
+import { Modal } from "antd";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect,
-  useLocation
+  
 } from "react-router-dom";
-import { useEffect, useLayoutEffect, useState } from "react";
+import {  useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
@@ -22,27 +22,28 @@ import io from 'socket.io-client';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import { faCheckSquare, faCoffee,faBell, faEllipsisH, faCaretDown, faSun, faMoon, faPhone,faInfoCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import CallVideo from "./components/CallVideo/CallVideo";
 library.add( fab,faCheckSquare, faCoffee,faBell, faEllipsisH,faCaretDown,faSun,faMoon,faPhone,faInfoCircle,faPlusCircle) 
 const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
-  // const { user } = useContext(AuthContext);
   const [visible, setVisible] = useState(false);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user, login} = AuthStore;
+  const from = useRef();
   const [userCall, setUserCall] = useState();
-  // const location = useLocation();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
-  
-
+  const signal = useRef();
   useLayoutEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
   },[]) 
 
-  // useEffect(() => {
-  //  console.log(location);
-  // },[]);
+  useEffect(() => {
+    socket.on("connect", () => {
+      AuthStore.action_setCallVideoSocketId(socket.id)
+    });
+  },[]);
   useEffect(() => {
     AuthStore.socket?.on("setUserOffline", (userId) => {
 
@@ -62,7 +63,7 @@ const App = observer(() => {
     })
 
     AuthStore.socket?.on("getMessage", (data) => {
-      console.log("this is text: ", data.text);
+
      ActionStore.action_updateConnversationById({
        updatedAt:Date(data.updatedAt),
        lastText: {
@@ -73,8 +74,8 @@ const App = observer(() => {
      }, data.conversationId);
     })
 
-    ActionStore.socket?.on('callUser', async (data) => {
-      console.log(data);
+    AuthStore.socket?.on('callUser', async (data) => {
+      from.current = data.roomID;
       setUserCall(data.from)
       setVisible(true);
     })
@@ -82,58 +83,80 @@ const App = observer(() => {
  },[]);
 
   const validLogin = async () => {
-    
-    const token = await sessionStorage.getItem('token');
-    !token && AuthStore.action_setLogin(0);
-    token && await AuthStore.action_valdLogin();
-    
-  }
-  // accept call
-  const handleOk = async () => {
-     window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=1`, "_blank")
+    if(window.location.pathname != '/callvideo') {
+      const token = await sessionStorage.getItem('token');
+      !token && AuthStore.action_setLogin(0);
+      token && await AuthStore.action_valdLogin();
+    } else {
+      const token = await sessionStorage.getItem('token');
+      token && await sessionStorage.removeItem('token');
+    }
   }
 
-  // tu choi call video
-  const handleCancel = () => {
-    AuthStore.action_setCallStatus("cancel");
+   // accept call
+   const handleOk = async () => {
+    setVisible(false);
+    window.open(`http://localhost:3000/callvideo?from=${userCall?._id}&room=${from.current}&status=1`, "_blank")
+    
   }
+
+ // tu choi call video
+ const handleCancel = () => {
+  setVisible(false);
+   
+ }
   return (
     <>
-      <Router>
-        <Switch>
-          <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
-          <Route path="/register">
-            {login == 1 ? <Redirect to="/" /> : <Register />}
-          </Route>
+    <Router>
+      <Switch>
+        {/* <Route exact path="/">
+          {login ? <Home /> : <Register />}
+        </Route>
+        <Route path="/login">{login ? <Redirect to="/" /> : <Login />}</Route>
+        <Route path="/register">
+          {login ? <Redirect to="/" /> : <Register />}
+        </Route>
+        <Route path="/messenger">
+          {!login ? <Redirect to="/" /> : <Messenger />}
+        </Route>
+        <Route path="/profile/:_id">
+          <Profile />
+        </Route> */}
 
-          <ProtectedRoute 
-            path="/"
-            component={PrRouter}
-            login={login}
-            />
+        <Route path="/login">{login == 1 ? <Redirect to="/" /> : <Login />}</Route>
+        <Route path="/register">
+          {login == 1 ? <Redirect to="/" /> : <Register />}
+        </Route>
+        <Route path="/callvideo" component={CallVideo} exact/>
 
-        </Switch>
-      </Router>
+        <ProtectedRoute 
+          path="/"
+          component={PrRouter}
+          login={login}
+          />
 
-      <Modal
-        title="Call Video"
-        visible={visible}
-        onOk={handleOk}
-        // confirmLoading={confirmLoading}
-        onCancel={handleCancel}
-        okText="Trả lời"
-        cancelText="Từ chối"
-      >
-      <img src={
-          userCall?.profilePicture
-              ? userCall?.profilePicture
-              : PF + "person/noAvatar.png"
-          } alt="" className="header-profile__img avt" />
+      </Switch>
+    </Router>
 
-          <span>{userCall?.username}</span>
+            <Modal
+                title="Call Video"
+                visible={visible}
+                onOk={handleOk}
+                // confirmLoading={confirmLoading}
+                onCancel={handleCancel}
+                okText="Trả lời"
+                cancelText="Từ chối"
+            >
+              <img src={
+                userCall?.profilePicture
+                    ? userCall?.profilePicture
+                    : PF + "person/noAvatar.png"
+                } alt="" className="header-profile__img avt" />
 
-      </Modal>
-    </>
+                <span>{userCall?.username}</span>
+
+          </Modal>
+          </>
   );
 
 })

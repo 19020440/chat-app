@@ -32,12 +32,12 @@ const routes = [
         name: "Profile",
         component: Home,
     },
-    {
-      exact: true,
-      path: ROUTE.callvideo,
-      name: "CallVideo",
-      component: CallVideo,
-  },
+  //   {
+  //     exact: true,
+  //     path: ROUTE.callvideo,
+  //     name: "CallVideo",
+  //     component: CallVideo,
+  // },
     
   ];
 

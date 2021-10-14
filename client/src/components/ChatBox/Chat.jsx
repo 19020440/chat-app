@@ -44,7 +44,6 @@ const Chat = observer(() => {
       const handleSubmit = async (e) => {
         e.preventDefault();
         const statusSeen = ActionStore.conversations[indexConversation]?.lastText?.receiveSeen ? true:false;
-        console.log(covId);
         try {
           const message = {
             sender: user._id,
@@ -146,7 +145,6 @@ const Chat = observer(() => {
    }
      
 }
-console.log("re-render");
 
 //get Profile
 useEffect(() => {
