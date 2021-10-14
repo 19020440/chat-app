@@ -75,8 +75,7 @@ const App = observer(() => {
     })
 
     AuthStore.socket?.on('callUser', async (data) => {
-      signal.current = JSON.stringify(data.signal);
-      from.current = data.fromSK;
+      from.current = data.roomID;
       setUserCall(data.from)
       setVisible(true);
     })
@@ -97,7 +96,7 @@ const App = observer(() => {
    // accept call
    const handleOk = async () => {
     setVisible(false);
-    window.open(`http://localhost:3000/callvideo?from=${userCall?.socketId}&to=${user?._id}&status=1&signal=${signal.current}&sif=${from.current}`, "_blank")
+    window.open(`http://localhost:3000/callvideo?from=${userCall?._id}&room=${from.current}&status=1`, "_blank")
     
   }
 
