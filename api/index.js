@@ -77,20 +77,9 @@ app.use("/api/messages", messageRoute);
 
 
 //SOCKETIO
-let users = [];
+const users = {};
+const socketToRoom = {};
 
-// const addUser = (userId, socketId) => {
-//   !users.some((user) => user.userId === userId) &&
-//     users.push({ userId, socketId });
-// };
-
-const removeUser = (socketId) => {
-  users = users.filter((user) => user.socketId !== socketId);
-};
-
-const getUser = (userId) => {
-  return users.find((user) => user.userId === userId);
-};
 
 io.on("connection", (socket) => {
   //when ceonnect
@@ -125,15 +114,11 @@ io.on("connection", (socket) => {
 
   //take userId and socketId from user
   socket.on("addUser", async (userId) => {
-    // console.log(userId);
     try {
       const updateSocketId = await User.findByIdAndUpdate(userId, {socketId: socket.id});
     } catch(err) {
       console.log(err);
     }
-    
-    // addUser(userId, socket.id);
-    // io.emit("getUsers", users);
   });
 
   //send and get message
@@ -169,21 +154,44 @@ io.on("connection", (socket) => {
   })
 
   //call video
-  socket.on("join room", roomID => {
-    if (users[roomID]) {
-        const length = users[roomID].length;
-        if (length === 4) {
-            socket.emit("room full");
-            return;
-        }
-        users[roomID].push(socket.id);
-    } else {
-        users[roomID] = [socket.id];
-    }
-    socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
+  socket.on("join room", async ({roomID,from}) => {
+    
+      try {
+        const userF = await User.findById(from).exec();
+        if (users[roomID]) {
+          const length = users[roomID].length;
+          if (length === 4) {
+              socket.emit("room full");
+              return;
+          }
+          users[roomID].push(socket.id);
+        } else {
+              users[roomID] = [socket.id];
+              const memberInRoom = await Conversation.findById(roomID).exec();
+              
+              !memberInRoom && socket.emit('log bug', "Conversation not exist");
+              const membersA = memberInRoom.members.filter(item => item!=from);
+              membersA.forEach(async (item) => {
+                const user = await User.findById(item).exec();
+                io.to(user?.socketId).emit("callUser", {roomID,from: userF});
+              })
+              socket.on("callUser", (data) => {
 
-    socket.emit("all users", usersInThisRoom);
+              })
+        }
+       
+      socketToRoom[socket.id] = roomID;
+      const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
+  
+      socket.emit("all users", usersInThisRoom);
+      } catch(err) {
+        console.log(err);
+      }
+    
+  
+
+   
+    
 });
 
 socket.on("sending signal", payload => {
@@ -200,8 +208,6 @@ socket.on("returning signal", payload => {
   //when disconnect
   socket.on("disconnect", async () => {
     console.log("a user disconnected!", socket.id);
-    // removeUser(socket.id);
-    // io.emit("getUsers", users);
     try { 
       const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: "",status: false});
       console.log(removeSocketId);
@@ -210,6 +216,13 @@ socket.on("returning signal", payload => {
 
     }
     io.emit("setUserOffline");
+
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    if (room) {
+        room = room.filter(id => id !== socket.id);
+        users[roomID] = room;
+    }
   });
 });
 
