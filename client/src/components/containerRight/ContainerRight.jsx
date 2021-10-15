@@ -4,16 +4,20 @@ import {useStore} from '../../hook'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
-library.add(fab, faChevronDown) 
+import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch } from '@fortawesome/free-solid-svg-icons'
+library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash) 
 const ContainerRight = observer((props) => {
     const AuthStore = useStore('AuthStore')
     const ActionStore = useStore('ActionStore')
     const {profileOfFriend} = ActionStore;
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+    const [activeQVR, setActiveQVR] = useState(false);
     const [active, setActive] = useState(false);
     const handleShow = () => {
         setActive(!active);
+    }
+    const handleShowQVR = () => {
+        setActiveQVR(!activeQVR);
     }
     return (
         <>
@@ -41,15 +45,17 @@ const ContainerRight = observer((props) => {
                                 <div class="dropdown-head__title">
                                     Tuỳ chỉnh đoạn chat
                                 </div>
-                                <div class="dropdown-head__icon">
+                                <div class="dropdown-head__icon" hidden={active}>
                                     <FontAwesomeIcon icon={faChevronDown} />
-                                    
+                                </div>
+                                <div class="dropdown-head__icon" hidden={!active}>
+                                    <FontAwesomeIcon icon={faChevronUp} />
                                 </div>
                             </div>
                             <ul class={`dropdown-list${active? " active": ""}`}>
                                 <li class="dropdown-item">
                                     <div class="dropdown-item__icon">
-                                        <i  class="fas fa-dot-circle"></i>
+                                        <FontAwesomeIcon icon={faDotCircle} />
                                     </div>
                                     <div class="dropdown-item__text">
                                         Đổi chủ đề
@@ -58,7 +64,7 @@ const ContainerRight = observer((props) => {
                                 
                                 <li class="dropdown-item">
                                     <div class="dropdown-item__icon">
-                                        <i class="fas fa-thumbs-up"></i>
+                                        <FontAwesomeIcon icon={faThumbsUp} />
                                     </div>
                                     <div class="dropdown-item__text">
                                         Thay đổi biểu tượng cảm xúc
@@ -66,7 +72,7 @@ const ContainerRight = observer((props) => {
                                 </li>
                                 <li class="dropdown-item">
                                     <div class="dropdown-item__icon">
-                                        <i class="far fa-font-case"></i>
+                                        <FontAwesomeIcon icon={faFont} />
                                     </div>
                                     <div class="dropdown-item__text">
                                         Chỉnh sửa biệt danh
@@ -74,7 +80,7 @@ const ContainerRight = observer((props) => {
                                 </li>
                                 <li class="dropdown-item">
                                     <div class="dropdown-item__icon">
-                                        <i class="fal fa-search"></i>
+                                        <FontAwesomeIcon icon={faSearch} />
                                     </div>
                                     <div class="dropdown-item__text">
                                         Tìm kiếm trong cuộc trò chuyện
@@ -82,15 +88,53 @@ const ContainerRight = observer((props) => {
                                 </li>
                             </ul>
                         </div>
-                        <div class="container-right__menu-dropdown">
+                        <div class="container-right__menu-dropdown" onClick={handleShowQVR}>
                             <div class="dropdown-head">
                                 <div class="dropdown-head__title">
                                     {`Quyền riêng tư & hỗ trợ`}
                                 </div>
                                 <div class="dropdown-head__icon">
-                                    <FontAwesomeIcon icon={faChevronDown} />
+                                    <FontAwesomeIcon icon={faChevronDown} hidden={activeQVR}/>
+                                </div>
+                                <div class="dropdown-head__icon"  hidden={!activeQVR}>
+                                    <FontAwesomeIcon icon={faChevronUp}/>
                                 </div>
                             </div>
+                            <ul class={`dropdown-list${activeQVR? " activeQVR": ""}`}>
+                                <li class="dropdown-item">
+                                    <div class="dropdown-item__icon">
+                                        <FontAwesomeIcon icon={faBell}/>
+                                    </div>
+                                    <div class="dropdown-item__text">
+                                        Tắt âm cuộc trò chuyện
+                                    </div>
+                                </li>
+                                
+                                <li class="dropdown-item">
+                                    <div class="dropdown-item__icon">
+                                        <FontAwesomeIcon icon={faBan}/>
+                                    </div>
+                                    <div class="dropdown-item__text">
+                                        Bỏ qua tin nhắn
+                                    </div>
+                                </li>
+                                <li class="dropdown-item">
+                                    <div class="dropdown-item__icon">
+                                        <FontAwesomeIcon icon={faUserSlash}/>
+                                    </div>
+                                    <div class="dropdown-item__text">
+                                        Chặn
+                                    </div>
+                                </li>
+                                <li class="dropdown-item">
+                                    <div class="dropdown-item__icon">
+                                        <i class="fal fa-search"></i>
+                                    </div>
+                                    <div class="dropdown-item__text">
+                                        Có gì đó không ổn 
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                         <div class="container-right__menu-dropdown">
                             <div class="dropdown-head">

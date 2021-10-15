@@ -1,6 +1,7 @@
+const {getLessProfile} = require('../helper/funtion')
 const User = require("../models/User");
 
-module.exports  = new class AuthController {
+module.exports  = new class UserController {
 
 
     //update User
@@ -132,9 +133,14 @@ module.exports  = new class AuthController {
           }
           //searchUser
           async searchUser(req, res, next) {
-          
-            const result =  await User.find( { 'username' : { '$regex' : req.body.word, '$options' : 'i' } } );
-            res.json({content: result, status: 1})
+            try {
+              const result =  await User.find( { 'username' : { '$regex' : req.body.word, '$options' : 'i' } } );
+              const rs = getLessProfile(result)
+              res.json({content: rs, status: 1})
+            } catch(err) {
+              res.json({content: err, status: 0});
+            }T
+            
           }
    
 }

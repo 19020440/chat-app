@@ -649,6 +649,9 @@ footer span:hover {
 .container-left__item.active {
   background: var(--active-min);
 }
+.activeQVR {
+  display: block !important;
+}
 
 .container-left__item:hover {
   cursor: pointer;

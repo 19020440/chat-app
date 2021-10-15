@@ -2,10 +2,9 @@ import "./topbar.css";
 import { Search, Person, Chat, Notifications } from "@material-ui/icons";
 import { Link } from "react-router-dom";
 import { useContext, useRef, useState } from "react";
-import { AuthContext } from "../../context/AuthContext";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
-import {MessageArgsProps} from 'antd';
+import Header from '../header/Header'
 import {showMessageError,countTextNotSeen} from '../../helper/function'
 import { Modal, Button, Space } from 'antd';
 import 'antd/dist/antd.css';
@@ -46,7 +45,8 @@ const Topbar = observer(() =>{
   return (
     <>
     <div className="topbarContainer">
-      <div className="topbarLeft">
+      <Header/>
+      {/* <div className="topbarLeft">
         <Link to="/" style={{ textDecoration: "none" }}>
           <span className="logo">CHATTING</span>
         </Link>
@@ -80,9 +80,8 @@ const Topbar = observer(() =>{
        
         <div className="topbarIcons">
           <div className="topbarIconItem">
-            {/* <Person /> */}
             <img src="https://img.icons8.com/ios/25 /000000/user--v1.png" />
-            {/* <span className="topbarIconBadge"></span> */}
+
           </div>
           <div className="topbarIconItem">
             <Link to="/messenger"><img src="https://img.icons8.com/ios/25/000000/facebook-messenger--v1.png"/></Link> 
@@ -94,12 +93,12 @@ const Topbar = observer(() =>{
            
           </div>
           <div className="topbarIconItem">
-            {/* <Notifications /> */}
+
             <img src="https://img.icons8.com/material-outlined/25/000000/filled-appointment-reminders.png"/>
-            {/* <span className="topbarIconBadge"></span> */}
+
           </div>
           <div className="topbarIconItem topbarExitMain" onClick={handleSetting}>
-            {/* <Notifications /> */}
+
             <img src="https://img.icons8.com/ios-glyphs/25/000000/circled-chevron-down.png"/>
             <div className="topbarExit" ref={ref}>
                 <ul>
@@ -149,12 +148,12 @@ const Topbar = observer(() =>{
                   </li>
                 </ul>
             </div>
-            {/* <span className="topbarIconBadge"></span> */}
+
           </div>
 
           
         </div>
-      </div>
+      </div> */}
     </div>
 
       <Modal

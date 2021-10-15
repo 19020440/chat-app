@@ -183,6 +183,9 @@
   margin-right: 8px;
   color: var(--text-color);
 }
+.header-right__profile a {
+  color: var(--text-color);
+}
 
 .header-right__profile:hover {
   background-color: var(--bg-color);
@@ -211,6 +214,9 @@
   justify-content: center;
   margin: 0 4px;
   position: relative;
+}
+.header-right__item a {
+  color: black;
 }
 
 .header-right__item-count {
