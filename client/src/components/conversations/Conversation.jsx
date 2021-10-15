@@ -10,9 +10,9 @@ import ProfileRight from '../ProfileRight/ProfileRight'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faEllipsisH,faPenSquare,faVideo } from '@fortawesome/free-solid-svg-icons'
+import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faVideo } from '@fortawesome/free-solid-svg-icons'
 import { useHistory } from "react-router-dom";
-library.add( fab,faEllipsisH,faVideo,faPenSquare) 
+library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft) 
 
 const Conversation = observer(() => {
     const ActionStore = useStore('ActionStore');
@@ -21,7 +21,7 @@ const Conversation = observer(() => {
     const history = useHistory();
     const beforeConversation = useRef(null);
     const currentConversation = useRef(null);
-
+    const [actionSearchPeple,setActionSearchPeople] = useState(false);
     useEffect(() => {
         currentConversation.current = ActionStore.currentConversation;
         beforeConversation.current = ActionStore.currentConversation;
@@ -49,7 +49,16 @@ const Conversation = observer(() => {
           }
     }
   }
+  //SEARCH FRIEND
+  const handleSearchPeople = (e) => {
+      setActionSearchPeople(true);
+    ActionStore.action_searchFriend(e.target.value);
+  }
 
+  //END SEARCH
+  const handleEndSearch = () => {
+    setActionSearchPeople(false);
+  }
   const handleOutComponent = async () => {
     if(currentConversation.current !== null) {
         try {
@@ -95,9 +104,15 @@ const Conversation = observer(() => {
                         <div className="container-left__head-search">
                             <div className="container-left__search-box">
                                 <div className="container-left__search-box-icon">
-                                    <i className="fal fa-search"></i>
+                                <FontAwesomeIcon icon={faSearch} className={actionSearchPeple?"hidden_icon":""}/>
+                                <FontAwesomeIcon icon={faArrowLeft} className={!actionSearchPeple?"hidden_icon":""} onClick={handleEndSearch}/>
+                                
                                 </div>
-                                <input type="text" className="container-left__search-box-input" placeholder="Tìm kiếm trên Messenger"/>
+                                <input type="text" 
+                                className="container-left__search-box-input" 
+                                placeholder="Tìm kiếm trên Messenger"
+                                onChange={handleSearchPeople}
+                                />
                             </div>
                         </div>
                     </div>
@@ -119,8 +134,7 @@ const Conversation = observer(() => {
                                     )
                                 })}
                                 
-                            
-                            
+
                         </ul>
                     </div>
                 </div>

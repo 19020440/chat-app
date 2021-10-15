@@ -138,13 +138,7 @@ const ContrainerMess = observer((props) => {
          });
        }, []);
       
-  //Show rightbar
-  const handleShowRightBar = () => {
-    const element = showRef.current.getAttribute("class");
-    if(element.indexOf("hid") != -1) {
-      showRef.current.classList.remove("hid");
-    } else showRef.current.classList.add("hid");
-  }
+
 
 
 
