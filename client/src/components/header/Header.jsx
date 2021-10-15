@@ -102,16 +102,17 @@ const header = observer((props) => {
 
                     <ul className="header-right">
                         <li className="header-right__profile nav-wall">
-                            <img src={
+                            <Link to={`/profile/${user?._id}`}>  <img src={
                                     user?.profilePicture
                                         ? user?.profilePicture
                                         : PF + "person/noAvatar.png"
                                     } alt="" className="header-profile__img avt" />
-                            <span className="header-profile__name last-name">{user?.username}</span>
+                            <span className="header-profile__name last-name">{user?.username}</span></Link>
+                           
                         </li>
 
                         <li className="header-right__item">
-                            {count !=0 &&
+                            <Link to="/messenger">{count !=0 &&
                                 <>
                                     <span className="header-right__item-count">
                                         {count}
@@ -120,7 +121,8 @@ const header = observer((props) => {
                             
                             }
                             
-                            <FontAwesomeIcon icon={faFacebookMessenger} className="header-right__item-notify"/>
+                            <FontAwesomeIcon icon={faFacebookMessenger} className="header-right__item-notify"/></Link>
+                            
                         </li>
                         
                         <li className="header-right__item">

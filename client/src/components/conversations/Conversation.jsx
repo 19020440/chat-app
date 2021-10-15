@@ -10,9 +10,10 @@ import ProfileRight from '../ProfileRight/ProfileRight'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faEllipsisH,faPenSquare,faVideo } from '@fortawesome/free-solid-svg-icons'
+import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faVideo } from '@fortawesome/free-solid-svg-icons'
 import { useHistory } from "react-router-dom";
-library.add( fab,faEllipsisH,faVideo,faPenSquare) 
+import SearchFriend from '../searchFriend/search'
+library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft) 
 
 const Conversation = observer(() => {
     const ActionStore = useStore('ActionStore');
@@ -21,7 +22,7 @@ const Conversation = observer(() => {
     const history = useHistory();
     const beforeConversation = useRef(null);
     const currentConversation = useRef(null);
-
+    const [actionSearchPeple,setActionSearchPeople] = useState(false);
     useEffect(() => {
         currentConversation.current = ActionStore.currentConversation;
         beforeConversation.current = ActionStore.currentConversation;
@@ -47,7 +48,17 @@ const Conversation = observer(() => {
           }
     }
   }
+  //SEARCH FRIEND
+  const handleSearchPeople = (e) => {
+      setActionSearchPeople(true);
+    ActionStore.action_searchFriend(e.target.value);
+  }
 
+  //END SEARCH
+  const handleEndSearch = () => {
+    ActionStore.action_resetListSearchFriend();
+    setActionSearchPeople(false);
+  }
   const handleOutComponent = async () => {
     if(currentConversation.current !== null) {
         try {
@@ -66,7 +77,8 @@ const Conversation = observer(() => {
   useEffect(() => {
     return () => {
         handleOutComponent();
-        console.log("out room");
+        window.removeEventListener('beforeunload', handleOutComponent);
+        
     }
   },[])
 
@@ -93,32 +105,46 @@ const Conversation = observer(() => {
                         <div className="container-left__head-search">
                             <div className="container-left__search-box">
                                 <div className="container-left__search-box-icon">
-                                    <i className="fal fa-search"></i>
+                                <FontAwesomeIcon icon={faSearch} className={actionSearchPeple?"hidden_icon":""}/>
+                                <FontAwesomeIcon icon={faArrowLeft} className={!actionSearchPeple?"hidden_icon":""} onClick={handleEndSearch}/>
+                                
                                 </div>
-                                <input type="text" className="container-left__search-box-input" placeholder="Tìm kiếm trên Messenger"/>
+                                <input type="text" 
+                                className="container-left__search-box-input" 
+                                placeholder="Tìm kiếm trên Messenger"
+                                onChange={(e) => handleSearchPeople(e)}
+                                />
                             </div>
                         </div>
                     </div>
                     <div className="container-left__body">
                         <ul className="container-left__list">
-                            
-                                {conversations.map((conversation,index) => {
-                                    return (
-                                        < >
-                                        <li className="container-left__item" onClick={async () => {
-                                            currentConversation.current = conversation?._id
-                                            await handlePassPage(conversation);
-                                            beforeConversation.current = conversation?._id;
-                                            
-                                        }}>
-                                            <ProfileRight conversation={conversation} seen={conversation.lastText?.seens?true:false}/>
-                                        </li>
-                                        </>
-                                    )
-                                })}
+
+                            {actionSearchPeple ?
+                              _.isEmpty(ActionStore.listSearch) ? <> <span>Không tìm thấy kết quả phù hợp</span> </>
+                              :ActionStore.listSearch.map((user) => (
+                                <div>
+                                  <SearchFriend user={user} />
+                                </div>
+                              ))
+                              
+                            :conversations.map((conversation,index) => {
+                                return (
+                                    < >
+                                    <li className="container-left__item" onClick={async () => {
+                                        currentConversation.current = conversation?._id
+                                        await handlePassPage(conversation);
+                                        beforeConversation.current = conversation?._id;
+                                        
+                                    }}>
+                                        <ProfileRight conversation={conversation} seen={conversation.lastText?.seens?true:false}/>
+                                    </li>
+                                    </>
+                                )
+                            })
+                            }
                                 
-                            
-                            
+
                         </ul>
                     </div>
                 </div>

@@ -17,6 +17,9 @@
   bottom: 12px;
   left: 39px;
 }
+.hidden_icon {
+  display: none;
+}
 .conversation:hover {
   background-color: rgb(245, 243, 243);
 }

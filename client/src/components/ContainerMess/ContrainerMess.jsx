@@ -50,11 +50,8 @@ const ContrainerMess = observer((props) => {
           console.log(err);
         }
       };
-      
-      //call video
-      const handleCallVideo =  () => {
-            window.open(`http://localhost:3000/callvideo?from=${user._id}&to=${ActionStore.profileOfFriend?._id}&status=${0}`)
-      }
+
+    
 
       //send message
       const handleSubmit = async (e) => {
@@ -145,6 +142,9 @@ const ContrainerMess = observer((props) => {
          });
        }, []);
       
+
+
+
 
     //Join Room 
     useEffect(() => {

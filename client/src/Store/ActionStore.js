@@ -54,6 +54,7 @@ export class ActionStore {
             action_updateConnversationById: action,
             action_countTextNotSeen: action,
             action_setCurrentConversation: action,
+            action_resetListSearchFriend: action,
         })
     }
 
@@ -272,21 +273,28 @@ export class ActionStore {
             else return [];
         }
     }
-
+    /// SEARCH FRIEND
     async action_searchFriend(data) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.searchFriend}`;
         const json = {
             "word": data,
         }
-        const result = await Request.post(json, DOMAIN);
-        if(result) {
-            if(!_.isEmpty(result.content)) {
-                const res = getLessProfile(result.content);
-                this.listSearch = res;
-                return res;
+        if(data != "") {
+            const result = await Request.post(json, DOMAIN);
+            if(result) {
+                if(!_.isEmpty(result.content)) {
+                    const res = getLessProfile(result.content);
+                    this.listSearch = res;
+                    return res;
+                }
+                else return [];
             }
-            else return [];
-        }
+        } else this.listSearch = [];
+      
+    }
+
+    action_resetListSearchFriend() {
+        this.listSearch = [];
     }
 
     async action_getCovBySearch(userId, searchUserId) {
