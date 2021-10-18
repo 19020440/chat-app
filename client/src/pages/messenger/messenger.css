@@ -175,3 +175,6 @@
   }
 }
 */
+.container_chat_main {
+  display: flex;
+}
