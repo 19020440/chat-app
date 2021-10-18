@@ -303,7 +303,10 @@ export class ActionStore {
         const result = await Request.get({}, DOMAIN);
 
         if(result) {
-            if(!_.isEmpty(result.content)) return result.content;
+            if(!_.isEmpty(result.content)) {
+                this.action_setConversations([...this.conversations,result.content]);
+                return result.content;
+            }
             else return {};
         }
     }

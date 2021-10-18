@@ -76,6 +76,12 @@ const Conversation = observer(() => {
     }
   }
 
+  // create new conversation 
+  const handlenewConversation = async (user) => {
+    const result = await ActionStore.action_getCovBySearch(AuthStore?.user._id,user?._id);
+    history.push(`/messenger/${result._id}`);
+  }
+
   useEffect(() => {
     return () => {
         handleOutComponent();
@@ -125,7 +131,7 @@ const Conversation = observer(() => {
                             {actionSearchPeple ?
                               _.isEmpty(ActionStore.listSearch) ? <> <span>Không tìm thấy kết quả phù hợp</span> </>
                               :ActionStore.listSearch.map((user) => (
-                                <div>
+                                <div onClick={() => handlenewConversation(user)}>
                                   <SearchFriend user={user} />
                                 </div>
                               ))
