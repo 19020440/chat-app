@@ -19,6 +19,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp} from '@fortawesome/free-solid-svg-icons'
 import ContrainerMess from "../../components/ContainerMess/ContrainerMess";
+import { Row, Col } from 'antd';
 
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
 
@@ -31,13 +32,18 @@ library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGi
     <div className={`app${AuthStore.themePage?"": " dark"}`}>
         <div className="app-grid">
             <Header />
-            <div className="container">
-                <Conversation />
-                <Switch>
-                  <Route path="/messenger" exact component={ChatEmpty}/>
-                  <Route path="/messenger/:conversationId" exact component={ContrainerMess}/>
-                </ Switch>
-            </div>
+            <Row className="container" gutter={0}>
+                <Col span={6}>
+                  <Conversation />
+                </Col>
+                <Col span={18}> 
+                  <Switch>
+                    <Route path="/messenger" exact component={ChatEmpty}/>
+                    <Route path="/messenger/:conversationId" exact component={ContrainerMess}/>
+                  </ Switch>
+                </Col>
+                
+            </Row>
         </div>
     </div>
 

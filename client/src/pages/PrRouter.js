@@ -58,7 +58,7 @@ const PrRouter = observer((props) => {
       
     };
     getConversations();
-  }, []);
+  }, [AuthStore.user]);
 
     return (
         <Switch>
