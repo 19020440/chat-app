@@ -24,7 +24,6 @@ const ContrainerMess = observer((props) => {
     const {user} = AuthStore;
     const indexConversation = findIndexFromArrayLodash(ActionStore.conversations, {_id: conversationId});
     const currentConversation = ActionStore.conversations[indexConversation];
-    const showRef = useRef(null);
     const [newMessage, setNewMessage] = useState("");
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
