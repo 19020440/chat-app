@@ -1135,7 +1135,7 @@ footer span:hover {
 
 .container-right {
   width: 340px;
-  /* display: none; */
+  display: none;
   height: calc(100vh - var(--header-height));
   overflow-y: auto;
 }

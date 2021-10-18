@@ -36,7 +36,7 @@ library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGi
                 <Col span={6}>
                   <Conversation />
                 </Col>
-                <Col span={18}> 
+                <Col span={18} className="container_chat_main"> 
                   <Switch>
                     <Route path="/messenger" exact component={ChatEmpty}/>
                     <Route path="/messenger/:conversationId" exact component={ContrainerMess}/>
