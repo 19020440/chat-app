@@ -1,12 +1,12 @@
 import React from 'react';
-
+import StartMes from '../StartMess/StartMes'
+import './chatempty.css'
+import { Row, Col } from 'antd';
 function ChatEmpty(props) {
     return (
-        <div>
-            <span className="noConversationText">
-                Open a conversation to start a chat.
-              </span>
-        </div>
+        <Row className="chat_empty">
+           <StartMes />
+        </Row>
     );
 }
 
