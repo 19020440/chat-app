@@ -2,17 +2,19 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp} from '@fortawesome/free-solid-svg-icons'
+import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp, faSearch, faChevronDown, faChevronUp} from '@fortawesome/free-solid-svg-icons'
 import Message from "../../components/message/Message";
-import {findIndexLastTextSeen,sortConversationByUpdateAt,findIndexFromArrayLodash} from '../../helper/function'
+import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash} from '../../helper/function'
 import { useEffect, useRef, useState } from "react";
 import { Switch, Route,Link, useParams} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import ContainerRight from '../containerRight/ContainerRight'
-import ScrollToBottom from 'react-scroll-to-bottom'
-library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
+import SearchMess from '../searchMess/searchMess'
+import './containermess.css'
+
+library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp,faSearch,faChevronDown,faChevronUp) 
 
 const ContrainerMess = observer((props) => {
     const AuthStore = useStore('AuthStore')
@@ -138,7 +140,20 @@ const ContrainerMess = observer((props) => {
       
 
 
-
+       //sear mess
+       useEffect(() => {
+        if(AuthStore.stt !==null) {
+          let spanText = document.querySelector('.hight_light-text');
+          if(spanText) spanText.classList.remove("hight_light-text");
+          let result =  document.getElementById(`mess${AuthStore.stt}`);
+          const text =  result.querySelector('.messageText').innerHTML;
+          result.querySelector('.messageText').innerHTML = addSpantoText(text,AuthStore.textSearch)
+          document.getElementById(`mess${AuthStore.stt != 0 ? AuthStore.stt-1 : 0}`).scrollIntoView();  
+        } else {
+          let spanText = document.querySelector('.hight_light-text');
+          if(spanText) spanText.classList.remove("hight_light-text");
+        }
+       },[AuthStore.stt])
 
     //Join Room 
     useEffect(() => {
@@ -158,7 +173,6 @@ const ContrainerMess = observer((props) => {
    }
      
 }
-console.log("re-render");
 
 //get Profile
 useEffect(() => {
@@ -217,6 +231,8 @@ useEffect(() => {
                                 <FontAwesomeIcon icon={faInfoCircle} />
                             </div>
                         </div>
+                        {AuthStore.statusSearchMess &&  <SearchMess/>}
+                       
                     </div>
                     <div className="container-main__body">
                         <div className="container-main__list--no-content">
@@ -242,7 +258,7 @@ useEffect(() => {
                                 {/* <div > */}
                                     {messages.map((m, index) => {
                                         return (
-                                            <li className="container-main__item1" ref={scrollRef}>
+                                            <li className="container-main__item1" ref={scrollRef} id={`mess${index}`}>
                                                 <Message message={m} own={m.sender === user._id} 
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
                                                     seen={m.seens}
@@ -252,110 +268,6 @@ useEffect(() => {
                                         );
                                     })}
                                 {/* </div> */}
-                                {/* <li className="container-main__item isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item isUser isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item isUser isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn reaction-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li> */}
                                  
                             </ul>
                     </div>

@@ -113,8 +113,8 @@ const Conversation = observer(() => {
                         <div className="container-left__head-search">
                             <div className="container-left__search-box">
                                 <div className="container-left__search-box-icon">
-                                <FontAwesomeIcon icon={faSearch} className={actionSearchPeple?"hidden_icon":""}/>
-                                <FontAwesomeIcon icon={faArrowLeft} className={!actionSearchPeple?"hidden_icon":""} onClick={handleEndSearch}/>
+                                  <FontAwesomeIcon icon={faSearch} className={actionSearchPeple?"hidden_icon":""}/>
+                                  <FontAwesomeIcon icon={faArrowLeft} className={!actionSearchPeple?"hidden_icon":""} onClick={handleEndSearch}/>
                                 
                                 </div>
                                 <input type="text" 

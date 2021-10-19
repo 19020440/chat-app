@@ -12,9 +12,14 @@ export  class AuthStore {
     themePage = true;
     activeContainer = false;
     CallVideoSocketId = "";
+    statusSearchMess = false;
+    stt = null;
+    textSearch = null;
     constructor() {
         makeAutoObservable(this,{
+            stt:observable,
             themePage: observable,
+            statusSearchMess: observable,
             CallVideoSocketId: observable,
             activeContainer: observable,
             login: observable,
@@ -27,7 +32,18 @@ export  class AuthStore {
             action_setSatusSeenText: action,
             action_setTheme: action,
             action_setCallVideoSocketId: action,
+            action_searchMess: action,
+            action_setTextSearch:action,
         })
+    }
+    action_setTextSearch(data) {
+        this.textSearch = data;
+    }
+    action_setStt(data) {
+        this.stt = data;
+    }
+    action_searchMess(data) {
+        this.statusSearchMess = data;
     }
     action_setCallVideoSocketId(data) {
         this.CallVideoSocketId = data;

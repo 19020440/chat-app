@@ -19,6 +19,10 @@ const ContainerRight = observer((props) => {
     const handleShowQVR = () => {
         setActiveQVR(!activeQVR);
     }
+
+    const handleSearchMess = () => {
+        AuthStore.action_searchMess(true);
+    }
     return (
         <>
         <div class={`container-right${AuthStore.activeContainer?" active":""}`}>
@@ -40,8 +44,8 @@ const ContainerRight = observer((props) => {
                         </div>
                     </div>
                     <div class="container-right__menu">
-                        <div class="container-right__menu-dropdown" onClick={handleShow}>
-                            <div class="dropdown-head">
+                        <div class="container-right__menu-dropdown" >
+                            <div class="dropdown-head" onClick={handleShow}>
                                 <div class="dropdown-head__title">
                                     Tuỳ chỉnh đoạn chat
                                 </div>
@@ -82,7 +86,7 @@ const ContainerRight = observer((props) => {
                                     <div class="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faSearch} />
                                     </div>
-                                    <div class="dropdown-item__text">
+                                    <div class="dropdown-item__text" onClick={handleSearchMess}>
                                         Tìm kiếm trong cuộc trò chuyện
                                     </div>
                                 </li>
