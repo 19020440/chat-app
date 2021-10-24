@@ -88,3 +88,9 @@ export const showMessageError = (msg, onOk) => {
     string = string.replace(re, `<span class="hight_light-text">${find}</span>`);
     return string;
   }
+
+  export const deleteItemInArrayByIndex = (arr,index) => {
+    arr.splice(index,1);
+    console.log(arr);
+    return arr;
+  }

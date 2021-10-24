@@ -37,3 +37,28 @@
   padding-right: 10px;
   font-size: 16px;
 } */
+.container-main__bottom-search-multi-input-upload {
+  display: flex;
+  align-items: center;
+  padding: 10px !important;
+  position: absolute;
+  height: 60px;
+  top: -55px;
+  background-color: var(--bg-color);
+  width: 100%;
+  border-top-left-radius: 10px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+.container-main__bottom-search-multi-input-upload img {
+  width: 50px;
+}
+.dragBox input {
+  opacity: 0;
+}
+.container-main__bottom-search-multi-input {
+  position: relative;
+}
+.container-main__bottom-left-icon-gifphy {
+  position: relative;
+}

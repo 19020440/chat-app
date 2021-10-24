@@ -4,7 +4,6 @@ export const WsCode = {
     register: 'register',
     valid: "auth/valid",
     getConversation: 'chat/conversation',
-
     getProfile: 'users',
     getPost: "posts",
     getPostTimeLine: "posts/timeline",
@@ -16,4 +15,5 @@ export const WsCode = {
     searchFriend: "users/search",
     searchCov: 'conversations/find',
     updateConversation: "conversations/update",
+    deleteImage: 'upload/delete'
 }

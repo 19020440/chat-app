@@ -1064,6 +1064,7 @@ footer span:hover {
   background: var(--bg-color);
   flex: 1;
   border-radius: 20px;
+  position: relative;
 }
 
 .container-main__bottom-search-input {

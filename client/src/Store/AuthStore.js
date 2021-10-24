@@ -2,7 +2,9 @@ import {observable, makeAutoObservable, action} from 'mobx'
 import {Request} from '../helper/Request'
 import {CONFIG_URL} from '../helper/constant'
 import {WsCode} from '../helper/Wscode'
+import { deleteItemInArrayByIndex } from '../helper/function'
 import _ from 'lodash'
+import axios from 'axios'
 export  class AuthStore {
 
     login = 2;
@@ -15,9 +17,15 @@ export  class AuthStore {
     statusSearchMess = false;
     stt = null;
     textSearch = null;
+    textFile = [];
+    GifphyList = [];
+    textGif = null;
+    textFileName = [];
+    cancelImageIndex = null;
     constructor() {
         makeAutoObservable(this,{
             stt:observable,
+            textGif: observable,
             themePage: observable,
             statusSearchMess: observable,
             CallVideoSocketId: observable,
@@ -34,7 +42,96 @@ export  class AuthStore {
             action_setCallVideoSocketId: action,
             action_searchMess: action,
             action_setTextSearch:action,
+            action_uploadFile: action,
+            action_setTextFile: action,
+            action_getGifPhyList:action,
+            action_setTextGif: action,
+            action_resetTextFile: action,
+            cancelImageIndex: observable,
+            action_setCancelImageIndex: action,
         })
+    }
+
+
+    async action_setCancelImageIndex(index) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.deleteImage}`;
+        const json = {
+            path: this.textFileName[index],
+        }
+
+        const result = await Request.post(json, DOMAIN);
+
+        if(result) {
+            console.log(result.content);
+            this.textFileName = deleteItemInArrayByIndex(this.textFileName, index);
+            this.textFile = deleteItemInArrayByIndex(this.textFile, index);
+            // this.cancelImageIndex = index;
+        }
+
+        
+
+    }
+    action_resetTextFile() {
+        this.textFile = [];
+    }
+    action_setTextGif(data) {
+        this.textGif = data;
+    }
+    async action_getGifPhyList(data) {
+        if(data != "") {
+            try {
+                const result = await axios("https://api.giphy.com/v1/gifs/search", {
+                    params: {
+                        api_key: "DM9k1GJss6SpFFpsZM8gQeCYLA7FnuIw",
+                        q: data,
+                    }
+                });
+                console.log(result.data.data);
+                this.GifphyList = result.data.data;
+            } catch(er) {
+               console.log(er); 
+            }
+        } else {
+
+            try {
+                const result = await axios("https://api.giphy.com/v1/gifs/trending", {
+                    params: {
+                        api_key: "DM9k1GJss6SpFFpsZM8gQeCYLA7FnuIw"
+                    }
+                });
+        
+               this.GifphyList = result.data.data;
+            } catch(err) {
+                console.log(err);
+            }
+
+        }
+       
+       
+    }
+    action_setTextFile(data) {
+        this.textFile = [...this.textFile,data];
+    }
+    async action_uploadFile(file) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`
+       const result =  await file.map(async (value) => {
+
+            const formData = new FormData();
+            const fileName = Date.now() + value.name;
+            formData.append("name", fileName);
+            formData.append("file", value);
+            
+            
+    
+            const result = await Request.post(formData,DOMAIN);
+            if(result) {
+                const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`
+                await this.action_setTextFile(url);
+                this.textFileName = [...this.textFileName, result.content]
+            }
+        })
+        return result;
+       
     }
     action_setTextSearch(data) {
         this.textSearch = data;
@@ -87,6 +184,7 @@ export  class AuthStore {
                 this.user = result.content;
                 this.socket?.emit('validLogin');
                 this.socket?.on('setvalidLogin', (socketId) => {
+                    this.user.socketId = socketId;
                   this.socket?.emit("online",{email: this.user?.email, id : socketId});
                 })
             }

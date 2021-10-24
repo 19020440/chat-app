@@ -37,7 +37,6 @@ const Share = observer(() => {
       data.append("file", file);
       newPost.img = fileName;
       try {
-        // await axios.post("/upload", data);
         await ActionStore.action_upload(data);
       } catch (err) {}
     }
