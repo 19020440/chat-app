@@ -23,6 +23,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import { faCheckSquare, faCoffee,faBell, faEllipsisH, faCaretDown, faSun, faMoon, faPhone,faInfoCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import CallVideo from "./components/CallVideo/CallVideo";
+import Camera from "./components/camera/Camera";
 library.add( fab,faCheckSquare, faCoffee,faBell, faEllipsisH,faCaretDown,faSun,faMoon,faPhone,faInfoCircle,faPlusCircle) 
 const socket = io.connect("http://localhost:8800");
 const App = observer(() => {
@@ -128,7 +129,7 @@ const App = observer(() => {
           {login == 1 ? <Redirect to="/" /> : <Register />}
         </Route>
         <Route path="/callvideo" component={CallVideo} exact/>
-
+        <Route path="/camera" component={Camera} exact/>
         <ProtectedRoute 
           path="/"
           component={PrRouter}

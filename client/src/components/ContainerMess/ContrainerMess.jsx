@@ -2,18 +2,23 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp} from '@fortawesome/free-solid-svg-icons'
+import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp, faSearch, faChevronDown, faChevronUp, faUpload, faSmileWink, faImage} from '@fortawesome/free-solid-svg-icons'
 import Message from "../../components/message/Message";
-import {findIndexLastTextSeen,sortConversationByUpdateAt,findIndexFromArrayLodash} from '../../helper/function'
+import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash, deleteItemInArrayByIndex} from '../../helper/function'
 import { useEffect, useRef, useState } from "react";
-import { Switch, Route,Link, useParams} from "react-router-dom";
+import { Switch, Route,Link, useParams,useHistory} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import Peer from "simple-peer"
 import ContainerRight from '../containerRight/ContainerRight'
-import ScrollToBottom from 'react-scroll-to-bottom'
-library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,faArrowAltCircleRight,faThumbsUp) 
+import SearchMess from '../searchMess/searchMess'
+import UploadFile from '../UploadFile/UploadFile'
+import { Row,Col,Input } from 'antd';
+import './containermess.css'
+import Gifphy from '../Gifphy/Gifphy';
+library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
+  faArrowAltCircleRight,faThumbsUp,faSearch,faChevronDown,faChevronUp,faUpload,faSearch,faSmileWink,faImage) 
 
 const ContrainerMess = observer((props) => {
     const AuthStore = useStore('AuthStore')
@@ -28,9 +33,10 @@ const ContrainerMess = observer((props) => {
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
     const scrollRef = useRef(null);
-    const [stream, setStream] = useState();
-    const myVideo = useRef()
-
+    const history = useHistory(); 
+    const [files,setFiles] = useState([]);
+    const [openGif, setOpenGif] = useState(false);
+    const [actionCancel,setActionCancel] = useState(false);
     useEffect(() => {
       if(findIndexFromArrayLodash != -1) {
         ActionStore.action_setCurrentConversation(covId);
@@ -55,57 +61,95 @@ const ContrainerMess = observer((props) => {
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
-        const statusSeen = ActionStore.conversations[indexConversation]?.lastText?.receiveSeen ? true:false;
-        console.log(covId);
+        try {
+
+          const statusSeen = ActionStore.conversations[indexConversation]?.lastText?.receiveSeen ? true:false;
+          const receiverId = currentConversation.members.find(
+            (member) => member !== user._id
+          );
+
+          if(newMessage != "") {
+            const message = {
+              sender: user._id,
+              text: JSON.stringify(newMessage),
+              conversationId: covId,
+              seens: statusSeen,
+            };
+            const res = await ActionStore.action_saveMessage(message);
+            const {conversationId,...lastText} = message;
+            if(indexConversation !== null){
+              // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+              ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+            }
+         
+      
+            AuthStore.socket?.emit("sendMessage", {
+                senderId: user._id,
+                receiverId,
+                text: JSON.stringify(newMessage),
+                updatedAt: Date.now(),
+                conversationId: currentConversation?._id,
+                seens: statusSeen,
+            });
+            setMessages([...messages, res]);
+            setNewMessage("");
+          }
 
 
 
-          const message = {
-            sender: user._id,
-            text: newMessage,
-            conversationId: conversationId,
-            seens: statusSeen,
-          };
+              if(!_.isEmpty(AuthStore.textFile)) {
 
-          const res = await ActionStore.action_saveMessage(message);
+                AuthStore.socket?.emit("sendMessage", {
+                  senderId: user._id,
+                  receiverId,
+                  text: JSON.stringify(AuthStore.textFile),
+                  updatedAt: Date.now(),
+                  conversationId: currentConversation?._id,
+                  seens: statusSeen,
+                });
 
-          const {conversationId,...lastText} = message;
-          
-        if(indexConversation !== null){
-            // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
-            ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-        }
-        
-        
-    
-        const receiverId = currentConversation.members.find(
-          (member) => member !== user._id
-        );
-
-    
-       AuthStore.socket?.emit("sendMessage", {
-          senderId: user._id,
-          receiverId,
-          text: newMessage,
-          updatedAt: Date.now(),
-          conversationId: currentConversation?._id,
-          seens: statusSeen,
-        });
-    
-
-          
-          
-          setMessages([...messages, res]);
-          setNewMessage("");
+                const message = {
+                  sender: user._id,
+                  text: JSON.stringify(AuthStore.textFile),
+                  conversationId: covId,
+                  seens: statusSeen,
+                };
+                const res = await ActionStore.action_saveMessage(message);
+                const {conversationId,...lastText} = message;
+                if(indexConversation !== null){
+                  // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+                  ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+                }
+                AuthStore.action_resetTextFile(); 
+                setMessages([...messages, res]);
+                setFiles([]);
+              }
+              
 
 
 
+       } catch(err) {
+            console.log(err);
+          }
 
       };
 
+      //Gif Text
+
+      useEffect(() => {
+        if(AuthStore.textGif)  setMessages([...messages, AuthStore.textGif]);
+      },[AuthStore.textGif])
+      /// call video
       const handleCallVideo =  () => {
         window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${covId}&status=${0}`)
-  }
+      }
+
+      // Files
+
+      const handleFiles = (e) => {
+        AuthStore.action_uploadFile(Object.values(e.target.files));
+        setFiles([...files,...Object.values(e.target.files)]);
+      }
 
       const handleShowRightConversation = () => {
         AuthStore.action_setActiveContainer();
@@ -143,7 +187,20 @@ const ContrainerMess = observer((props) => {
       
 
 
-
+       //search mess
+       useEffect(() => {
+        if(AuthStore.stt !==null) {
+          let spanText = document.querySelector('.hight_light-text');
+          if(spanText) spanText.classList.remove("hight_light-text");
+          let result =  document.getElementById(`mess${AuthStore.stt}`);
+          const text =  result.querySelector('.messageText').innerHTML;
+          result.querySelector('.messageText').innerHTML = addSpantoText(text,AuthStore.textSearch)
+          document.getElementById(`mess${AuthStore.stt != 0 ? AuthStore.stt-1 : 0}`).scrollIntoView();  
+        } else {
+          let spanText = document.querySelector('.hight_light-text');
+          if(spanText) spanText.classList.remove("hight_light-text");
+        }
+       },[AuthStore.stt])
 
     //Join Room 
     useEffect(() => {
@@ -164,6 +221,10 @@ const ContrainerMess = observer((props) => {
      
 }
 
+//SELFIE 
+ const handleSelfie = () => {
+   history.push('/camera')
+ }
 
 //get Profile
 useEffect(() => {
@@ -184,9 +245,41 @@ const profileFriend = async () => {
   
 }
 
+//send mess by enter
+const handleSendMessByEnter = (e) => {
+  if(e.which == 13) {
+
+  }
+}
+//get gifphy list
+const handleGetGifphyList = () => {
+  setOpenGif(!openGif);
+}
+
 useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // cancel image
+
+  // const handleCancelImage = async (index) => {
+   
+  //     setFiles(deleteItemInArrayByIndex);
+  // } 
+
+  useEffect(() => {
+    // if(AuthStore.cancelImageIndex !== null) {
+    //   handleCancelImage();
+    // }
+  },[AuthStore.cancelImageIndex])
+
+  const cancel =  (index) => {
+    console.log(index);
+    const result =  deleteItemInArrayByIndex([...files],index);
+      setFiles(result);
+      // setActionCancel(!actionCancel)
+  }
+
     return (
         <>
             <div className="container-main">
@@ -222,6 +315,8 @@ useEffect(() => {
                                 <FontAwesomeIcon icon={faInfoCircle} />
                             </div>
                         </div>
+                        {AuthStore.statusSearchMess &&  <SearchMess/>}
+                       
                     </div>
                     <div className="container-main__body">
                         <div className="container-main__list--no-content">
@@ -247,7 +342,7 @@ useEffect(() => {
                                 {/* <div > */}
                                     {messages.map((m, index) => {
                                         return (
-                                            <li className="container-main__item1" ref={scrollRef}>
+                                            <li className="container-main__item1" ref={scrollRef} id={`mess${index}`}>
                                                 <Message message={m} own={m.sender === user._id} 
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
                                                     seen={m.seens}
@@ -257,138 +352,65 @@ useEffect(() => {
                                         );
                                     })}
                                 {/* </div> */}
-                                {/* <li className="container-main__item isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item isUser isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item isUser isReaction">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i  className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn reaction-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li className="container-main__item">
-                                    <div className="container-main__item-avt">
-                                        <img src="" alt="" className="container-main__item-avt__img" />
-                                    </div>
-                                    <div className="container-main__item-content">
-                                        <div className="container-main__item-text">
-                                            Thử màu đó coi sao
-                                        </div>
-                                        <div className="container-main__item-reaction">
-                                            <div className="container-main__item-reaction-icon">
-                                                <i className="fas fa-heart"></i>
-                                            </div>
-                                            <div className="container-main__item-reaction-total">
-                                                1
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="container-main__item-group">
-                                        <div className="container-main__item-group-btn">
-                                            <i  className="fas fa-heart"></i>
-                                        </div>
-                                        <div className="container-main__item-group-btn">
-                                            <i className="fad fa-trash-alt"></i>
-                                        </div>
-                                    </div>
-                                </li> */}
                                  
                             </ul>
                     </div>
                     <div className="container-main__bottom">
+                      
                         <div className="container-main__bottom-left">
                             <div className="container-main__bottom-left-icon">
-                                {/* <i className="fas fa-plus-circle"></i> */}
                                 <FontAwesomeIcon icon={faPlusCircle} />
                             </div>
-                            <div className="container-main__bottom-left-icon hide">
+                            <div className="container-main__bottom-left-icon hide" onClick={handleSelfie}>
                                 <FontAwesomeIcon icon={faPortrait} />
                             </div>
-                            <div className="container-main__bottom-left-icon hide">
+                            <label for="upload_files" className="container-main__bottom-left-icon hide">
                             
-                                <FontAwesomeIcon icon={faAirFreshener} />
-                            </div>
-                            <div className="container-main__bottom-left-icon hide">
-                            
-                            <FontAwesomeIcon icon={faGift} />
+                                <FontAwesomeIcon icon={faImage} />
+                            </label>
+                            <div className="container-main__bottom-left-icon hide container-main__bottom-left-icon-gifphy">
+                                {openGif && <Gifphy currentConversation={currentConversation}/> }
+                              <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList}/>
                             </div>
                         </div>
                         <div className="container-main__bottom-search">
-                            <input type="text" placeholder="Aa" className="container-main__bottom-search-input"  
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            value={newMessage}
-                            />
+                          
+                                    {!_.isEmpty(files) && 
+  
+                                      <div className="container-main__bottom-search-multi-input-upload">
+                                       
+                                        {
+                                          files.map((value, index) => {
+                                            return (
+                                              <UploadFile file={value}  cancel={cancel}indexs={index}/>
+                                              
+                                            )
+                                          })
+                                        
+                                        
+                                        }
+                                        
+        
+                                        <label for="upload_files">
+                                          <FontAwesomeIcon icon={faUpload} />
+                                        </label>
+                                    
+                                    </div>
+                                    
+                                    }
+                                    <span className="dragBox" hidden>
+                                          <input type="file" multiple onChange={handleFiles} id="upload_files" />
+                                        </span>
+                              
+                              
+                              <input type="text" placeholder="Aa" className="container-main__bottom-search-input"  
+                              onChange={(e) => setNewMessage(e.target.value)}
+                              value={newMessage}
+                              onKeyPress={handleSendMessByEnter}
+                              />
+                              
                             <div className="container-main__bottom-search__icon">
-                                <i className="fas fa-smile-wink"></i>
+                            <FontAwesomeIcon icon={faSmileWink} />
                                 <div className="container-main__bottom-search__list-icon">
                                     <div className="container-main__bottom-icon-item">
                                         <i  alt="&#xf4da;" className="fas fa-smile-wink"></i>
@@ -418,9 +440,9 @@ useEffect(() => {
                             </div>
                         </div>
                         <div className="container-main__bottom-right">
-                            <div className="container-main__bottom-thumb-up">
+                            {/* <div className="container-main__bottom-thumb-up">
                                 <FontAwesomeIcon icon={faThumbsUp} />
-                            </div>
+                            </div> */}
                             <div className="container-main__bottom-send"  onClick={handleSubmit}>
                                 <FontAwesomeIcon icon={faArrowAltCircleRight} />
                             </div>

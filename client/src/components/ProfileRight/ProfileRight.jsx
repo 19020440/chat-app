@@ -8,7 +8,12 @@ const ProfileRight = observer(({conversation, seen}) =>{
     const ActionStore = useStore('ActionStore');
     const AuthStore = useStore('AuthStore');
     const PF = process.env.REACT_APP_PUBLIC_FOLDER; 
+    const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
+   
     useEffect(() => {
+           console.log(lasttextLen);
+        
+        
     const getUser = async () => {
         try {
           const friendId = conversation.members.find((m) => m !== AuthStore.user?._id);
@@ -44,9 +49,11 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                                     
                                                     
                                                     {conversation?.lastText?.sender === AuthStore.user?._id &&  !_.isEmpty(conversation?.lastText) 
-                                                ? `You: ${conversation.lastText?.text}` 
+                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} ảnh` :`You: ${conversation.lastText?.text}` 
                                                 : !_.isEmpty(conversation?.lastText?.text) 
-                                                ? `${conversation?.lastText?.text}`: ""}.
+                                                ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
+                                                : `${conversation?.lastText?.text}`
+                                                : ""}.
                 
             
                                             </span>

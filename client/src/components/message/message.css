@@ -51,3 +51,7 @@
   background-color: #1877f2;
   color: black;
 }
+.mess_file {
+  height: 50px !important;
+  width: 50px !important;
+}

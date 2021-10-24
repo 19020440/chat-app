@@ -19,7 +19,10 @@ const server = http.createServer(app);
 const User = require('./models/User');
 const Messenger = require('./models/Message');
 const Conversation = require("./models/Conversation");
+const fs = require('fs')
+const { promisify } = require('util')
 
+const unlinkAsync = promisify(fs.unlink)
 const io  = new Server(server, {
   cors: {
       origin: 'http://localhost:3000',
@@ -63,10 +66,15 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), (req, res) => {
   try {
-    return res.status(200).json({content: "File uploded successfully", status: 1});
+    return res.status(200).json({content: req.body.name , status: 1});
   } catch (error) {
     console.error(error);
   }
+});
+
+app.post("/api/upload/delete",upload.single("file"),async (req, res) => {
+    await unlinkAsync(path.join(__dirname, `public/images/${req.body.path}`))
+    res.json({content: "succes", status: 1})
 });
 
 app.use("/api/auth", authRoute);

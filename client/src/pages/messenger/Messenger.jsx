@@ -25,8 +25,9 @@ library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGi
 
   const Messenger = observer(() => {
   const AuthStore = useStore('AuthStore');
-    const history = useHistory();
-    console.log(history);
+  useEffect(() => {
+    AuthStore.action_getGifPhyList("");
+  },[])
   return (
 
     <div className={`app${AuthStore.themePage?"": " dark"}`}>
