@@ -17,20 +17,21 @@ const Upload = observer(({file,cancel,indexs}) => {
         const arr = file.type.split('/');
 
         if(arr[1] == "png" || arr[1] == "jpeg") {
-            let fileName = URL.createObjectURL(file);
-            setUrl(fileName);
+            setUrl(file.preview);
             setIsImage(true);
         }
 
         
     },[])
 
-    const handleCancelImage = (e) => {
-        cancel(indexs);
-        AuthStore.action_setCancelImageIndex(indexs);
+    const handleCancelImage = async (e) => {
+       await  URL.revokeObjectURL(url);
+        cancel(file.id);
+        // AuthStore.action_setCancelImageIndex(indexs);
+       
     }
     return (
-        <div className="container_mess-uploadFile" >
+        <div className="container_mess-uploadFile">
             {isImage ?  
             <>
                <img 
