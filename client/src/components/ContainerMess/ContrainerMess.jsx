@@ -276,7 +276,7 @@ useEffect(() => {
   const cancel =  (index) => {
 
     const result = files.filter(value => value.id != index);
-      setFiles([]);
+      // setFiles([]);
       setFiles([...result]);
 
   }
