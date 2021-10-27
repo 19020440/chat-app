@@ -9,7 +9,6 @@ import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 library.add(fab,faXbox,faXingSquare) 
 const Upload = observer(({file,cancel,indexs}) => {
-    const [url, setUrl] = useState(null);
     const AuthStore = useStore('AuthStore')
     const [isImage,setIsImage] = useState(false);
 
@@ -17,20 +16,21 @@ const Upload = observer(({file,cancel,indexs}) => {
         const arr = file.type.split('/');
 
         if(arr[1] == "png" || arr[1] == "jpeg") {
-            let fileName = URL.createObjectURL(file);
-            setUrl(fileName);
+            // setUrl(file.preview);
             setIsImage(true);
         }
 
         
     },[])
 
-    const handleCancelImage = (e) => {
-        cancel(indexs);
+    const handleCancelImage = async (e) => {
+       await  URL.revokeObjectURL(file.preview);
+        cancel(file.id);
         AuthStore.action_setCancelImageIndex(indexs);
+       
     }
     return (
-        <div className="container_mess-uploadFile" >
+        <div className="container_mess-uploadFile">
             {isImage ?  
             <>
                <img 
@@ -39,7 +39,7 @@ const Upload = observer(({file,cancel,indexs}) => {
                onClick={handleCancelImage}
                />
                 
-                <img src={url}/>
+                <img src={file.preview}/>
             </>
             : <span>{file.name}</span>
             

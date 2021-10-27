@@ -148,7 +148,14 @@ const ContrainerMess = observer((props) => {
 
       const handleFiles = (e) => {
         AuthStore.action_uploadFile(Object.values(e.target.files));
-        setFiles([...files,...Object.values(e.target.files)]);
+
+        const file = Object.values(e.target.files).map((value,index) => {
+          value.preview = URL.createObjectURL(value)
+          value.id = Date.now() + "_" +index;
+          return value;
+        })
+
+        setFiles([...files,...file]);
       }
 
       const handleShowRightConversation = () => {
@@ -267,17 +274,14 @@ useEffect(() => {
   //     setFiles(deleteItemInArrayByIndex);
   // } 
 
-  useEffect(() => {
-    // if(AuthStore.cancelImageIndex !== null) {
-    //   handleCancelImage();
-    // }
-  },[AuthStore.cancelImageIndex])
+  
 
   const cancel =  (index) => {
-    console.log(index);
-    const result =  deleteItemInArrayByIndex([...files],index);
-      setFiles(result);
-      // setActionCancel(!actionCancel)
+
+    const result = files.filter(value => value.id != index);
+      // setFiles([]);
+      setFiles([...result]);
+
   }
 
     return (
@@ -378,16 +382,13 @@ useEffect(() => {
                                     {!_.isEmpty(files) && 
   
                                       <div className="container-main__bottom-search-multi-input-upload">
-                                       
+                                       {console.log(files)}
                                         {
                                           files.map((value, index) => {
                                             return (
-                                              <UploadFile file={value}  cancel={cancel}indexs={index}/>
-                                              
-                                            )
+                                              <UploadFile file={value}  cancel={cancel} indexs={index}/>
+                                            );
                                           })
-                                        
-                                        
                                         }
                                         
         

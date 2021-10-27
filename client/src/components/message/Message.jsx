@@ -38,9 +38,22 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
           {isText && <p className="messageText">{JSON.parse(message.text)}</p>}
           {isFile && 
             JSON.parse(message.text).map((value) => {
-              return (
-                <img src={value} className="mess_file"/>
+              const arr = value.split('.');
+              const arrName = value.split('_');
+             
+               if(arr[arr.length -1] == "pdf" || arr[arr.length -1] == "docx") return (
+                <a href={value} className="mess_file" style={{width:50, height:50}}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // e.target.download = arrName[arrName.length-1];
+                  }}
+                  download
+                >{arrName[arrName.length-1]}</a>
               )
+              else  
+              return (
+                  <img src={value} className="mess_file"/>
+                );
             })
           
           }
