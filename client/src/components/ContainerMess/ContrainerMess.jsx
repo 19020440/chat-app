@@ -35,12 +35,11 @@ const ContrainerMess = observer((props) => {
     const history = useHistory(); 
     const [files,setFiles] = useState([]);
     const [openGif, setOpenGif] = useState(false);
-    const [actionCancel,setActionCancel] = useState(false);
     useEffect(() => {
-      if(findIndexFromArrayLodash != -1) {
-        ActionStore.action_setCurrentConversation(covId);
-      }
-    },[])
+      // if(findIndexFromArrayLodash != -1) {
+        ActionStore.action_setCurrentConversation(conversationId);
+      // }
+    },[conversationId])
 
     /// get message
     useEffect(() => {
@@ -60,10 +59,10 @@ const ContrainerMess = observer((props) => {
         e.preventDefault();
         try {
 
-          const statusSeen = ActionStore.conversations[indexConversation]?.lastText?.receiveSeen ? true:false;
-          const receiverId = currentConversation.members.find(
-            (member) => member !== user._id
-          );
+          const statusSeen = currentConversation?.lastText?.receiveSeen ? true:false;
+          // const receiverId = currentConversation.members.find(
+          //   (member) => member.id !== user._id
+          // );
 
           if(newMessage != "") {
             const message = {
@@ -80,30 +79,17 @@ const ContrainerMess = observer((props) => {
             }
          
       
-            AuthStore.socket?.emit("sendMessage", {
-                senderId: user._id,
-                receiverId,
-                text: JSON.stringify(newMessage),
-                updatedAt: Date.now(),
-                conversationId: currentConversation?._id,
-                seens: statusSeen,
-            });
+            AuthStore.socket?.emit("sendMessage", res);
             setMessages([...messages, res]);
             setNewMessage("");
           }
+          
 
 
 
               if(!_.isEmpty(AuthStore.textFile)) {
 
-                AuthStore.socket?.emit("sendMessage", {
-                  senderId: user._id,
-                  receiverId,
-                  text: JSON.stringify(AuthStore.textFile),
-                  updatedAt: Date.now(),
-                  conversationId: currentConversation?._id,
-                  seens: statusSeen,
-                });
+               
 
                 const message = {
                   sender: user._id,
@@ -117,6 +103,8 @@ const ContrainerMess = observer((props) => {
                   // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
                   ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
                 }
+                AuthStore.socket?.emit("sendMessage", res);
+
                 AuthStore.action_resetTextFile(); 
                 setMessages([...messages, res]);
                 setFiles([]);
@@ -138,7 +126,7 @@ const ContrainerMess = observer((props) => {
       },[AuthStore.textGif])
       /// call video
       const handleCallVideo =  () => {
-        window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${covId}&status=${0}`)
+        window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${conversationId}&status=${0}`)
       }
 
       // Files
@@ -160,10 +148,11 @@ const ContrainerMess = observer((props) => {
         }
       // set arrives message
       useEffect(() => {
+        console.log("action this: ", currentConversation);
         arrivalMessage &&
         currentConversation?.members.includes(arrivalMessage.sender) &&
           setMessages((prev) => [...prev, arrivalMessage]);
-      }, [arrivalMessage, currentConversation]);
+      }, [arrivalMessage]);
 
       useEffect(() => {
         AuthStore.socket?.on("getMessage", (data) => {
@@ -176,11 +165,7 @@ const ContrainerMess = observer((props) => {
         //        seens: data.seens,
         //      }
         //    }, data.conversationId);
-           setArrivalMessage({
-             sender: data.senderId,
-             text: data.text,
-             createdAt: Date.now(),
-           });
+           setArrivalMessage(data);
           // setMessages((prev) => [...prev, {
           //   sender: data.senderId,
           //   text: data.text,
@@ -212,6 +197,7 @@ const ContrainerMess = observer((props) => {
       handleJoinRoom(currentConversation);
       }
     },[ActionStore.profileOfFriend])
+
   const handleJoinRoom = async (conversation) => {
     try {
     //  const friendId = conversation.members.find((m) => m !== user._id);
@@ -233,12 +219,12 @@ const ContrainerMess = observer((props) => {
 //get Profile
 useEffect(() => {
   profileFriend();
-},[ActionStore.offlineStatus, covId])
+},[ActionStore.offlineStatus, conversationId])
 
 const profileFriend = async () => {
   // ActionStore.action_setProfileOfFriend("");
   if(!_.isEmpty(currentConversation)) {
-    const friendId = currentConversation.members.find((m) => m !== user._id); 
+    const friendId = currentConversation.members.find((m) => m.id !== user._id); 
     try {
       const res = await ActionStore.action_getProfile(friendId);
       ActionStore.action_setProfileOfFriend(res);
@@ -250,11 +236,11 @@ const profileFriend = async () => {
 }
 
 //send mess by enter
-const handleSendMessByEnter = (e) => {
-  if(e.which == 13) {
+// const handleSendMessByEnter = (e) => {
+//   if(e.which == 13) {
 
-  }
-}
+//   }
+// }
 //get gifphy list
 const handleGetGifphyList = () => {
   setOpenGif(!openGif);
@@ -404,7 +390,7 @@ useEffect(() => {
                               <input type="text" placeholder="Aa" className="container-main__bottom-search-input"  
                               onChange={(e) => setNewMessage(e.target.value)}
                               value={newMessage}
-                              onKeyPress={handleSendMessByEnter}
+                              // onKeyPress={handleSendMessByEnter}
                               />
                               
                             <div className="container-main__bottom-search__icon">

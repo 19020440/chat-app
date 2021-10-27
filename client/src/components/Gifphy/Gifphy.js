@@ -21,9 +21,9 @@ const  Gifphy = observer(({currentConversation})  => {
     const handleSendGif = async (e) => {
         try {
             const statusSeen = currentConversation?.lastText?.receiveSeen ? true:false;
-            const receiverId = currentConversation.members.find(
-                (member) => member !== user._id
-            );
+            // const receiverId = currentConversation.members.find(
+            //     (member) => member !== user._id
+            // );
 
             const message = {
                 sender: user._id,
@@ -33,14 +33,7 @@ const  Gifphy = observer(({currentConversation})  => {
               };
               const res = await ActionStore.action_saveMessage(message);
               AuthStore.action_setTextGif(res);
-              AuthStore.socket?.emit("sendMessage", {
-                senderId: user._id,
-                receiverId,
-                text: JSON.stringify([e.target.src]),
-                updatedAt: Date.now(),
-                conversationId: currentConversation?._id,
-                seens: statusSeen,
-            });
+              AuthStore.socket?.emit("sendMessage", res);
            
         } catch(err) {
             console.log(err);

@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faVideo } from '@fortawesome/free-solid-svg-icons'
-import { useHistory } from "react-router-dom";
+import { useHistory,useParams } from "react-router-dom";
 import SearchFriend from '../searchFriend/search'
 library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft) 
 
@@ -23,33 +23,25 @@ const Conversation = observer(() => {
     const beforeConversation = useRef(null);
     const currentConversation = useRef(null);
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
+    const [conversationId,setConversationId] = useState(null);
     useEffect(() => {
-        currentConversation.current = ActionStore.currentConversation;
-        beforeConversation.current = ActionStore.currentConversation;
+      setConversationId(ActionStore.currentConversation);
+     
     },[ActionStore.currentConversation])
-  const handlePassPage =  (conversation) => {
-    history.push(`/messenger/${conversation._id}`);
-    handleOutRoom();
-  }
 
-  const handleOutRoom = async () => {
-      
-    if(beforeConversation.current != currentConversation.current) {
-        console.log("this is before: ", beforeConversation.current);
-         console.log("this is current: ", currentConversation.current);
-        try {
-            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: beforeConversation.current});
-            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
-            const res = await ActionStore.action_getProfile(friendId);
-
-            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
-            ActionStore.action_updateConversationSeenOutRoomSeft(beforeConversation.current);
-  
-          } catch(err) {
-            console.log(err);
-          }
+    const handlePassPage =  (conversation) => {
+      history.push(`/messenger/${conversation._id}`);
+      // handleOutRoom();   
     }
-  }
+
+    useEffect(() => {
+      return () => {
+        console.log("out this room: ", conversationId);
+       conversationId &&  handleOutComponent();
+      }
+    },[conversationId])
+   
+  
   //SEARCH FRIEND
   const handleSearchPeople = (e) => {
       setActionSearchPeople(true);
@@ -62,18 +54,18 @@ const Conversation = observer(() => {
     setActionSearchPeople(false);
   }
   const handleOutComponent = async () => {
-    if(currentConversation.current !== null) {
+    // if(currentConversation.current !== null) {
         try {
-            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: currentConversation.current});
-            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
+            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: conversationId});
+            const friendId = conversations.members.find((m) => m.id !== AuthStore.user?._id);
             const res = await ActionStore.action_getProfile(friendId);
-            ActionStore.action_updateConversationSeenOutRoomSeft(currentConversation.current);
+            ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
             AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
   
           } catch(err) {
             console.log(err);
           }
-    }
+    // }
   }
 
   // create new conversation 
@@ -82,13 +74,7 @@ const Conversation = observer(() => {
     history.push(`/messenger/${result._id}`);
   }
 
-  useEffect(() => {
-    return () => {
-        handleOutComponent();
-        window.removeEventListener('beforeunload', handleOutComponent);
-        
-    }
-  },[])
+
 
   
   return (

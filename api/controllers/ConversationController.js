@@ -4,16 +4,47 @@ const Conversation = require('../models/Conversation');
 module.exports  = new class ConversationController {
     //new Cov
     async newCov(req, res, next) {
-            const newConversation = new Conversation({
-              members: [req.body.senderId, req.body.receiverId],
-            });
+
+            // const sender = await User.findById(req.body.senderId).exec();
+            // const receive = await User.findById(req.body.receiverId).exec();
+            Promise.all([User.findById(req.body.senderId).exec(),User.findById(req.body.receiverId).exec()])
+              .then(async ([sender1, receive1]) => {
+                if(sender1 && receive1) {
+                  const member1 = {
+                    id: req.body.senderId,
+                    profilePicture: sender1.profilePicture,
+                    username: sender1.username,
+                  }
+  
+                  const member2 = {
+                    id: req.body.receiverId,
+                    profilePicture: receive1.profilePicture,
+                    username: receive1.username,
+                  }
+                  const newConversation = new Conversation({
+                    members: [member1, member2],
+                  });
+              
+                    const savedConversation = await newConversation.save();
+                    res.status(200).json(savedConversation);
+                 
+                    
+                 
+                } else {
+                  !sender1 &&  res.status(500).json({content: "nguoi dung khong ton tai", status: 0});
+                  !receive1 &&  res.status(500).json({content: "nguoi dung khong ton tai", status: 0});
+                }
+              
+
+              })
+              .catch(err => {
+                res.status(500).json({content: err, status: 0});
+              }) 
+                
+              
+            
           
-            try {
-              const savedConversation = await newConversation.save();
-              res.status(200).json(savedConversation);
-            } catch (err) {
-              res.status(500).json(err);
-            }
+            
     }
 
     //get conv of a user
@@ -21,7 +52,7 @@ module.exports  = new class ConversationController {
     async getCovOfUser(req, res, next) {
             try {
               const conversation = await Conversation.find({
-                members: { $in: [req.params.userId] },
+                members: { $elemMatch: {id: req.params.userId} },
               });
               res.status(200).json({content: conversation, status: 1});
             } catch (err) {

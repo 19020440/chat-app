@@ -97,9 +97,14 @@ io.on("connection", (socket) => {
     socket.emit("setvalidLogin", socket.id);
   })
 
+  //first_join_room
+  socket.on("first_join_room", data => {
+    console.log(data);
+    socket.join(data);
+  })
+
   //join room
-  socket.on("join_room", async ({socketId, conversationId,receiveId}) => {
-    console.log("thíis is recevei: ", receiveId);
+  socket.on("join_room", async ({socketId, conversationId,receiveId}) => { 
     try {
       const updateStatusSeen = await Messenger.updateMany(
         {$and:[{sender: receiveId},{seens:false}, {conversationId}]},
@@ -110,13 +115,14 @@ io.on("connection", (socket) => {
     } catch(err) {
       console.log(err);
     }
-   
+    socket.join(conversationId);
     socket.to(socketId).emit("setJoin_room", conversationId);
   })
 
   //out ROOM
   socket.on("out_room", ({socketId, conversationId}) => {
     console.log("out room with socket: ", {socketId, conversationId});
+    // socket.leave(conversationId);
     socket.to(socketId).emit("setout_room", conversationId);
   })
 
@@ -130,23 +136,18 @@ io.on("connection", (socket) => {
   });
 
   //send and get message
-  socket.on("sendMessage", async ({ senderId, receiverId, text,updatedAt,conversationId,seens }) => {
-
+  socket.on("sendMessage", async (res) => {
+    console.log("sendMessage: ", res.conversationId);
     try {
-      const user = await User.findById(receiverId).exec();
-      console.log("this is user: ",user);
-      io.to(user.socketId).emit("getMessage", {
-        senderId,
-        text,
-        updatedAt,
-        conversationId,
-        seens
-      });
+      // const user = await User.findById(receiverId).exec();
+      // console.log("this is user: ",user);
+      socket.to(res.conversationId).emit("getMessage", res);
     }catch(err) {
 
     }
     
   });
+
 //OOFLINE
   socket.on("userOffline", async(userId) => {
     console.log("this is offline :" ,userId);
@@ -154,11 +155,18 @@ io.on("connection", (socket) => {
   })
 
   //ONLINE
-  socket.on("online", async ({email, id}) => {
+  socket.on("online", async ({email, id,arrCovId}) => {
     console.log("email is: ", email);
-    const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
+    try {
+      const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
+      socket.to(arrCovId).emit('setOnline', arrCovId)
+
+    } catch(err) {
+
+    }
     
-    io.emit('setOnline', "done")
+    
+    
   })
 
   //call video

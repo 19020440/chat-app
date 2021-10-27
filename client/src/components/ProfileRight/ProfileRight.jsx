@@ -11,20 +11,22 @@ const ProfileRight = observer(({conversation, seen}) =>{
     const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
    
     useEffect(() => {
-           console.log(lasttextLen);
+        //    console.log(lasttextLen);
         
         
     const getUser = async () => {
         try {
-          const friendId = conversation.members.find((m) => m !== AuthStore.user?._id);
-          const res = await ActionStore.action_getProfile(friendId);
+          const friendId = conversation.members.find((m) => m.id !== AuthStore.user?._id);
+          const res = await ActionStore.action_getProfile(friendId.id);
           setUser(res);
         } catch (err) {
           console.log(err);
         }
       };
       getUser();
-    }, [ conversation,ActionStore.offlineStatus]);
+    }, []);
+
+    
     return (
         <div className="status">
                                 <div className="container-left__item-avatar">
@@ -43,20 +45,24 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                     </div>
                                     <div className="container-left__item-info-sub">
                                         <div className="container-left__item-info-last-mess">
-                                            <span className={`conversationName1${conversation?.lastText?.sender === AuthStore.user?._id ?
+                                            {!_.isEmpty(conversation?.lastText) &&
+                                                <span className={`conversationName1${conversation?.lastText?.sender === AuthStore.user?._id ?
                                                     " color-text_while" 
                                                     : seen? " color-text_while":" color-text_blue"}`}>
                                                     
                                                     
                                                     {conversation?.lastText?.sender === AuthStore.user?._id &&  !_.isEmpty(conversation?.lastText) 
-                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} ảnh` :`You: ${conversation.lastText?.text}` 
+                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} ảnh` :`You: ${JSON.parse(conversation.lastText?.text)}` 
                                                 : !_.isEmpty(conversation?.lastText?.text) 
                                                 ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
-                                                : `${conversation?.lastText?.text}`
-                                                : ""}.
-                
+                                                : `${JSON.parse(conversation?.lastText?.text)}`
+                                                : ""}
+                                                
             
                                             </span>
+                                            
+                                            }
+                                            
                                         </div>
                                         ·
                                         <div className="container-left__item-info-time">

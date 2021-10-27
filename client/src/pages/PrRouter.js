@@ -46,19 +46,7 @@ const routes = [
 const PrRouter = observer((props) => {
   const ActionStore = useStore('ActionStore')
   const AuthStore = useStore('AuthStore')
-  useEffect(() => {
-    const getConversations = async () => {
-      if(!_.isEmpty(AuthStore.user) && _.isEmpty(ActionStore.conversations)) {
-        try {
-          const res = await ActionStore.action_getConversation(AuthStore.user?._id);
-        } catch (err) {
-          console.log(err);
-        } 
-      }
-      
-    };
-    getConversations();
-  }, [AuthStore.user]);
+ 
 
     return (
         <Switch>

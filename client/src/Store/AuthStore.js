@@ -171,6 +171,7 @@ export  class AuthStore {
             this.login  = 1;
             !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
+            return true;
         }
 
     }
@@ -180,13 +181,15 @@ export  class AuthStore {
         const result = await Request.get({}, DOMAIN);
         if(result) {
             if(! _.isEmpty(result.content)) {
-                this.login = 1;
                 this.user = result.content;
+                
+                
                 this.socket?.emit('validLogin');
                 this.socket?.on('setvalidLogin', (socketId) => {
                     this.user.socketId = socketId;
-                  this.socket?.emit("online",{email: this.user?.email, id : socketId});
+                    this.login = 1;
                 })
+                
             }
         }
 

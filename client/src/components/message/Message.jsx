@@ -50,6 +50,16 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
                   download
                 >{arrName[arrName.length-1]}</a>
               )
+
+              else if(arr[arr.length -1] == "mp4" )  return (
+
+                <video width="320" height="240" controls style={{width:150, height:150}}>
+                  <source src={value} type="video/mp4"/>
+
+
+                </video>
+                
+              )
               else  
               return (
                   <img src={value} className="mess_file"/>

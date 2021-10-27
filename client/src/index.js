@@ -4,12 +4,14 @@ import App from "./App";
 import './App.css'
 import { AuthContextProvider } from "./context/AuthContext";
 import {stores, StoresProvider} from './Store/'
-
+import { BrowserRouter } from "react-router-dom";
 ReactDOM.render(
   <React.StrictMode>
     <AuthContextProvider>
       <StoresProvider value={stores}>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </StoresProvider>
     </AuthContextProvider>
   </React.StrictMode>,

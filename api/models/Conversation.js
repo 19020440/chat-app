@@ -8,6 +8,10 @@ const ConversationSchema = new mongoose.Schema(
     lastText: {
       type: Object,
       default: {},
+    },
+    name: {
+      type: String,
+      default: null,
     }
   },
   { timestamps: true }

@@ -35,10 +35,31 @@ const App = observer(() => {
   const [userCall, setUserCall] = useState();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const signal = useRef();
-  useLayoutEffect(() => {
+  useEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
   },[]) 
+  //get conversation 
+  useEffect(() => {
+    const getConversations = async () => {
+     
+      if(!_.isEmpty(AuthStore.user) && _.isEmpty(ActionStore.conversations)) {
+        console.log("login: ", login);
+        try {
+          const res = await ActionStore.action_getConversation(AuthStore.user?._id);
+          const arrCovId = res.map((value) => {
+            return value._id;
+          })
+          AuthStore.socket.emit("first_join_room", arrCovId);
+          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  AuthStore.user?.socketId,arrCovId});
+        } catch (err) {
+          console.log(err);
+        } 
+      }
+      
+    };
+   if(login == 1) getConversations();
+  }, [login]);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -51,7 +72,8 @@ const App = observer(() => {
      ActionStore.action_setOfflientStatus();
     })
     AuthStore.socket?.on("setOnline", (data) => {
-     ActionStore.action_setOfflientStatus();
+      
+    //  ActionStore.action_setOfflientStatus(); 
     })
 
     AuthStore.socket?.on("setJoin_room", (conversationId) => {
@@ -108,7 +130,7 @@ const App = observer(() => {
  }
   return (
     <>
-    <Router>
+    {/* <Router> */}
       <Switch>
         {/* <Route exact path="/">
           {login ? <Home /> : <Register />}
@@ -137,7 +159,7 @@ const App = observer(() => {
           />
 
       </Switch>
-    </Router>
+    {/* </Router> */}
 
             <Modal
                 title="Call Video"
