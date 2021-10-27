@@ -450,7 +450,7 @@ useEffect(() => {
                         </div>
                     </div>
                 </div>
-                {stream &&  <video playsInline muted ref={myVideo} autoPlay style={{ width: "300px" }} />}
+                
         
                                 <ContainerRight />
         </>
