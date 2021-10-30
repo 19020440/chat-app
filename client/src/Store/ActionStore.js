@@ -68,16 +68,26 @@ export class ActionStore {
         this.countTextNotSeen = countTextNotSeen(data);
     }
     ///update Status
-    action_updateStatusSeenConversation(covId, string) {
-        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
+    action_updateStatusSeenConversation({conversationId,senderId}, string) {
+        const result = findIndexFromArrayLodash(this.conversations, {_id: conversationId});
         if(result != -1) {
             try {
                 if(string == "join") {
-                    this.conversations[result].lastText.receiveSeen = true;
-                    console.log("join room with ID: ",result);
+                    const rs = this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) value.seen = true;
+                        return value;
+                    });
+                    this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) value.seen = true;
+                        return value;
+                    });
+                    console.log("join room with ID: ",rs);
                 }
                 else  {
-                    this.conversations[result].lastText.receiveSeen = false;
+                    this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) value.seen = false;
+                        return value;
+                    });
                     console.log("out room with ID: ",result);}
                 
             } catch(err) {
@@ -112,13 +122,11 @@ export class ActionStore {
             }
         }
         
-        console.log(this.conversations[result]);
     }
 
     async action_setConverSationByIndex(data, index) {
         try {
-            const receiveSeen = this.conversations[index].lastText.receiveSeen
-            if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+
             this.conversations[index] = {...this.conversations[index],updatedAt: data.updatedAt};
             this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
         } catch(err) {

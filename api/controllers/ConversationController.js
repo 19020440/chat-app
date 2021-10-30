@@ -21,8 +21,27 @@ module.exports  = new class ConversationController {
                     profilePicture: receive1.profilePicture,
                     username: receive1.username,
                   }
+
+                  const lastText1 = {
+                    id: req.body.senderId,
+                    profilePicture: sender1.profilePicture,
+                    seen: false,
+                  }
+  
+                  const lastText2 = {
+                    id: req.body.receiverId,
+                    profilePicture: receive1.profilePicture,
+                    seen: false,
+                  }
+
+
                   const newConversation = new Conversation({
                     members: [member1, member2],
+                    lastText: {
+                      sender: "",
+                      text: "",
+                      seens: [lastText1,lastText2]
+                    }
                   });
               
                     const savedConversation = await newConversation.save();

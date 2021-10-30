@@ -22,15 +22,15 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
       <div className="messageTop">
         {message.sender !== AuthStore.user._id &&
         
-          <>
-            <img
-            className="messageImg"
-            src={
-              ActionStore.profileOfFriend.profilePicture != "" ? ActionStore.profileOfFriend.profilePicture
-              : PF + "person/noAvatar.png"
-            }
-        />
-          </>
+        <>
+        <img
+        className="messageImg"
+        src={
+          ActionStore.profileOfFriend.profilePicture != "" ? ActionStore.profileOfFriend.profilePicture
+          : PF + "person/noAvatar.png"
+        }
+    />
+      </>
         
         }
         
@@ -70,12 +70,20 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
           {/* {message.sender == AuthStore.user._id && !_.isEmpty(ActionStore.lastText) && seen &&
             <> 
             
-            <img src={ActionStore.profileOfFriend.profilePicture} alt="" />
+            <img src={message.senderImage } alt="" />
             
             </>
           } */}
           {lastTextSeen && message.sender == AuthStore.user._id &&
-            <><img src={ActionStore.profileOfFriend.profilePicture} alt="" className="image_text"/></>
+            <>
+            {message.seens.map(value => {
+              if(value.id != AuthStore.user._id)
+              return (
+                <img src={value.profilePicture} alt="" className="image_text"/>
+              )
+            })}
+           
+            </>
           }
           {!seen && message.sender == AuthStore.user._id &&
             <>

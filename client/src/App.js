@@ -50,8 +50,10 @@ const App = observer(() => {
           const arrCovId = res.map((value) => {
             return value._id;
           })
+          AuthStore.action_setListRoom(arrCovId);
           AuthStore.socket.emit("first_join_room", arrCovId);
-          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  AuthStore.user?.socketId,arrCovId});
+          console.log(AuthStore.user?.socketId);
+          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  AuthStore.user?.socketId,arrCovId: arrCovId});
         } catch (err) {
           console.log(err);
         } 
@@ -67,22 +69,21 @@ const App = observer(() => {
     });
   },[]);
   useEffect(() => {
-    AuthStore.socket?.on("setUserOffline", (userId) => {
-
-     ActionStore.action_setOfflientStatus();
-    })
-    AuthStore.socket?.on("setOnline", (data) => {
-      
-    //  ActionStore.action_setOfflientStatus(); 
-    })
-
-    AuthStore.socket?.on("setJoin_room", (conversationId) => {
-      ActionStore.action_updateStatusSeenConversation(conversationId, "join");
+   
+    AuthStore.socket?.on("setJoin_room", (data) => {
+      console.log("joined rooom:", data.conversationId)
+      ActionStore.action_updateStatusSeenConversation(data , "join");
+      AuthStore.socket.emit("answer_join_room", {conversationId: data.conversationId, receiveId: AuthStore.user?._id})
       AuthStore.action_setSatusSeenText();
     })
 
-    AuthStore.socket?.on("setout_room", (conversationId) => {
-      ActionStore.action_updateStatusSeenConversation(conversationId, "out")
+    AuthStore.socket.on("answer_join_room",  (data) => {
+      ActionStore.action_updateStatusSeenConversation(data , "join");
+      AuthStore.action_setSatusSeenText();
+    })
+
+    AuthStore.socket?.on("setout_room", (data) => {
+      ActionStore.action_updateStatusSeenConversation(data, "out")
     })
 
     AuthStore.socket?.on("getMessage", (data) => {
@@ -104,6 +105,7 @@ const App = observer(() => {
     })
    
  },[]);
+ 
 
   const validLogin = async () => {
     if(window.location.pathname != '/callvideo') {

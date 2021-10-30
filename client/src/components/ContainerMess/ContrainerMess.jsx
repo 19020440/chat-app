@@ -4,16 +4,15 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp, faSearch, faChevronDown, faChevronUp, faUpload, faSmileWink, faImage} from '@fortawesome/free-solid-svg-icons'
 import Message from "../../components/message/Message";
-import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash, deleteItemInArrayByIndex} from '../../helper/function'
+import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash, findObjectFromArrayLodash} from '../../helper/function'
 import { useEffect, useRef, useState } from "react";
-import { Switch, Route,Link, useParams,useHistory} from "react-router-dom";
+import {useParams,useHistory} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import ContainerRight from '../containerRight/ContainerRight'
 import SearchMess from '../searchMess/searchMess'
 import UploadFile from '../UploadFile/UploadFile'
-import { Row,Col,Input } from 'antd';
 import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
@@ -28,6 +27,7 @@ const ContrainerMess = observer((props) => {
     const {user} = AuthStore;
     const indexConversation = findIndexFromArrayLodash(ActionStore.conversations, {_id: conversationId});
     const currentConversation = ActionStore.conversations[indexConversation];
+    // const [userProfile] = currentConversation.members.filter(val ue => value.id != AuthStore?.user._id);
     const [newMessage, setNewMessage] = useState("");
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
@@ -59,10 +59,9 @@ const ContrainerMess = observer((props) => {
         e.preventDefault();
         try {
 
-          const statusSeen = currentConversation?.lastText?.receiveSeen ? true:false;
-          // const receiverId = currentConversation.members.find(
-          //   (member) => member.id !== user._id
-          // );
+          const statusSeen = currentConversation.lastText.seens;
+          const seen = statusSeen.filter(value => value.seen == true);
+
 
           if(newMessage != "") {
             const message = {
@@ -70,6 +69,7 @@ const ContrainerMess = observer((props) => {
               text: JSON.stringify(newMessage),
               conversationId: covId,
               seens: statusSeen,
+              seen: !_.isEmpty(seen),
             };
             const res = await ActionStore.action_saveMessage(message);
             const {conversationId,...lastText} = message;
@@ -148,23 +148,13 @@ const ContrainerMess = observer((props) => {
         }
       // set arrives message
       useEffect(() => {
-        console.log("action this: ", currentConversation);
-        arrivalMessage &&
-        currentConversation?.members.includes(arrivalMessage.sender) &&
+        arrivalMessage && 
+        !_.isEmpty( currentConversation?.members.filter(value => value.id == arrivalMessage.sender)) &&
           setMessages((prev) => [...prev, arrivalMessage]);
       }, [arrivalMessage]);
 
       useEffect(() => {
         AuthStore.socket?.on("getMessage", (data) => {
-            console.log("this is text: ", data.text);
-        //    ActionStore.action_updateConnversationById({
-        //      updatedAt:Date(data.updatedAt),
-        //      lastText: {
-        //        sender: data.senderId,
-        //        text: data.text,
-        //        seens: data.seens,
-        //      }
-        //    }, data.conversationId);
            setArrivalMessage(data);
           // setMessages((prev) => [...prev, {
           //   sender: data.senderId,
@@ -196,14 +186,14 @@ const ContrainerMess = observer((props) => {
       if(!_.isEmpty(currentConversation)) {
       handleJoinRoom(currentConversation);
       }
-    },[ActionStore.profileOfFriend])
+    },[currentConversation])
 
   const handleJoinRoom = async (conversation) => {
     try {
     //  const friendId = conversation.members.find((m) => m !== user._id);
      const res = ActionStore.profileOfFriend;
-     AuthStore.socket?.emit("join_room", {socketId: res?.socketId, conversationId: conversation._id, receiveId: res?._id})
-     ActionStore.action_updateStatusSeenSelf(conversation._id); 
+     AuthStore.socket?.emit("join_room", {senderId: AuthStore?.user._id, conversationId: conversation._id, receiveId: res?._id})
+    //  ActionStore.action_updateStatusSeenSelf(conversation._id); 
      
    } catch (err) {
      console.log(err);
@@ -219,19 +209,24 @@ const ContrainerMess = observer((props) => {
 //get Profile
 useEffect(() => {
   profileFriend();
-},[ActionStore.offlineStatus, conversationId])
+},[ActionStore.offlineStatus,currentConversation])
 
 const profileFriend = async () => {
   // ActionStore.action_setProfileOfFriend("");
-  if(!_.isEmpty(currentConversation)) {
-    const friendId = currentConversation.members.find((m) => m.id !== user._id); 
-    try {
-      const res = await ActionStore.action_getProfile(friendId);
-      ActionStore.action_setProfileOfFriend(res);
-    } catch (err) {
-      console.log(err);
+
+    if(!_.isEmpty(currentConversation)) {
+      try {
+      
+        const friendId = currentConversation.members.find((m) => m.id !== user._id); 
+        
+        const res = await ActionStore.action_getProfile(friendId.id);
+        ActionStore.action_setProfileOfFriend(res);
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }
+   
+  
   
 }
 
@@ -250,12 +245,7 @@ useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // cancel image
 
-  // const handleCancelImage = async (index) => {
-   
-  //     setFiles(deleteItemInArrayByIndex);
-  // } 
 
   
 
@@ -332,7 +322,7 @@ useEffect(() => {
                                             <li className="container-main__item1" ref={scrollRef} id={`mess${index}`}>
                                                 <Message message={m} own={m.sender === user._id} 
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
-                                                    seen={m.seens}
+                                                    seen={m.seen}
                                                     lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
                                                 />
                                             </li>

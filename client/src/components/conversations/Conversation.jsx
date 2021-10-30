@@ -58,9 +58,9 @@ const Conversation = observer(() => {
         try {
             const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: conversationId});
             const friendId = conversations.members.find((m) => m.id !== AuthStore.user?._id);
-            const res = await ActionStore.action_getProfile(friendId);
+            const res = await ActionStore.action_getProfile(friendId.id);
             ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
-            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
+            AuthStore.socket?.emit("out_room",  {senderId: AuthStore.user._id, conversationId: conversations._id});
   
           } catch(err) {
             console.log(err);

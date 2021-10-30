@@ -9,7 +9,7 @@ router.post("/", async (req, res) => {
   const {conversationId, ...lastText}= req.body;
   try {
     const savedMessage = await newMessage.save();
-    const result = await Conversation.findByIdAndUpdate({_id: conversationId}, {lastText});
+    // const result = await Conversation.findByIdAndUpdate({_id: conversationId}, {lastText});
     res.status(200).json({content: savedMessage, status: 1});
   } catch (err) {
     res.status(500).json(err);

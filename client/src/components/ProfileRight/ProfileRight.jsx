@@ -9,22 +9,55 @@ const ProfileRight = observer(({conversation, seen}) =>{
     const AuthStore = useStore('AuthStore');
     const PF = process.env.REACT_APP_PUBLIC_FOLDER; 
     const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
-   
-    useEffect(() => {
-        //    console.log(lasttextLen);
-        
-        
-    const getUser = async () => {
-        try {
-          const friendId = conversation.members.find((m) => m.id !== AuthStore.user?._id);
-          const res = await ActionStore.action_getProfile(friendId.id);
-          setUser(res);
-        } catch (err) {
-          console.log(err);
-        }
-      };
-      getUser();
+    const [userProfile] = conversation.members.filter(value => value.id != AuthStore?.user._id);
+    useEffect(() => {   
+        userProfile.status = false;
+        setUser(userProfile);     
     }, []);
+
+
+
+    useEffect(() => {
+        AuthStore.socket?.on("setOnline", (data) => {
+
+                const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
+                console.log(conversation._id == result[0]);
+                if(conversation._id == result[0]) {
+                    ActionStore.action_setOfflientStatus();
+                   const newUser = {...userProfile};
+                   newUser.status = true;
+                   setUser(newUser);
+                   AuthStore.socket.emit("answerOnline", conversation._id)
+                }
+
+           
+                 })
+
+            AuthStore.socket?.on("setUserOffline", (arrCov) => {
+
+                const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
+                console.log(conversation._id == result[0]);
+                if(conversation._id == result[0]) {
+                    ActionStore.action_setOfflientStatus();
+                   const newUser = {...userProfile};
+                   newUser.status = false;
+                   setUser(newUser);
+               
+                }
+
+
+            }) 
+
+               AuthStore.socket.on("receive_anwerOnline", (covId) => {
+                if(conversation._id == covId) {
+                    ActionStore.action_setOfflientStatus();
+                    const newUser = {...userProfile};
+                    newUser.status = true;
+                    setUser(newUser);
+                   
+                 }
+               })
+    },[])
 
     
     return (
@@ -57,8 +90,6 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                                 ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
                                                 : `${JSON.parse(conversation?.lastText?.text)}`
                                                 : ""}
-                                                
-            
                                             </span>
                                             
                                             }

@@ -49,7 +49,7 @@ export const showMessageError = (msg, onOk) => {
 
   export const findIndexLastTextSeen = (data) => {
     if(_.size(data) >=1){
-      for(let i = _.size(data)-1; i >=0;--i)   if(data[i].seens) return i;
+      for(let i = _.size(data)-1; i >=0;--i)   if(data[i].seen) return i;
       return null;
     }
 

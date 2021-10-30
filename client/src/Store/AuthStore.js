@@ -22,8 +22,12 @@ export  class AuthStore {
     textGif = null;
     textFileName = [];
     cancelImageIndex = null;
+    listRoom = [];
+    listStatusCov = [];
     constructor() {
         makeAutoObservable(this,{
+            listStatusCov: observable,
+            listRoom: observable,
             stt:observable,
             textGif: observable,
             themePage: observable,
@@ -49,10 +53,15 @@ export  class AuthStore {
             action_resetTextFile: action,
             cancelImageIndex: observable,
             action_setCancelImageIndex: action,
+            action_setListRoom: action,
         })
     }
-
-
+    action_setListStatusCov(data) {
+        this.listStatusCov = [...this.listStatusCov, data]; 
+    }
+    action_setListRoom(data) {
+        this.listRoom = data;
+    }
     async action_setCancelImageIndex(index) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.deleteImage}`;
         const json = {
@@ -169,7 +178,7 @@ export  class AuthStore {
         if(result) {
             this.user = result.content;
             this.login  = 1;
-            !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
+            // !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
             return true;
         }

@@ -33,7 +33,7 @@ const io  = new Server(server, {
 dotenv.config();
 
 mongoose.connect(
-  'mongodb://localhost:27017/chatting',
+  'mongodb://localhost:27017/chatting2',
   { useNewUrlParser: true, useUnifiedTopology: true },
   () => {
     console.log("Connected to MongoDB");
@@ -104,26 +104,32 @@ io.on("connection", (socket) => {
   })
 
   //join room
-  socket.on("join_room", async ({socketId, conversationId,receiveId}) => { 
-    try {
-      const updateStatusSeen = await Messenger.updateMany(
-        {$and:[{sender: receiveId},{seens:false}, {conversationId}]},
-         {seens: true});
-         const updateConversation = await Conversation.update(
-           {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
-            {'lastText.seens': true })
-    } catch(err) {
-      console.log(err);
-    }
-    socket.join(conversationId);
-    socket.to(socketId).emit("setJoin_room", conversationId);
+  socket.on("join_room", async ({senderId, conversationId,receiveId}) => { 
+    // try {
+    //   const updateStatusSeen = await Messenger.updateMany(
+    //     {$and:[{sender: receiveId},{seens:false}, {conversationId}]},
+    //      {seens: true});
+    //      const updateConversation = await Conversation.update(
+    //        {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
+    //         {'lastText.seens': true })
+    // } catch(err) {
+    //   console.log(err);
+    // }
+    // socket.join(conversationId);
+    console.log("conversation join room: ",conversationId);
+    socket.to(conversationId).emit("setJoin_room", {senderId, conversationId});
+  })
+
+  //ANswer join room
+  socket.on("answer_join_room", ({conversationId,receiveId}) => {
+    socket.to(conversationId).emit("answer_join_room", {conversationId,senderId: receiveId})
   })
 
   //out ROOM
-  socket.on("out_room", ({socketId, conversationId}) => {
-    console.log("out room with socket: ", {socketId, conversationId});
+  socket.on("out_room", ({senderId, conversationId}) => {
+    console.log("out room with socket: ", {senderId, conversationId});
     // socket.leave(conversationId);
-    socket.to(socketId).emit("setout_room", conversationId);
+    socket.to(conversationId).emit("setout_room", {senderId, conversationId});
   })
 
   //take userId and socketId from user
@@ -137,7 +143,7 @@ io.on("connection", (socket) => {
 
   //send and get message
   socket.on("sendMessage", async (res) => {
-    console.log("sendMessage: ", res.conversationId);
+    // console.log("sendMessage: ", res.conversationId);
     try {
       // const user = await User.findById(receiverId).exec();
       // console.log("this is user: ",user);
@@ -150,23 +156,27 @@ io.on("connection", (socket) => {
 
 //OOFLINE
   socket.on("userOffline", async(userId) => {
-    console.log("this is offline :" ,userId);
+    // console.log("this is offline :" ,userId);
     io.emit("setUserOffline", userId);
   })
 
   //ONLINE
   socket.on("online", async ({email, id,arrCovId}) => {
-    console.log("email is: ", email);
+    console.log("email is: ", id);
     try {
+     
       const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
-      socket.to(arrCovId).emit('setOnline', arrCovId)
+      removeSocketId && socket.to(arrCovId).emit('setOnline', arrCovId)
+     
 
     } catch(err) {
 
     }
-    
-    
-    
+ 
+  })
+  //ANSWER_ONLINE
+  socket.on("answerOnline", covId => {
+    socket.to(covId).emit("receive_anwerOnline", covId)
   })
 
   //call video
@@ -223,15 +233,25 @@ socket.on("returning signal", payload => {
 
   //when disconnect
   socket.on("disconnect", async () => {
-    console.log("a user disconnected!", socket.id);
+    console.log("DISCONEXT!");
     try { 
+      
       const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: "",status: false});
       console.log(removeSocketId);
-      // const updateStatus = await User.findOneAndUpdate({socketId: socket.id}, {status: false});
+     const id = removeSocketId._id.toString();
+     
+      const conversations = await Conversation.find({
+        members: { $elemMatch: {id: id} },
+      });
+      const arrCov = conversations.map((value) => {
+        return value._id.toString();
+      })
+     
+      socket.to(arrCov).emit("setUserOffline",arrCov);
     }catch(err) {
-
+      console.log(err);
     }
-    io.emit("setUserOffline");
+    
 
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
