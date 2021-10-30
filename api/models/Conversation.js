@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const ConversationSchema = new mongoose.Schema(
   {
     members: {
-      type: Array,
+      type: Object,
     },
     lastText: {
       type: Object,
@@ -12,6 +12,9 @@ const ConversationSchema = new mongoose.Schema(
     name: {
       type: String,
       default: null,
+    },
+    covImage: {
+      type: String,
     }
   },
   { timestamps: true }

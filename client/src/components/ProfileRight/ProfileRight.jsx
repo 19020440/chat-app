@@ -10,7 +10,9 @@ const ProfileRight = observer(({conversation, seen}) =>{
     const PF = process.env.REACT_APP_PUBLIC_FOLDER; 
     const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
     const [userProfile] = conversation.members.filter(value => value.id != AuthStore?.user._id);
+    const seenStatus = seen[0].seen;
     useEffect(() => {   
+        
         userProfile.status = false;
         setUser(userProfile);     
     }, []);
@@ -21,9 +23,9 @@ const ProfileRight = observer(({conversation, seen}) =>{
         AuthStore.socket?.on("setOnline", (data) => {
 
                 const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
-                console.log(conversation._id == result[0]);
+
                 if(conversation._id == result[0]) {
-                    ActionStore.action_setOfflientStatus();
+
                    const newUser = {...userProfile};
                    newUser.status = true;
                    setUser(newUser);
@@ -36,9 +38,9 @@ const ProfileRight = observer(({conversation, seen}) =>{
             AuthStore.socket?.on("setUserOffline", (arrCov) => {
 
                 const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
-                console.log(conversation._id == result[0]);
+
                 if(conversation._id == result[0]) {
-                    ActionStore.action_setOfflientStatus();
+
                    const newUser = {...userProfile};
                    newUser.status = false;
                    setUser(newUser);
@@ -50,7 +52,7 @@ const ProfileRight = observer(({conversation, seen}) =>{
 
                AuthStore.socket.on("receive_anwerOnline", (covId) => {
                 if(conversation._id == covId) {
-                    ActionStore.action_setOfflientStatus();
+
                     const newUser = {...userProfile};
                     newUser.status = true;
                     setUser(newUser);
@@ -81,7 +83,7 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                             {!_.isEmpty(conversation?.lastText) &&
                                                 <span className={`conversationName1${conversation?.lastText?.sender === AuthStore.user?._id ?
                                                     " color-text_while" 
-                                                    : seen? " color-text_while":" color-text_blue"}`}>
+                                                    : seenStatus? " color-text_while":" color-text_blue"}`}>
                                                     
                                                     
                                                     {conversation?.lastText?.sender === AuthStore.user?._id &&  !_.isEmpty(conversation?.lastText) 

@@ -59,7 +59,7 @@ const Conversation = observer(() => {
             const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: conversationId});
             const friendId = conversations.members.find((m) => m.id !== AuthStore.user?._id);
             const res = await ActionStore.action_getProfile(friendId.id);
-            ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
+            // ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
             AuthStore.socket?.emit("out_room",  {senderId: AuthStore.user._id, conversationId: conversations._id});
   
           } catch(err) {
@@ -131,7 +131,7 @@ const Conversation = observer(() => {
                                         beforeConversation.current = conversation?._id;
                                         
                                     }}>
-                                        <ProfileRight conversation={conversation} seen={conversation.lastText?.seens?true:false}/>
+                                        <ProfileRight conversation={conversation} seen={conversation.lastText?.seens.filter((value) => value.id == AuthStore.user._id)}/>
                                     </li>
                                     </>
                                 )

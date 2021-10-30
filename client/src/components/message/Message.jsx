@@ -11,11 +11,18 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const [isText, setIsText] = useState(false);
   const [isFile,setIsFile] = useState(false);
+  const profileFriends = message.seens.filter(value => value.id == message.sender)
+  const [profileFriend, setProfileFriend] = useState({});
   useEffect(() => {
     const text = JSON.parse(message.text)
     if(!_.isArray(text)) {
       setIsText(true);
     } else setIsFile(true);
+  },[])
+  useEffect(() => {
+    console.log(profileFriends[0]);
+    if(!_.isEmpty(profileFriends)) setProfileFriend(profileFriends[0]);
+    
   },[])
   return (
     <div className={own ? "message own" : "message"}>
@@ -26,7 +33,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
         <img
         className="messageImg"
         src={
-          ActionStore.profileOfFriend.profilePicture != "" ? ActionStore.profileOfFriend.profilePicture
+          profileFriend.profilePicture != "" ? profileFriend.profilePicture
           : PF + "person/noAvatar.png"
         }
     />

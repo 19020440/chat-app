@@ -74,8 +74,12 @@ export class ActionStore {
             try {
                 if(string == "join") {
                     const rs = this.conversations[result].lastText.seens.map((value) =>{
-                        if(value.id == senderId) value.seen = true;
-                        return value;
+                        if(value.id == senderId) {
+                            console.log(value.id);
+                            value.seen = true;
+                            
+                         }
+                         return value;
                     });
                     this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
                         if(value.id == senderId) value.seen = true;
@@ -84,11 +88,15 @@ export class ActionStore {
                     console.log("join room with ID: ",rs);
                 }
                 else  {
+                    const rs = this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) value.seen = true;
+                        return value;
+                    });
                     this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
                         if(value.id == senderId) value.seen = false;
                         return value;
                     });
-                    console.log("out room with ID: ",result);}
+                    console.log("out room with ID: ",rs);}
                 
             } catch(err) {
                 console.log(err);
@@ -138,8 +146,8 @@ export class ActionStore {
         const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
         if(index != -1) {
             try {
-                const receiveSeen = this.conversations[index].lastText.receiveSeen
-                if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+                // const receiveSeen = this.conversations[index].lastText.receiveSeen
+                // if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
                 this.conversations[index].updatedAt = data.updatedAt;
                 this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
             } catch(err) {

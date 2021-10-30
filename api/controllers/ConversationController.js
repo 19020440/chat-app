@@ -11,36 +11,36 @@ module.exports  = new class ConversationController {
               .then(async ([sender1, receive1]) => {
                 if(sender1 && receive1) {
                   const member1 = {
-                    id: req.body.senderId,
                     profilePicture: sender1.profilePicture,
                     username: sender1.username,
                   }
+                  
   
                   const member2 = {
-                    id: req.body.receiverId,
-                    profilePicture: receive1.profilePicture,
-                    username: receive1.username,
+                
+                      profilePicture: receive1.profilePicture,
+                      username: receive1.username,
+                   
                   }
 
                   const lastText1 = {
-                    id: req.body.senderId,
-                    profilePicture: sender1.profilePicture,
-                    seen: false,
+                      profilePicture: sender1.profilePicture,
+                      seen: false,
+
                   }
   
                   const lastText2 = {
-                    id: req.body.receiverId,
-                    profilePicture: receive1.profilePicture,
-                    seen: false,
+                      profilePicture: receive1.profilePicture,
+                      seen: false,
                   }
 
 
                   const newConversation = new Conversation({
-                    members: [member1, member2],
+                    members: { [req.body.senderId]: member1,  [req.body.receiverId]: member2},
                     lastText: {
                       sender: "",
                       text: "",
-                      seens: [lastText1,lastText2]
+                      seens: { [req.body.senderId]: lastText1, [req.body.receiverId]: lastText2}
                     }
                   });
               
@@ -110,5 +110,7 @@ module.exports  = new class ConversationController {
         res.status(500).json({content: err, status:0})
       }
     }
+
+    
 
 }

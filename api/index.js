@@ -104,26 +104,37 @@ io.on("connection", (socket) => {
   })
 
   //join room
-  socket.on("join_room", async ({senderId, conversationId,receiveId}) => { 
-    // try {
-    //   const updateStatusSeen = await Messenger.updateMany(
-    //     {$and:[{sender: receiveId},{seens:false}, {conversationId}]},
-    //      {seens: true});
-    //      const updateConversation = await Conversation.update(
-    //        {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
-    //         {'lastText.seens': true })
-    // } catch(err) {
-    //   console.log(err);
-    // }
+  socket.on("join_room", async ({senderId, conversationId}) => { 
+    try {
+      const updateStatusSeen = await Messenger.updateMany(
+        {$and:[{seen:false}, {conversationId}]},
+         {seen: true});
+      //    const updateConversation = await Conversation.update(
+      //      {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
+      //       {'lastText.seen': true })
+
+          
+            const updateConversation = await Conversation.update(
+              {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
+              
+                {
+                $set:  {'lastText.seens.$.seen': true },
+              }
+                )
+                 
+          
+    } catch(err) {
+      console.log(err);
+    }
     // socket.join(conversationId);
     console.log("conversation join room: ",conversationId);
     socket.to(conversationId).emit("setJoin_room", {senderId, conversationId});
   })
 
   //ANswer join room
-  socket.on("answer_join_room", ({conversationId,receiveId}) => {
-    socket.to(conversationId).emit("answer_join_room", {conversationId,senderId: receiveId})
-  })
+  // socket.on("answer_join_room", ({conversationId,receiveId}) => {
+  //   socket.to(conversationId).emit("answer_join_room", {conversationId,senderId: receiveId})
+  // })
 
   //out ROOM
   socket.on("out_room", ({senderId, conversationId}) => {

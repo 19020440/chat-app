@@ -66,7 +66,7 @@ export const showMessageError = (msg, onOk) => {
     let count = 0;
     try {
       conversations.map((value) => {
-        if(value?.lastText?.seens === false && value.lastText?.sender != userId) count++;
+        if(value?.lastText?.seen === false && value.lastText?.sender != userId) count++;
       })
     } catch(err) {
       console.log(err);

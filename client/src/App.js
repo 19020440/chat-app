@@ -73,14 +73,14 @@ const App = observer(() => {
     AuthStore.socket?.on("setJoin_room", (data) => {
       console.log("joined rooom:", data.conversationId)
       ActionStore.action_updateStatusSeenConversation(data , "join");
-      AuthStore.socket.emit("answer_join_room", {conversationId: data.conversationId, receiveId: AuthStore.user?._id})
+      // AuthStore.socket.emit("answer_join_room", {conversationId: data.conversationId, receiveId: AuthStore.user?._id})
       AuthStore.action_setSatusSeenText();
     })
 
-    AuthStore.socket.on("answer_join_room",  (data) => {
-      ActionStore.action_updateStatusSeenConversation(data , "join");
-      AuthStore.action_setSatusSeenText();
-    })
+    // AuthStore.socket.on("answer_join_room",  (data) => {
+    //   ActionStore.action_updateStatusSeenConversation(data , "join");
+    //   AuthStore.action_setSatusSeenText();
+    // })
 
     AuthStore.socket?.on("setout_room", (data) => {
       ActionStore.action_updateStatusSeenConversation(data, "out")
@@ -94,6 +94,7 @@ const App = observer(() => {
          sender: data.senderId,
          text: data.text,
          seens: data.seens,
+         seen: data.seen
        }
      }, data.conversationId);
     })

@@ -27,7 +27,7 @@ const ContrainerMess = observer((props) => {
     const {user} = AuthStore;
     const indexConversation = findIndexFromArrayLodash(ActionStore.conversations, {_id: conversationId});
     const currentConversation = ActionStore.conversations[indexConversation];
-    // const [userProfile] = currentConversation.members.filter(val ue => value.id != AuthStore?.user._id);
+    
     const [newMessage, setNewMessage] = useState("");
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
@@ -35,10 +35,9 @@ const ContrainerMess = observer((props) => {
     const history = useHistory(); 
     const [files,setFiles] = useState([]);
     const [openGif, setOpenGif] = useState(false);
+    const [profileFriend,setProfileFriend] = useState({});
     useEffect(() => {
-      // if(findIndexFromArrayLodash != -1) {
         ActionStore.action_setCurrentConversation(conversationId);
-      // }
     },[conversationId])
 
     /// get message
@@ -53,15 +52,16 @@ const ContrainerMess = observer((props) => {
           console.log(err);
         }
       };
-
+      console.log("re-render");
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
         try {
 
           const statusSeen = currentConversation.lastText.seens;
-          const seen = statusSeen.filter(value => value.seen == true);
-
+          const seen = statusSeen.filter(value => value.seen == true && value.id != AuthStore.user._id);
+          console.log(statusSeen);
+          console.log(seen);
 
           if(newMessage != "") {
             const message = {
@@ -74,7 +74,6 @@ const ContrainerMess = observer((props) => {
             const res = await ActionStore.action_saveMessage(message);
             const {conversationId,...lastText} = message;
             if(indexConversation !== null){
-              // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
               ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
             }
          
@@ -96,11 +95,12 @@ const ContrainerMess = observer((props) => {
                   text: JSON.stringify(AuthStore.textFile),
                   conversationId: covId,
                   seens: statusSeen,
+                  seen: !_.isEmpty(seen),
                 };
                 const res = await ActionStore.action_saveMessage(message);
                 const {conversationId,...lastText} = message;
                 if(indexConversation !== null){
-                  // ActionStore.action_setLastTextByIndex({_id: conversationId, lastText}, currentLastText.current); 
+
                   ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
                 }
                 AuthStore.socket?.emit("sendMessage", res);
@@ -109,13 +109,9 @@ const ContrainerMess = observer((props) => {
                 setMessages([...messages, res]);
                 setFiles([]);
               }
-              
-
-
-
        } catch(err) {
             console.log(err);
-          }
+      }
 
       };
 
@@ -156,11 +152,6 @@ const ContrainerMess = observer((props) => {
       useEffect(() => {
         AuthStore.socket?.on("getMessage", (data) => {
            setArrivalMessage(data);
-          // setMessages((prev) => [...prev, {
-          //   sender: data.senderId,
-          //   text: data.text,
-          //   createdAt: Date.now(),
-          // }]);
          });
        }, []);
       
@@ -186,12 +177,12 @@ const ContrainerMess = observer((props) => {
       if(!_.isEmpty(currentConversation)) {
       handleJoinRoom(currentConversation);
       }
-    },[currentConversation])
+    },[])
 
   const handleJoinRoom = async (conversation) => {
     try {
-    //  const friendId = conversation.members.find((m) => m !== user._id);
-     const res = ActionStore.profileOfFriend;
+      console.log("action join room");
+     const res = profileFriend;
      AuthStore.socket?.emit("join_room", {senderId: AuthStore?.user._id, conversationId: conversation._id, receiveId: res?._id})
     //  ActionStore.action_updateStatusSeenSelf(conversation._id); 
      
@@ -206,29 +197,28 @@ const ContrainerMess = observer((props) => {
    history.push('/camera')
  }
 
-//get Profile
-useEffect(() => {
-  profileFriend();
-},[ActionStore.offlineStatus,currentConversation])
-
-const profileFriend = async () => {
-  // ActionStore.action_setProfileOfFriend("");
-
-    if(!_.isEmpty(currentConversation)) {
-      try {
-      
-        const friendId = currentConversation.members.find((m) => m.id !== user._id); 
-        
-        const res = await ActionStore.action_getProfile(friendId.id);
-        ActionStore.action_setProfileOfFriend(res);
-      } catch (err) {
-        console.log(err);
-      }
+//Out room
+  useEffect(() => {
+    return () => {
+      console.log("out this room: ", conversationId);
+    conversationId &&  handleOutComponent();
     }
-   
-  
-  
-}
+  },[conversationId])
+
+  const handleOutComponent = async () => {
+    // if(currentConversation.current !== null) {
+        try {
+            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: conversationId});
+            const friendId = conversations.members.find((m) => m.id !== AuthStore.user?._id);
+            const res = await ActionStore.action_getProfile(friendId.id);
+            // ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
+            AuthStore.socket?.emit("out_room",  {senderId: AuthStore.user._id, conversationId: conversations._id});
+
+          } catch(err) {
+            console.log(err);
+          }
+    // }
+  }
 
 //send mess by enter
 // const handleSendMessByEnter = (e) => {
@@ -236,26 +226,68 @@ const profileFriend = async () => {
 
 //   }
 // }
-//get gifphy list
-const handleGetGifphyList = () => {
-  setOpenGif(!openGif);
-}
 
-useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+
+//get gifphy list
+  const handleGetGifphyList = () => {
+    setOpenGif(!openGif);
+  }
+
+  useEffect(() => {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-
-
-  
-
   const cancel =  (index) => {
-
     const result = files.filter(value => value.id != index);
-      // setFiles([]);
-      setFiles([...result]);
-
+    setFiles([...result]);
   }
+  //Set Profile
+
+  useEffect(() => {
+    if(!_.isEmpty(currentConversation)) {
+      const [userProfile] = currentConversation.members.filter(value => value.id != AuthStore?.user._id);
+      AuthStore.socket?.on("setOnline", (data) => {
+  
+              const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
+
+              if(conversationId == result[0]) {
+                  // ActionStore.action_setOfflientStatus();
+                 const newUser = {...userProfile};
+                 newUser.status = true;
+                 setProfileFriend(newUser);
+                 AuthStore.socket.emit("answerOnline", conversationId)
+              }
+  
+         
+               })
+  
+          AuthStore.socket?.on("setUserOffline", (arrCov) => {
+  
+              const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
+
+              if(conversationId == result[0]) {
+                  // ActionStore.action_setOfflientStatus();
+                 const newUser = {...userProfile};
+                 newUser.status = false;
+                 setProfileFriend(newUser);
+             
+              }
+  
+  
+          }) 
+  
+             AuthStore.socket.on("receive_anwerOnline", (covId) => {
+              if(conversationId == covId) {
+                  // ActionStore.action_setOfflientStatus();
+                  const newUser = {...userProfile};
+                  newUser.status = true;
+                  setProfileFriend(newUser);
+                 
+               }
+             })
+    }
+   
+},[currentConversation])
 
     return (
         <>
@@ -264,15 +296,15 @@ useEffect(() => {
                         <div className="container-main__head-left">
                             <div className="container-main__head-left-avt">
                                 <img className="container-main__head-left-avt-img avt-mess" src={
-                                    ActionStore.profileOfFriend?.profilePicture
-                                        ? ActionStore.profileOfFriend?.profilePicture
+                                    profileFriend?.profilePicture
+                                        ? profileFriend?.profilePicture
                                         : PF + "person/noAvatar.png"
                                     } alt="" />
                             </div>
-                            <span className={ActionStore.profileOfFriend?.status ? "status_active1":""}></span>
+                            <span className={profileFriend?.status ? "status_active1":""}></span>
                             <div className="container-main__head-left-info">
                                 <div className="container-main__head-left-info__name name-mess">
-                                    {ActionStore.profileOfFriend?.username}
+                                    {profileFriend?.username}
                                 </div>
                                 <div className="container-main__head-left-info-time online">
                                     Hoạt động
@@ -299,14 +331,14 @@ useEffect(() => {
                         <div className="container-main__list--no-content">
                             <div className="no-content__avt">
                                 <img src={
-                                    ActionStore.profileOfFriend?.profilePicture
-                                        ? ActionStore.profileOfFriend?.profilePicture
+                                    profileFriend?.profilePicture
+                                        ? profileFriend?.profilePicture
                                         : PF + "person/noAvatar.png"
                                     } alt="" className="no-content__img avt-mess" />
                             </div>
                             <div className="no-content__info">
                                 <div className="no-content__info-name name-mess">
-                                {ActionStore.profileOfFriend?.username} 
+                                {profileFriend?.username} 
                                 </div>
                                 <div className="no-content__info-sub">
                                     Facebook
@@ -346,7 +378,7 @@ useEffect(() => {
                                 <FontAwesomeIcon icon={faImage} />
                             </label>
                             <div className="container-main__bottom-left-icon hide container-main__bottom-left-icon-gifphy">
-                                {openGif && <Gifphy currentConversation={currentConversation}/> }
+                                {openGif && <Gifphy currentConversation={currentConversation} indexCov={indexConversation}/> }
                               <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList}/>
                             </div>
                         </div>
