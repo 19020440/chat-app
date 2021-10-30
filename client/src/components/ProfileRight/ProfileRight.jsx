@@ -10,7 +10,7 @@ const ProfileRight = observer(({conversation, seen}) =>{
     const PF = process.env.REACT_APP_PUBLIC_FOLDER; 
     const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
     const [userProfile] = conversation.members.filter(value => value.id != AuthStore?.user._id);
-    const seenStatus = seen[0].seen;
+    const seenStatus = seen.seen;
     useEffect(() => {   
         
         userProfile.status = false;
@@ -23,7 +23,6 @@ const ProfileRight = observer(({conversation, seen}) =>{
         AuthStore.socket?.on("setOnline", (data) => {
 
                 const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
-
                 if(conversation._id == result[0]) {
 
                    const newUser = {...userProfile};

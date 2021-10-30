@@ -249,7 +249,7 @@ const ContrainerMess = observer((props) => {
       AuthStore.socket?.on("setOnline", (data) => {
   
               const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
-
+ 
               if(conversationId == result[0]) {
                   // ActionStore.action_setOfflientStatus();
                  const newUser = {...userProfile};
