@@ -12,7 +12,8 @@ import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 import ContainerRight from '../containerRight/ContainerRight'
 import SearchMess from '../searchMess/searchMess'
-import UploadFile from '../UploadFile/UploadFile'
+import UploadFile from '../UploadFile/UploadFile';
+import { format } from "timeago.js";
 import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
@@ -27,7 +28,6 @@ const ContrainerMess = observer((props) => {
     const {user} = AuthStore;
     const indexConversation = findIndexFromArrayLodash(ActionStore.conversations, {_id: conversationId});
     const currentConversation = ActionStore.conversations[indexConversation];
-    
     const [newMessage, setNewMessage] = useState("");
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [arrivalMessage,setArrivalMessage]= useState(null)
@@ -36,6 +36,26 @@ const ContrainerMess = observer((props) => {
     const [files,setFiles] = useState([]);
     const [openGif, setOpenGif] = useState(false);
     const [profileFriend,setProfileFriend] = useState({});
+    //set ProfileFriend
+    useEffect(() => {
+      if(!_.isEmpty(currentConversation)) {
+        const sizeUserInRoom = _.size(currentConversation.members) > 2 ? true:false;
+        
+        if(sizeUserInRoom) {
+          const status = _.size(currentConversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
+          setProfileFriend({
+            username: currentConversation.name,
+            profilePicture: currentConversation.covImage,
+            status
+          })
+        } else {
+          const [userProfile] = currentConversation.members.filter(value => value.id != AuthStore?.user._id);
+          setProfileFriend(userProfile); 
+        }
+      }
+    },[currentConversation])
+
+
     useEffect(() => {
         ActionStore.action_setCurrentConversation(conversationId);
     },[conversationId])
@@ -52,66 +72,65 @@ const ContrainerMess = observer((props) => {
           console.log(err);
         }
       };
-      console.log("re-render");
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
+        // try {
 
           const statusSeen = currentConversation.lastText.seens;
-          const seen = statusSeen.filter(value => value.seen == true && value.id != AuthStore.user._id);
+          const seen = statusSeen.filter(value => value.joinRoom == true && value.id != AuthStore.user._id);
           console.log(statusSeen);
           console.log(seen);
 
-          if(newMessage != "") {
-            const message = {
-              sender: user._id,
-              text: JSON.stringify(newMessage),
-              conversationId: covId,
-              seens: statusSeen,
-              seen: !_.isEmpty(seen),
-            };
-            const res = await ActionStore.action_saveMessage(message);
-            const {conversationId,...lastText} = message;
-            if(indexConversation !== null){
-              ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-            }
+      //     if(newMessage != "") {
+      //       const message = {
+      //         sender: user._id,
+      //         text: JSON.stringify(newMessage),
+      //         conversationId: covId,
+      //         seens: statusSeen,
+      //         seen: !_.isEmpty(seen),
+      //       };
+      //       const res = await ActionStore.action_saveMessage(message);
+      //       const {conversationId,...lastText} = message;
+      //       if(indexConversation !== null){
+      //         ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+      //       }
          
       
-            AuthStore.socket?.emit("sendMessage", res);
-            setMessages([...messages, res]);
-            setNewMessage("");
-          }
+      //       AuthStore.socket?.emit("sendMessage", res);
+      //       setMessages([...messages, res]);
+      //       setNewMessage("");
+      //     }
           
 
 
 
-              if(!_.isEmpty(AuthStore.textFile)) {
+      //         if(!_.isEmpty(AuthStore.textFile)) {
 
                
 
-                const message = {
-                  sender: user._id,
-                  text: JSON.stringify(AuthStore.textFile),
-                  conversationId: covId,
-                  seens: statusSeen,
-                  seen: !_.isEmpty(seen),
-                };
-                const res = await ActionStore.action_saveMessage(message);
-                const {conversationId,...lastText} = message;
-                if(indexConversation !== null){
+      //           const message = {
+      //             sender: user._id,
+      //             text: JSON.stringify(AuthStore.textFile),
+      //             conversationId: covId,
+      //             seens: statusSeen,
+      //             seen: !_.isEmpty(seen),
+      //           };
+      //           const res = await ActionStore.action_saveMessage(message);
+      //           const {conversationId,...lastText} = message;
+      //           if(indexConversation !== null){
 
-                  ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-                }
-                AuthStore.socket?.emit("sendMessage", res);
+      //             ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+      //           }
+      //           AuthStore.socket?.emit("sendMessage", res);
 
-                AuthStore.action_resetTextFile(); 
-                setMessages([...messages, res]);
-                setFiles([]);
-              }
-       } catch(err) {
-            console.log(err);
-      }
+      //           AuthStore.action_resetTextFile(); 
+      //           setMessages([...messages, res]);
+      //           setFiles([]);
+      //         }
+      //  } catch(err) {
+      //       console.log(err);
+      // }
 
       };
 
@@ -177,14 +196,13 @@ const ContrainerMess = observer((props) => {
       if(!_.isEmpty(currentConversation)) {
       handleJoinRoom(currentConversation);
       }
-    },[])
+    },[currentConversation])
 
   const handleJoinRoom = async (conversation) => {
     try {
       console.log("action join room");
-     const res = profileFriend;
-     AuthStore.socket?.emit("join_room", {senderId: AuthStore?.user._id, conversationId: conversation._id, receiveId: res?._id})
-    //  ActionStore.action_updateStatusSeenSelf(conversation._id); 
+     AuthStore.socket?.emit("join_room", {senderId: AuthStore?.user._id, conversationId: conversation._id})
+     ActionStore.action_updateStatusSeenSelf({conversationId: conversation._id,senderId: AuthStore?.user._id}); 
      
    } catch (err) {
      console.log(err);
@@ -241,53 +259,6 @@ const ContrainerMess = observer((props) => {
     const result = files.filter(value => value.id != index);
     setFiles([...result]);
   }
-  //Set Profile
-
-  useEffect(() => {
-    if(!_.isEmpty(currentConversation)) {
-      const [userProfile] = currentConversation.members.filter(value => value.id != AuthStore?.user._id);
-      AuthStore.socket?.on("setOnline", (data) => {
-  
-              const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
- 
-              if(conversationId == result[0]) {
-                  // ActionStore.action_setOfflientStatus();
-                 const newUser = {...userProfile};
-                 newUser.status = true;
-                 setProfileFriend(newUser);
-                 AuthStore.socket.emit("answerOnline", conversationId)
-              }
-  
-         
-               })
-  
-          AuthStore.socket?.on("setUserOffline", (arrCov) => {
-  
-              const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
-
-              if(conversationId == result[0]) {
-                  // ActionStore.action_setOfflientStatus();
-                 const newUser = {...userProfile};
-                 newUser.status = false;
-                 setProfileFriend(newUser);
-             
-              }
-  
-  
-          }) 
-  
-             AuthStore.socket.on("receive_anwerOnline", (covId) => {
-              if(conversationId == covId) {
-                  // ActionStore.action_setOfflientStatus();
-                  const newUser = {...userProfile};
-                  newUser.status = true;
-                  setProfileFriend(newUser);
-                 
-               }
-             })
-    }
-   
-},[currentConversation])
 
     return (
         <>
@@ -307,9 +278,9 @@ const ContrainerMess = observer((props) => {
                                     {profileFriend?.username}
                                 </div>
                                 <div className="container-main__head-left-info-time online">
-                                    Hoạt động
-                                    <span>1</span>
-                                    giờ trước
+                                    
+                                    <span>{profileFriend.status?"Đang hoạt động":`Hoạt động cách đây ${format(currentConversation?.updatedAt)}`}</span>
+                                    
                                 </div>
                             </div>
                         </div>

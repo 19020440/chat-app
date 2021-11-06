@@ -106,14 +106,16 @@ io.on("connection", (socket) => {
   //join room
   socket.on("join_room", async ({senderId, conversationId}) => { 
     try {
-      const updateStatusSeen = await Messenger.updateMany(
-        {$and:[{seen:false}, {conversationId}]},
-         {seen: true});
+      // const updateStatusSeen = await Messenger.updateMany(
+      //   {$and:[{seen:false}, {conversationId},{seens: {$elemMatch: {id: senderId}}}]},
+      //    {seen: true});
       //    const updateConversation = await Conversation.update(
       //      {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
       //       {'lastText.seen': true })
 
-          
+            const updateStatusSeen = await Messenger.updateMany(
+              {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
+              {$set: {seen: true,"seens.$.seen": true}});
             const updateConversation = await Conversation.update(
               {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
               
@@ -121,7 +123,6 @@ io.on("connection", (socket) => {
                 $set:  {'lastText.seens.$.seen': true },
               }
                 )
-                 
           
     } catch(err) {
       console.log(err);
@@ -166,9 +167,9 @@ io.on("connection", (socket) => {
   });
 
 //OOFLINE
-  socket.on("userOffline", async(userId) => {
+  socket.on("userOffline", async({userId,arrCov}) => {
     // console.log("this is offline :" ,userId);
-    io.emit("setUserOffline", userId);
+    socket.to(arrCov).emit("setUserOffline", {userId, arrCov});
   })
 
   //ONLINE
@@ -177,7 +178,7 @@ io.on("connection", (socket) => {
     try {
      
       const removeSocketId = await User.findOneAndUpdate({email}, {socketId: id});
-      removeSocketId && socket.to(arrCovId).emit('setOnline', arrCovId)
+      removeSocketId && socket.to(arrCovId).emit('setOnline', {arrCovId, userOnlineId: removeSocketId._id.toString()})
      
 
     } catch(err) {
@@ -186,8 +187,9 @@ io.on("connection", (socket) => {
  
   })
   //ANSWER_ONLINE
-  socket.on("answerOnline", covId => {
-    socket.to(covId).emit("receive_anwerOnline", covId)
+  socket.on("answerOnline", ({covId, userId}) => {
+    console.log("answser online:", userId);
+    socket.to(covId).emit("receive_anwerOnline", {covId, userId})
   })
 
   //call video
@@ -258,7 +260,7 @@ socket.on("returning signal", payload => {
         return value._id.toString();
       })
      
-      socket.to(arrCov).emit("setUserOffline",arrCov);
+      socket.to(arrCov).emit("setUserOffline",{userId: id, arrCov});
     }catch(err) {
       console.log(err);
     }

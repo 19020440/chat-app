@@ -24,7 +24,7 @@ const header = observer((props) => {
         await AuthStore.action_setTheme();
     }
     const handleLogOut = async () => {
-        !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", AuthStore.user._id);
+        !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
         await AuthStore.action_logout();
         setVisible(false); 

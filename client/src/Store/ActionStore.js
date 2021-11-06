@@ -3,7 +3,7 @@ import {observable, makeAutoObservable, action} from 'mobx'
 import {WsCode} from '../helper/Wscode'
 import {CONFIG_URL} from "../helper/constant"
 import {Request} from "../helper/Request"
-import {getLessProfile, countTextNotSeen,findIndexFromArrayLodash,sortConversationByUpdateAt} from '../helper/function';
+import {getLessProfile, countTextNotSeen,findIndexFromArrayLodash,sortConversationByUpdateAt,findObjectFromArrayLodash} from '../helper/function';
 export class ActionStore {
     
     profileOfFriend = {};
@@ -73,30 +73,24 @@ export class ActionStore {
         if(result != -1) {
             try {
                 if(string == "join") {
-                    const rs = this.conversations[result].lastText.seens.map((value) =>{
+                        this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
                         if(value.id == senderId) {
-                            console.log(value.id);
                             value.seen = true;
-                            
-                         }
-                         return value;
-                    });
-                    this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
-                        if(value.id == senderId) value.seen = true;
+                            value.joinRoom = true;
+                        }
                         return value;
                     });
-                    console.log("join room with ID: ",rs);
+                    console.log("join room with ID: ",result);
                 }
                 else  {
-                    const rs = this.conversations[result].lastText.seens.map((value) =>{
-                        if(value.id == senderId) value.seen = true;
-                        return value;
-                    });
                     this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
-                        if(value.id == senderId) value.seen = false;
+                        if(value.id == senderId) {
+                            value.seen = false;
+                            value.joinRoom = false;
+                        }
                         return value;
                     });
-                    console.log("out room with ID: ",rs);}
+                    console.log("out room with ID: ",result);}
                 
             } catch(err) {
                 console.log(err);
@@ -104,31 +98,50 @@ export class ActionStore {
         }
     }
 
-    action_updateConversationSeenOutRoomSeft(covId) {
-        const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
-        if(!this.conversations[index].lastText) this.conversations[index].lastText = {sendSeen: false}
-        else this.conversations[index].lastText.sendSeen = false;
-       
+    action_updateStatusSeenMembers({conversationId,senderId}, string) {
+        // console.log(senderId);
+        const result = findIndexFromArrayLodash(this.conversations, {_id: conversationId});
+        if(result != -1) {
+            try {
+                if(string == "join") {
+                    this.conversations[result].members =  this.conversations[result].members.map((value) =>{
+                        if(value.id == senderId) value.status = true;
+                        return value;
+                    });
+                    // console.log("join online with ID: ",result);
+                }
+                else  {
+                    this.conversations[result].members =  this.conversations[result].members.map((value) =>{
+                        if(value.id == senderId) value.status = false;
+                        return value;
+                    });
+                    // console.log("out offline with ID: ",result);
+                }
+                
+            } catch(err) {
+                console.log(err);
+            }
+        }
     }
+
 
     action_updateConversationSeenOutRoom(index) {
         if(!this.conversations[index].lastText) this.conversations[index].lastText = {receiveSeen: false}
         else this.conversations[index].lastText.receiveSeen = false;
     }
-    action_updateStatusSeenSelf(covId) {
-        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
-        console.log("this is result: ",  this.conversations[result]);
-        if(result != -1) {
-            try {
-                if(!this.conversations[result].lastText) this.conversations[result].lastText = {sendSeen: true}
-                else this.conversations[result].lastText.sendSeen = true;
-                if(this.conversations[result].lastText.seens != undefined) this.conversations[result].lastText.seens = true;
-                
-                
-            } catch(err) {
-                console.log(err);
-            }
-        }
+    action_updateStatusSeenSelf({conversationId, senderId}) {
+       const cov = findObjectFromArrayLodash(this.conversations, {_id: conversationId});
+
+       cov.lastText.seens.map(value => {
+           if(value.id == senderId) {
+               value.joinRoom = true;
+               value.seen = true;
+           } else {
+               if(value.joinRoom) value.seen = true;
+               else value.seen = false;
+           }
+       })
+
         
     }
 

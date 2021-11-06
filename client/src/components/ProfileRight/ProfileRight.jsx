@@ -1,65 +1,33 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, memo} from 'react';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../../hook'
 import _ from 'lodash'
 import { format } from "timeago.js";
-const ProfileRight = observer(({conversation, seen}) =>{
+const ProfileRight = observer(({conversation, seen,isGroup}) =>{
     const [user, setUser] = useState({});
     const ActionStore = useStore('ActionStore');
     const AuthStore = useStore('AuthStore');
     const PF = process.env.REACT_APP_PUBLIC_FOLDER; 
     const lasttextLen =  conversation.lastText?.text ? _.isArray(JSON.parse(conversation.lastText?.text)) ? _.size(JSON.parse(conversation.lastText?.text)) : 0 : 0;
-    const [userProfile] = conversation.members.filter(value => value.id != AuthStore?.user._id);
-    const seenStatus = seen.seen;
+   
+    const seenStatus = seen[0].seen;
     useEffect(() => {   
-        
-        userProfile.status = false;
-        setUser(userProfile);     
-    }, []);
-
-
-
-    useEffect(() => {
-        AuthStore.socket?.on("setOnline", (data) => {
-
-                const result = AuthStore.listRoom.filter(function(n) { return data.indexOf(n) !== -1;});
-                if(conversation._id == result[0]) {
-
-                   const newUser = {...userProfile};
-                   newUser.status = true;
-                   setUser(newUser);
-                   AuthStore.socket.emit("answerOnline", conversation._id)
-                }
-
+        if(isGroup) {
+            const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
+            console.log(conversation.lastText);
+            setUser({
+                username: conversation.name,
+                profilePicture: conversation.covImage,
+                status: status
+            })
+        } else {
+            const [userProfile] = conversation.members.filter(value => value.id != AuthStore?.user._id);
+            setUser(userProfile);  
+        }
            
-                 })
+    }, [ActionStore.offlineStatus]);
 
-            AuthStore.socket?.on("setUserOffline", (arrCov) => {
-
-                const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
-
-                if(conversation._id == result[0]) {
-
-                   const newUser = {...userProfile};
-                   newUser.status = false;
-                   setUser(newUser);
-               
-                }
-
-
-            }) 
-
-               AuthStore.socket.on("receive_anwerOnline", (covId) => {
-                if(conversation._id == covId) {
-
-                    const newUser = {...userProfile};
-                    newUser.status = true;
-                    setUser(newUser);
-                   
-                 }
-               })
-    },[])
-
+    
     
     return (
         <div className="status">
@@ -91,6 +59,7 @@ const ProfileRight = observer(({conversation, seen}) =>{
                                                 ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
                                                 : `${JSON.parse(conversation?.lastText?.text)}`
                                                 : ""}
+                                                {console.log(seenStatus)}
                                             </span>
                                             
                                             }
@@ -118,4 +87,4 @@ const ProfileRight = observer(({conversation, seen}) =>{
 });
    
 
-export default ProfileRight;
+export default (ProfileRight);

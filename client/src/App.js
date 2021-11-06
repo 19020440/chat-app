@@ -69,18 +69,46 @@ const App = observer(() => {
     });
   },[]);
   useEffect(() => {
-   
+   //join_room
     AuthStore.socket?.on("setJoin_room", (data) => {
-      console.log("joined rooom:", data.conversationId)
+      console.log("user send is:", data.senderId);
       ActionStore.action_updateStatusSeenConversation(data , "join");
-      // AuthStore.socket.emit("answer_join_room", {conversationId: data.conversationId, receiveId: AuthStore.user?._id})
       AuthStore.action_setSatusSeenText();
     })
 
-    // AuthStore.socket.on("answer_join_room",  (data) => {
-    //   ActionStore.action_updateStatusSeenConversation(data , "join");
-    //   AuthStore.action_setSatusSeenText();
-    // })
+    //setjoin_room
+    AuthStore.socket?.on("setOnline", (data) => {
+      const result = AuthStore.listRoom.filter(function(n) { return data.arrCovId.indexOf(n) !== -1;});
+      console.log(result);
+      if(!_.isEmpty(result)) {
+        for(let i=0;i<_.size(result);++i) {
+          ActionStore.action_updateStatusSeenMembers({conversationId: result[i], senderId: data.userOnlineId} , "join");
+        }
+        ActionStore.action_setOfflientStatus();
+        AuthStore.socket.emit("answerOnline", {covId: result,userId: AuthStore.user._id})
+      }
+     })
+
+    AuthStore.socket?.on("setUserOffline", ({arrCov, userId}) => {
+      const result = AuthStore.listRoom.filter(function(n) { return arrCov.indexOf(n) !== -1;});
+      if(!_.isEmpty(result)) {
+        for(let i=0;i<_.size(result);++i) {
+          ActionStore.action_updateStatusSeenMembers({conversationId: result[i], senderId: userId} , "out");
+          
+        }
+        ActionStore.action_setOfflientStatus();
+        
+      }
+    }) 
+
+    AuthStore.socket.on("receive_anwerOnline", async (data) => {
+      for(let i=0;i<_.size(data.covId);++i) {
+        console.log(i);
+        ActionStore.action_updateStatusSeenMembers({conversationId: data.covId[i], senderId: data.userId} , "join");
+      }
+      await ActionStore.action_setOfflientStatus();
+    })
+
 
     AuthStore.socket?.on("setout_room", (data) => {
       ActionStore.action_updateStatusSeenConversation(data, "out")

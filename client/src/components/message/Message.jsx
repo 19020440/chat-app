@@ -20,7 +20,6 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
     } else setIsFile(true);
   },[])
   useEffect(() => {
-    console.log(profileFriends[0]);
     if(!_.isEmpty(profileFriends)) setProfileFriend(profileFriends[0]);
     
   },[])
@@ -74,24 +73,20 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
             })
           
           }
-          {/* {message.sender == AuthStore.user._id && !_.isEmpty(ActionStore.lastText) && seen &&
-            <> 
+          <div className="list_seen_messenger">
+              {lastTextSeen && message.sender == AuthStore.user._id &&
+                <>
+                {message.seens.map(value => {
+                  if(value.id != AuthStore.user._id && value.seen)
+                  return (
+                    <img src={value.profilePicture} alt="" className="image_text"/>
+                  )
+                })}
+              
+                </>
+              }
+          </div>
             
-            <img src={message.senderImage } alt="" />
-            
-            </>
-          } */}
-          {lastTextSeen && message.sender == AuthStore.user._id &&
-            <>
-            {message.seens.map(value => {
-              if(value.id != AuthStore.user._id)
-              return (
-                <img src={value.profilePicture} alt="" className="image_text"/>
-              )
-            })}
-           
-            </>
-          }
           {!seen && message.sender == AuthStore.user._id &&
             <>
             {/* <img src="https://img.icons8.com/material-outlined/13/000000/ok.png"/>  */}

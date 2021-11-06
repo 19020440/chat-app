@@ -1362,11 +1362,6 @@ footer span:hover {
 .hidden {
   display: block;
 }
-.image_text {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
 .hight_light-text {
   background-color: yellow;
 }

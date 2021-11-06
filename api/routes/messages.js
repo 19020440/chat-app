@@ -7,6 +7,7 @@ const Conversation = require('../models/Conversation')
 router.post("/", async (req, res) => {
   const newMessage = new Message(req.body);
   const {conversationId, ...lastText}= req.body;
+  console.log();
   try {
     const savedMessage = await newMessage.save();
     const result = await Conversation.findByIdAndUpdate({_id: conversationId}, {lastText});

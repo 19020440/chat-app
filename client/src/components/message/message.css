@@ -25,17 +25,19 @@
   word-break: break-word;
 }
 .massafeTextAndSeen {
-  position: relative;
+  /* position: relative; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .massafeTextAndSeen img {
+  border: black 1px solid;
+}
+.image_text {
   width: 12px;
   height: 12px;
   border-radius: 50px;
-  /* position: absolute; */
-  /* top: 38px; */
-  /* right: -3px; */
-  border: black 1px solid;
 }
 
 .messageBottom {
@@ -52,6 +54,7 @@
   color: black;
 }
 .mess_file {
-  height: 50px !important;
-  width: 50px !important;
+  height: 90%;
+  width: 100%;
+  border: black 1px solid;
 }

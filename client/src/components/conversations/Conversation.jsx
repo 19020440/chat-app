@@ -24,23 +24,10 @@ const Conversation = observer(() => {
     const currentConversation = useRef(null);
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
     const [conversationId,setConversationId] = useState(null);
-    // useEffect(() => {
-    //   setConversationId(ActionStore.currentConversation);
-     
-    // },[ActionStore.currentConversation])
 
     const handlePassPage =  (conversation) => {
-      history.push(`/messenger/${conversation._id}`);
-      // handleOutRoom();   
+      history.push(`/messenger/${conversation._id}`);  
     }
-
-    // useEffect(() => {
-    //   return () => {
-    //     console.log("out this room: ", conversationId);
-    //    conversationId &&  handleOutComponent();
-    //   }
-    // },[conversationId])
-   
   
   //SEARCH FRIEND
   const handleSearchPeople = (e) => {
@@ -53,24 +40,11 @@ const Conversation = observer(() => {
     ActionStore.action_resetListSearchFriend();
     setActionSearchPeople(false);
   }
-  // const handleOutComponent = async () => {
-  //   // if(currentConversation.current !== null) {
-  //       try {
-  //           const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: conversationId});
-  //           const friendId = conversations.members.find((m) => m.id !== AuthStore.user?._id);
-  //           const res = await ActionStore.action_getProfile(friendId.id);
-  //           // ActionStore.action_updateConversationSeenOutRoomSeft(conversationId);
-  //           AuthStore.socket?.emit("out_room",  {senderId: AuthStore.user._id, conversationId: conversations._id});
-  
-  //         } catch(err) {
-  //           console.log(err);
-  //         }
-  //   // }
-  // }
 
   // create new conversation 
   const handlenewConversation = async (user) => {
     const result = await ActionStore.action_getCovBySearch(AuthStore?.user._id,user?._id);
+    setActionSearchPeople(false);
     history.push(`/messenger/${result._id}`);
   }
 
@@ -131,7 +105,12 @@ const Conversation = observer(() => {
                                         beforeConversation.current = conversation?._id;
                                         
                                     }}>
-                                        <ProfileRight conversation={conversation} seen={conversation.lastText?.seens[AuthStore.user._id]}/>
+                                        <ProfileRight 
+                                        conversation={conversation} 
+                                        seen={conversation.lastText?.seens.filter(value => value.id == AuthStore.user._id)}
+                                        isGroup={_.size(conversation.members) > 2? true:false}
+                                        
+                                        />
                                     </li>
                                     </>
                                 )
