@@ -1370,3 +1370,6 @@ footer span:hover {
   margin-top: 20%;
   margin-left: 50%;
 }
+.ant-modal-title {
+  text-align: center;
+}

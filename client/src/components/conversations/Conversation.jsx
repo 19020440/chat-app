@@ -10,10 +10,11 @@ import ProfileRight from '../ProfileRight/ProfileRight'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faVideo } from '@fortawesome/free-solid-svg-icons'
+import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faUsers,faVideo } from '@fortawesome/free-solid-svg-icons'
 import { useHistory,useParams } from "react-router-dom";
 import SearchFriend from '../searchFriend/search'
-library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft) 
+import {Modal} from 'antd'
+library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft,faUsers) 
 
 const Conversation = observer(() => {
     const ActionStore = useStore('ActionStore');
@@ -23,8 +24,8 @@ const Conversation = observer(() => {
     const beforeConversation = useRef(null);
     const currentConversation = useRef(null);
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
-    const [conversationId,setConversationId] = useState(null);
-
+    const [showModalGroup,setShowModalGroup] = useState(false);
+    const [modalSearchList,setModalSearchList] = useState([])
     const handlePassPage =  (conversation) => {
       history.push(`/messenger/${conversation._id}`);  
     }
@@ -48,6 +49,56 @@ const Conversation = observer(() => {
     history.push(`/messenger/${result._id}`);
   }
 
+  //show modal create group
+  const modalGroup = (isModalVisible) => {
+    const handleInviteGroup = (e,userId) => {
+      AuthStore.socket.emit("invite_to_group",{from: AuthStore.user, to: userId})
+    }
+    return (
+      <Modal title="Tạo nhóm" visible={isModalVisible}  onCancel={handleCancelGroup} className="modal-group">
+        <div className="main-modal_showGroup">
+            <div className="main-modal_showGroup-search">
+                <FontAwesomeIcon icon={faSearch}/>
+                <input type="text" />
+            </div>
+            <span>Bạn bè</span>
+            <div className="main-modal_showGroup-row">
+                {modalSearchList.map(value => {
+                  return (
+                    <div className="main-modal_showGroup-col">
+                      <div className="main-modal_showGroup-col-info">
+                        <img src={value.profilePicture} className="main-modal_showGroup-col-img"/>
+                        <span>{value.username}</span>
+                      </div>
+                      <button onClick={(e) => {
+                        handleInviteGroup(e,value._id)
+                        }}
+                        >Mời vào nhóm</button>
+                    </div>
+                  )
+                })}
+               
+
+                
+            </div>
+        </div>
+        
+      </Modal>
+    )
+  }
+
+  const handleCancelGroup = () => {
+    setShowModalGroup(false);
+  }
+
+  useEffect(() => {
+    getListModalGroup();
+  },[])
+  const getListModalGroup = async () => {
+    const result = await ActionStore.action_getListFriend(AuthStore.user._id);
+    setModalSearchList(result)
+  }
+
 
 
   
@@ -65,8 +116,11 @@ const Conversation = observer(() => {
                                 <div className="container-left__head-group-btn">
                                     <FontAwesomeIcon icon="fa-solid fa-video" />
                                 </div>
-                                <div className="container-left__head-group-btn">
-                                    <FontAwesomeIcon icon={faPenSquare} />
+                                <div className="container-left__head-group-btn" onClick={async() => {
+                                 
+                                  setShowModalGroup(true);
+                                }}>
+                                    <FontAwesomeIcon icon={faUsers} />
                                 </div>
                             </div>
                         </div>
@@ -120,6 +174,7 @@ const Conversation = observer(() => {
 
                         </ul>
                     </div>
+                    {modalGroup(showModalGroup)}
                 </div>
   );
 });

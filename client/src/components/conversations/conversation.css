@@ -59,6 +59,72 @@
   text-overflow: ellipsis;
   overflow: hidden;
 }
+/*Modal Createa Group*/
+.main-modal_showGroup {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+.main-modal_showGroup span {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 5px 0 5px 0;
+}
+
+.main-modal_showGroup-search {
+  display: flex;
+  align-items: center;
+  background-color: #f0f2f5;
+  border-radius: 25px;
+  padding: 5px;
+  margin-bottom: 15px;
+}
+.main-modal_showGroup-search input {
+  flex: 1;
+  background-color: #f0f2f5;
+  border: none;
+  outline: none;
+}
+.main-modal_showGroup-search svg {
+  padding: 5px;
+}
+.modal-group .ant-modal-footer {
+  display: none;
+}
+.main-modal_showGroup-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  overflow-y: scroll;
+}
+.main-modal_showGroup-col {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.main-modal_showGroup-col span {
+  font-size: 16px;
+  font-weight: 500;
+}
+.main-modal_showGroup-col button {
+  background-color: #e7f3ff;
+  border: none;
+  padding: 5px;
+  font-weight: 600;
+  border-radius: 5px;
+}
+.main-modal_showGroup-col button:hover {
+  background-color: #7ca7d1;
+}
+
+.main-modal_showGroup-col-img {
+  border-radius: 50px;
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
 
 @media screen and (max-width: 768px) {
   .conversationName {

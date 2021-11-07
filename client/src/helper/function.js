@@ -77,7 +77,7 @@ export const showMessageError = (msg, onOk) => {
 
   export const findMessenger = (data,string) => {
     const result  = data.map((value,index) => {
-      if(value.text.indexOf(string) != -1) return index;
+      if(value.text.indexOf(string) != -1 && !_.isArray(JSON.parse(value.text))) return index;
     })
     const rs = result.filter(value => value != undefined)
     return rs;

@@ -54,7 +54,18 @@ export  class AuthStore {
             cancelImageIndex: observable,
             action_setCancelImageIndex: action,
             action_setListRoom: action,
+            action_addFriend: action,
         })
+    }
+    //ADd Friend and Cancel Friends
+    async action_addFriend(status,userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/${status?"follow": "unfollow"}`;
+        const json = {
+            userId: this.user._id,
+        }
+        const result = await Request.post(json, DOMAIN);
+        if(result) return true;
+        else return false;
     }
     action_setListStatusCov(data) {
         this.listStatusCov = [...this.listStatusCov, data]; 

@@ -324,7 +324,21 @@ export class ActionStore {
                 else return [];
             }
         } else this.listSearch = [];
-      
+    }
+
+    async action_searchFriendInfo(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.searchFriend}`;
+        const json = {
+            "word": data,
+        }
+            const result = await Request.post(json, DOMAIN);
+            if(result) {
+                if(!_.isEmpty(result.content)) {
+                    const res = getLessProfile(result.content);
+                    return res;
+                }
+                else return [];
+            }
     }
 
     action_resetListSearchFriend() {

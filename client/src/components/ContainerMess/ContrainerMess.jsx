@@ -75,62 +75,62 @@ const ContrainerMess = observer((props) => {
       //send message
       const handleSubmit = async (e) => {
         e.preventDefault();
-        // try {
+        try {
 
           const statusSeen = currentConversation.lastText.seens;
           const seen = statusSeen.filter(value => value.joinRoom == true && value.id != AuthStore.user._id);
           console.log(statusSeen);
           console.log(seen);
 
-      //     if(newMessage != "") {
-      //       const message = {
-      //         sender: user._id,
-      //         text: JSON.stringify(newMessage),
-      //         conversationId: covId,
-      //         seens: statusSeen,
-      //         seen: !_.isEmpty(seen),
-      //       };
-      //       const res = await ActionStore.action_saveMessage(message);
-      //       const {conversationId,...lastText} = message;
-      //       if(indexConversation !== null){
-      //         ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-      //       }
+          if(newMessage != "") {
+            const message = {
+              sender: user._id,
+              text: JSON.stringify(newMessage),
+              conversationId: covId,
+              seens: statusSeen,
+              seen: !_.isEmpty(seen),
+            };
+            const res = await ActionStore.action_saveMessage(message);
+            const {conversationId,...lastText} = message;
+            if(indexConversation !== null){
+              ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+            }
          
       
-      //       AuthStore.socket?.emit("sendMessage", res);
-      //       setMessages([...messages, res]);
-      //       setNewMessage("");
-      //     }
+            AuthStore.socket?.emit("sendMessage", res);
+            setMessages([...messages, res]);
+            setNewMessage("");
+          }
           
 
 
 
-      //         if(!_.isEmpty(AuthStore.textFile)) {
+              if(!_.isEmpty(AuthStore.textFile)) {
 
                
 
-      //           const message = {
-      //             sender: user._id,
-      //             text: JSON.stringify(AuthStore.textFile),
-      //             conversationId: covId,
-      //             seens: statusSeen,
-      //             seen: !_.isEmpty(seen),
-      //           };
-      //           const res = await ActionStore.action_saveMessage(message);
-      //           const {conversationId,...lastText} = message;
-      //           if(indexConversation !== null){
+                const message = {
+                  sender: user._id,
+                  text: JSON.stringify(AuthStore.textFile),
+                  conversationId: covId,
+                  seens: statusSeen,
+                  seen: !_.isEmpty(seen),
+                };
+                const res = await ActionStore.action_saveMessage(message);
+                const {conversationId,...lastText} = message;
+                if(indexConversation !== null){
 
-      //             ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-      //           }
-      //           AuthStore.socket?.emit("sendMessage", res);
+                  ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+                }
+                AuthStore.socket?.emit("sendMessage", res);
 
-      //           AuthStore.action_resetTextFile(); 
-      //           setMessages([...messages, res]);
-      //           setFiles([]);
-      //         }
-      //  } catch(err) {
-      //       console.log(err);
-      // }
+                AuthStore.action_resetTextFile(); 
+                setMessages([...messages, res]);
+                setFiles([]);
+              }
+       } catch(err) {
+            console.log(err);
+      }
 
       };
 
@@ -178,17 +178,28 @@ const ContrainerMess = observer((props) => {
 
        //search mess
        useEffect(() => {
-        if(AuthStore.stt !==null) {
-          let spanText = document.querySelector('.hight_light-text');
-          if(spanText) spanText.classList.remove("hight_light-text");
-          let result =  document.getElementById(`mess${AuthStore.stt}`);
-          const text =  result.querySelector('.messageText').innerHTML;
-          result.querySelector('.messageText').innerHTML = addSpantoText(text,AuthStore.textSearch)
-          document.getElementById(`mess${AuthStore.stt != 0 ? AuthStore.stt-1 : 0}`).scrollIntoView();  
-        } else {
-          let spanText = document.querySelector('.hight_light-text');
-          if(spanText) spanText.classList.remove("hight_light-text");
-        }
+         try {
+            if(AuthStore.stt !==null) {
+              let spanText = document.querySelectorAll('.hight_light-text');
+              if(!_.isEmpty( spanText))   spanText.forEach(value => {
+                value.classList.remove("hight_light-text");
+              })
+              let result =  document.getElementById(`mess${AuthStore.stt}`);
+              const text =  result.querySelector('.messageText').innerHTML;
+              result.querySelector('.messageText').innerHTML = addSpantoText(text,AuthStore.textSearch)
+              document.getElementById(`mess${AuthStore.stt != 0 ? AuthStore.stt-1 : 0}`).scrollIntoView();  
+            } else {
+              let spanText = document.querySelectorAll('.hight_light-text');
+              spanText.forEach(value => {
+                console.log(value);
+                value.classList.remove("hight_light-text");
+              })
+              
+            }
+         } catch(err) {
+           console.log(err);
+         }
+       
        },[AuthStore.stt])
 
     //Join Room 

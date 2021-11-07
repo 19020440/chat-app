@@ -1,5 +1,6 @@
 import React, {useState, useRef} from 'react';
 import './header.css'
+import {useHistory} from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
@@ -19,6 +20,10 @@ const header = observer((props) => {
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const ref = useRef(null);
     const count = countTextNotSeen(ActionStore.conversations, AuthStore.user?._id);
+    const [searchUserList,setSearchUserList] = useState([]);
+    const history = useHistory();
+    const [activeSeach,setActiveSearch] = useState(false);
+    const notifyRef = useRef(null);
     const handleTheme = async () => {
         
         await AuthStore.action_setTheme();
@@ -45,6 +50,27 @@ const header = observer((props) => {
         } else ref.current.classList.add("hidden");
         
       }
+      //search Friend
+      const handleSearchFriend = async (e) => {
+
+          if(e.target.value != "") {
+              const result = await ActionStore.action_searchFriendInfo(e.target.value);
+              setSearchUserList(result);
+          } else setSearchUserList([]);
+      }
+      //pass page
+      const handlePassPage = (e) => {
+          const result = Object.keys(e.target);
+          e.target.value = "";
+          history.push(`/profile/${(e.target[result[0]]).key}`)
+
+      }
+      //appear nitify
+      const handleShowNotify = (e) => {
+            const element = document.querySelector('.header-right__notify');
+            if(element.style.display == "" || element.style.display == "none") element.style.display = "block"; 
+            else element.style.display = "none";  
+      }
     return (
         <>
         <header className="header">
@@ -59,12 +85,37 @@ const header = observer((props) => {
                             <div className="header-left__search-icon">
                                 <i className="fal fa-search"></i>
                             </div>
-                            <input type="text" id="search-input" className="header-left__search-input" placeholder="Tìm kiếm trên Facebook" />
-                            <ul className="header-left__search-history">
-                                <li className="header-left__search-history-item">
-                                    Không có tìm kiếm nào gần đây
-                                </li>
-                            </ul>
+                            <input type="text" id="search-input" className="header-left__search-input"
+                             placeholder="Tìm kiếm trên Wilina" 
+                                onChange={handleSearchFriend}
+                                onFocus={() => {
+                                    setActiveSearch(true);
+                                }}
+                                onBlur={() => {
+                                    setActiveSearch(false);
+                                }}
+                            />
+                            {activeSeach && 
+                                 <ul className="header-left__search-history">
+                                 {_.isEmpty(searchUserList)? 
+                                     <li className="header-left__search-history-item">
+                                     Không có tìm kiếm nào gần đây
+                                     </li>
+                                 :
+                                     searchUserList.map(value => {
+                                         return (
+                                             <li className="header-left__search-history-item" key={value._id}
+                                             onMouseDown={handlePassPage}
+                                             >
+                                                 {value.username}
+                                             </li>
+                                         )
+                                     })
+                                 }
+                                 
+                             </ul>
+                            }
+                           
                         </div>
                     </div>
 
@@ -125,20 +176,18 @@ const header = observer((props) => {
                             
                         </li>
                         
-                        <li className="header-right__item">
+                        <li className="header-right__item" onClick={handleShowNotify}>
                             <span className="header-right__item-count">
                                 1
                             </span>
-                            {/* <i className="fas fa-bell header-right__item-notify"></i> */}
                             <FontAwesomeIcon icon="fa-solid fa-bell" className="header-right__item-notify"/>
-                            <div className="header-right__item-more header-right__notify">
+                            <div className="header-right__item-more header-right__notify" ref={notifyRef}>
                                 <div className="notify-heading">
                                     <h2 className="notify-heading__text">
                                         Thông báo
                                     </h2>
                                     <div className="notify-heading__right">
                                         <div className="notify-heading__right-icon">
-                                            {/* <i className="fas fa-ellipsis-h"></i> */}
                                             <FontAwesomeIcon icon="fa-solid fa-eclipse" />
                                         </div>
                                     </div>

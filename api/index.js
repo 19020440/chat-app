@@ -132,10 +132,18 @@ io.on("connection", (socket) => {
     socket.to(conversationId).emit("setJoin_room", {senderId, conversationId});
   })
 
-  //ANswer join room
-  // socket.on("answer_join_room", ({conversationId,receiveId}) => {
-  //   socket.to(conversationId).emit("answer_join_room", {conversationId,senderId: receiveId})
-  // })
+  //invite_join_group
+  socket.on('invite_to_group', async ({from,to}) => {
+      try {
+        const result = await Conversation.findOne({
+          members: { $all: [{$elemMatch : {id: from}}, {$elemMatch :{'id':to}}] },
+        });
+       
+      } catch(err) {
+        console.log(err);
+      }
+  })
+ 
 
   //out ROOM
   socket.on("out_room", ({senderId, conversationId}) => {

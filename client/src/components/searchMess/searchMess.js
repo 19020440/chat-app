@@ -33,7 +33,7 @@ const SearchMess = observer((props) => {
     }
 
     const handleDown = () => {
-        if(index < 9) {
+        if(index < listSeaerchMess.length-1) {
             setIndex(index+1);
             AuthStore.action_setStt(listSeaerchMess[index+1]);
         } else {
@@ -43,14 +43,21 @@ const SearchMess = observer((props) => {
         
     }
 
-    const handleStartSearch = (e) => {
+    const handleStartSearch = async (e) => {
         if(e.which  == 13) {
+           await AuthStore.action_setStt(null);
             const result = findMessenger(ActionStore.listMess,e.target.value);
-            console.log(result);
-            AuthStore.action_setStt(result[result.length-1]);
-            AuthStore.action_setTextSearch(e.target.value);
-            setIndex(result.length-1)
-            setListSearchMess(result);
+            if(_.size(result) == 0) {
+                e.target.placeholder = "Không tìm thấy kết quả phù hợp";
+                e.target.value = "";
+                setListSearchMess([]);
+            } else {
+                AuthStore.action_setStt(result[result.length-1]);
+                AuthStore.action_setTextSearch(e.target.value);
+                setIndex(result.length-1)
+                setListSearchMess(result);
+            }
+            
         }
     }
     return (
