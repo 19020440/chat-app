@@ -144,21 +144,18 @@ module.exports  = new class ConversationController {
     }
     //updateConversation
     async update(req, res) {
-      // const {id, conversationId} = req.body;
-      // try {
-      //   const updateConversation = await Conversation.findByIdAndUpdate(id, {lastText});
-      //   !updateConversation && res.status(500).json({content: "update fail", status: 0})
+      const {id, conversationId} = req.body;
+      try {
+        const updateConversation = await Conversation.findByIdAndUpdate(id, {lastText});
+        !updateConversation && res.status(500).json({content: "update fail", status: 0})
 
         
-      //   res.status(200).json({content: "update sucees !", status: 1}); 
-      // } catch(err) {
-      //   res.status(500).json({content: err, status:0})
-      // }
-      const {id} = req.body;
-      const result = await Notify.findOne({userId: id});
-      if(!result) {
-        
+        res.status(200).json({content: "update sucees !", status: 1}); 
+      } catch(err) {
+        res.status(500).json({content: err, status:0})
       }
+      
+     
     }
 
 }

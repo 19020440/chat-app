@@ -533,7 +533,7 @@ footer span:hover {
   cursor: pointer;
 }
 .container {
-  margin-top: var(--header-height);
+  margin-top: 40px;
   display: flex;
   height: calc(100vh - var(--header-height));
   overflow-y: hidden;

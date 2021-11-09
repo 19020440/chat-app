@@ -11,7 +11,7 @@ import {
   
 } from "react-router-dom";
 import {  useEffect, useLayoutEffect, useRef, useState } from "react";
-
+import{showMessageError} from './helper/function'
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
@@ -128,10 +128,20 @@ const App = observer(() => {
     })
 
     AuthStore.socket?.on('callUser', async (data) => {
-      from.current = data.roomID;
-      setUserCall(data.from)
-      setVisible(true);
+      if(data.from._id != AuthStore.user?._id) {
+        console.log(data);
+        from.current = data.roomID;
+        setUserCall(data.from)
+        setVisible(true);
+      }
+     
     })
+    //get_error
+    AuthStore.socket.on('send_error', text => {
+      showMessageError(text);
+    })
+
+  
    
  },[]);
  
@@ -150,7 +160,7 @@ const App = observer(() => {
    // accept call
    const handleOk = async () => {
     setVisible(false);
-    window.open(`http://localhost:3000/callvideo?from=${userCall?._id}&room=${from.current}&status=1`, "_blank")
+    window.open(`http://localhost:3000/callvideo?from=${AuthStore.user?._id}&room=${from.current}&status=1`, "_blank")
     
   }
 

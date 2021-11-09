@@ -91,7 +91,6 @@ const socketToRoom = {};
 
 io.on("connection", (socket) => {
   //when ceonnect
-  console.log("a user connected.", socket.id);
 
   socket.on("validLogin", () => {
     socket.emit("setvalidLogin", socket.id);
@@ -106,16 +105,12 @@ io.on("connection", (socket) => {
   //join room
   socket.on("join_room", async ({senderId, conversationId}) => { 
     try {
-      // const updateStatusSeen = await Messenger.updateMany(
-      //   {$and:[{seen:false}, {conversationId},{seens: {$elemMatch: {id: senderId}}}]},
-      //    {seen: true});
-      //    const updateConversation = await Conversation.update(
-      //      {$and: [{_id: conversationId}, {'lastText.sender': receiveId}]},
-      //       {'lastText.seen': true })
+
 
             const updateStatusSeen = await Messenger.updateMany(
               {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
               {$set: {seen: true,"seens.$.seen": true}});
+
             const updateConversation = await Conversation.update(
               {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
               
@@ -135,9 +130,22 @@ io.on("connection", (socket) => {
   //invite_join_group
   socket.on('invite_to_group', async ({from,to}) => {
       try {
-        const result = await Conversation.findOne({
-          members: { $all: [{$elemMatch : {id: from}}, {$elemMatch :{'id':to}}] },
-        });
+        const newNotify = {
+          senderId: from._id,
+          senderPicture: from.profilePicture,
+          description: `${from.username} đã gửi lời mời kết bạn`,
+          status: false
+        }
+        // const result = await Conversation.findOne({
+        //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
+        // });
+        const [rsNotify, rsCov] = Promise.all([Notify.update({ $push: { listNotify: newNotify } }), Conversation.findOne({
+          members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
+        })]);
+        !rsNotify && socket.emit("send_error", "Không thể update thông báo");
+        !rsCov && socket.emit("send_error", "Không tìm thấy cuộc trò chuyện");
+        socket.to(rsCov._id).emit("answer_invite_group", newNotify);
+
        
       } catch(err) {
         console.log(err);
@@ -202,35 +210,33 @@ io.on("connection", (socket) => {
 
   //call video
   socket.on("join room", async ({roomID,from}) => {
-    
+      socket.join(roomID)
       try {
         const userF = await User.findById(from).exec();
-        if (users[roomID]) {
-          const length = users[roomID].length;
-          if (length === 4) {
-              socket.emit("room full");
-              return;
-          }
-          users[roomID].push(socket.id);
-        } else {
-              users[roomID] = [socket.id];
-              const memberInRoom = await Conversation.findById(roomID).exec();
+      //   if (users[roomID]) {
+      //     const length = users[roomID].length;
+      //     if (length === 4) {
+      //         socket.emit("room full");
+      //         return;
+      //     }
+      //     users[roomID].push(socket.id);
+      //   } else {
+      //         users[roomID] = [socket.id];
+              // const memberInRoom = await Conversation.findById(roomID).exec();
               
-              !memberInRoom && socket.emit('log bug', "Conversation not exist");
-              const membersA = memberInRoom.members.filter(item => item!=from);
-              membersA.forEach(async (item) => {
-                const user = await User.findById(item).exec();
-                io.to(user?.socketId).emit("callUser", {roomID,from: userF});
-              })
-              socket.on("callUser", (data) => {
-
-              })
-        }
+              // !memberInRoom && socket.emit('log bug', "Conversation not exist");
+              // const membersA = memberInRoom.members.filter(item => item!=from);
+              // membersA.forEach(async (item) => {
+              //   const user = await User.findById(item).exec();
+                socket.to(roomID).emit("callUser", {roomID,from: userF});
+              // })
+              
+        // }
        
-      socketToRoom[socket.id] = roomID;
-      const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
+      // socketToRoom[socket.id] = roomID;
+      // const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
   
-      socket.emit("all users", usersInThisRoom);
+      // socket.emit("all users", usersInThisRoom);
       } catch(err) {
         console.log(err);
       }
@@ -242,11 +248,12 @@ io.on("connection", (socket) => {
 });
 
 socket.on("sending signal", payload => {
-    io.to(payload.userToSignal).emit('user joined', { signal: payload.signal, callerID: payload.callerID });
+    socket.join(payload.roomID)
+    socket.to(payload.roomID).emit('user joined', { signal: payload.signal, userId: payload.userId});
 });
 
 socket.on("returning signal", payload => {
-    io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
+    socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, userId: payload.userId });
 });
 
 

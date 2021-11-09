@@ -26,63 +26,76 @@ const  CallVideo = observer((props) => {
 
 
     useEffect(() => {
-        console.log("this is socketId: ",AuthStore.socket);
-    },[])
-    useEffect(() => {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-          AuthStore?.socket.emit("join room", {roomID,from});
+          if(status != 1) AuthStore?.socket.emit("join room", {roomID,from});
 				  myVideo.current.srcObject = stream;
 
-         
-
-           AuthStore?.socket.on("all users", users => {
-                const peers = [];
-                users.forEach(userID => {
-                    console.log("part 2:",AuthStore.socket.id );
-                    const peer = createPeer(userID,AuthStore?.socket.id, stream);
-                    peersRef.current.push({
-                        peerID: userID,
-                        peer,
-                    })
-                    peers.push(peer);
+                  const peer = new Peer({
+                    initiator: true,
+                    trickle: false,
+                    stream,
+                    });
+                    // peersRef.current.push({
+                    //     peer
+                    // })
+          
+                peer.on("signal", signal => {
+                   AuthStore?.socket.emit("sending signal", { signal,roomID,userId: from })
                 })
-                setPeers(peers);
-            })
+                setPeers([peer]);
+
+        //    AuthStore?.socket.on("all users", users => {
+        //         const peers = [];
+        //         users.forEach(userID => {
+        //             const peer = createPeer(userID,AuthStore?.socket.id, stream);
+                    // peersRef.current.push({
+                    //     peerID: userID,
+                    //     peer,
+                    // })
+        //             peers.push(peer);
+        //         })
+        //         setPeers(peers);
+        //     })
 
            AuthStore?.socket.on("user joined", payload => {
-                const peer = addPeer(payload.signal, payload.callerID, stream);
+               if(from != payload.userId) {
+                const peer = addPeer(payload.signal, stream);
                 peersRef.current.push({
-                    peerID: payload.callerID,
+                    peerID: payload.userId,
                     peer,
                 })
 
                 setPeers(users => [...users, peer]);
+               }
+               
             });
 
            AuthStore?.socket.on("receiving returned signal", payload => {
-                const item = peersRef.current.find(p => p.peerID === payload.id);
+                const item = peersRef.current.find(p => p.peerID === payload.userId);
                 item.peer.signal(payload.signal);
+                
+               
             });
        
 		    })
-   
+            
     },[]);
 
-    function createPeer(userToSignal, callerID, stream) {
-      const peer = new Peer({
-          initiator: true,
-          trickle: false,
-          stream,
-      });
+//     function createPeer(userToSignal, callerID, stream) {
+//       const peer = new Peer({
+//           initiator: true,
+//           trickle: false,
+//           stream,
+//       });
 
-      peer.on("signal", signal => {
-         AuthStore?.socket.emit("sending signal", { userToSignal, callerID, signal })
-      })
+//       peer.on("signal", signal => {
+//          AuthStore?.socket.emit("sending signal", { userToSignal, callerID, signal })
+//       })
 
-      return peer;
-  }
+//       return peer;
+//   }
 
-  function addPeer(incomingSignal, callerID, stream) {
+  function addPeer(incomingSignal, stream) {
       const peer = new Peer({
           initiator: false,
           trickle: false,
@@ -90,7 +103,7 @@ const  CallVideo = observer((props) => {
       })
 
       peer.on("signal", signal => {
-         AuthStore?.socket.emit("returning signal", { signal, callerID })
+         AuthStore?.socket.emit("returning signal", { signal, roomID,userId: from })
       })
 
       peer.signal(incomingSignal);

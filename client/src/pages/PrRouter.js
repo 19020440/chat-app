@@ -29,7 +29,7 @@ const routes = [
     {
         exact: true,
         path: ROUTE.home,
-        name: "Profile",
+        name: "Home",
         component: Home,
     },
   //   {
