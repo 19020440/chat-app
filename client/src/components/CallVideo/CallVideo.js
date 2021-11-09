@@ -34,11 +34,7 @@ const  CallVideo = observer((props) => {
                     initiator: true,
                     trickle: false,
                     stream,
-                    });
-                    // peersRef.current.push({
-                    //     peer
-                    // })
-          
+                    });        
                 peer.on("signal", signal => {
                    AuthStore?.socket.emit("sending signal", { signal,roomID,userId: from })
                 })
@@ -48,10 +44,10 @@ const  CallVideo = observer((props) => {
         //         const peers = [];
         //         users.forEach(userID => {
         //             const peer = createPeer(userID,AuthStore?.socket.id, stream);
-                    // peersRef.current.push({
-                    //     peerID: userID,
-                    //     peer,
-                    // })
+                    peersRef.current.push({
+                        // peerID: userID,
+                        peer,
+                    })
         //             peers.push(peer);
         //         })
         //         setPeers(peers);
@@ -60,10 +56,10 @@ const  CallVideo = observer((props) => {
            AuthStore?.socket.on("user joined", payload => {
                if(from != payload.userId) {
                 const peer = addPeer(payload.signal, stream);
-                peersRef.current.push({
-                    peerID: payload.userId,
-                    peer,
-                })
+                // peersRef.current.push({
+                //     peerID: payload.userId,
+                //     peer,
+                // })
 
                 setPeers(users => [...users, peer]);
                }
@@ -71,9 +67,13 @@ const  CallVideo = observer((props) => {
             });
 
            AuthStore?.socket.on("receiving returned signal", payload => {
-                const item = peersRef.current.find(p => p.peerID === payload.userId);
-                item.peer.signal(payload.signal);
-                
+                // const item = peersRef.current.find(p => p.peerID === payload.id);
+                // item.peer.signal(payload.signal);
+                console.log("trturn");
+                if(from != payload.userId   )  {
+                    console.log(peersRef.current[0]);
+                    peersRef.current[0].peer.signal(payload.signal )
+                }
                
             });
        

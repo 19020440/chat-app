@@ -4,6 +4,12 @@ import {useStore} from '../../hook'
 import { useEffect, useState } from "react";
 import {observer} from 'mobx-react-lite'
 import _ from "lodash";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import { faFile } from '@fortawesome/free-solid-svg-icons'
+import { Row,Col } from "antd";
+library.add(fab,faFile)
 
 const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   const AuthStore = useStore('AuthStore');
@@ -13,6 +19,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   const [isFile,setIsFile] = useState(false);
   const profileFriends = message.seens.filter(value => value.id == message.sender)
   const [profileFriend, setProfileFriend] = useState({});
+  const lengText = _.size(JSON.parse(message.text));
   useEffect(() => {
     const text = JSON.parse(message.text)
     if(!_.isArray(text)) {
@@ -21,10 +28,10 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   },[])
   useEffect(() => {
     if(!_.isEmpty(profileFriends)) setProfileFriend(profileFriends[0]);
-    
+    console.log(JSON.parse(message.text));
   },[])
   return (
-    <div className={own ? "message own" : "message"}>
+    <div className={own ? "message own" : "message notOwn"}>
       <div className="messageTop">
         {message.sender !== AuthStore.user._id &&
         
@@ -40,35 +47,37 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
         
         }
         
-        <div className="massafeTextAndSeen">
+        <Row className="massafeTextAndSeen">
           {isText && <p className="messageText">{JSON.parse(message.text)}</p>}
           {isFile && 
             JSON.parse(message.text).map((value) => {
               const arr = value.split('.');
               const arrName = value.split('_');
              
-               if(arr[arr.length -1] == "pdf" || arr[arr.length -1] == "docx") return (
-                <a href={value} className="mess_file" style={{width:50, height:50}}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // e.target.download = arrName[arrName.length-1];
-                  }}
-                  download
-                >{arrName[arrName.length-1]}</a>
+              if(arr[arr.length -1] == "pdf" || arr[arr.length -1] == "docx") return (
+                <Col span={lengText == 1? 24:lengText==2?12:8} className="text_file"> 
+                  <FontAwesomeIcon icon="fa-solid fa-file" />
+                  <a href={value} className="mess_file"
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
+                    download
+                  >{arrName[arrName.length-1]}</a>
+              </Col>
               )
 
               else if(arr[arr.length -1] == "mp4" )  return (
-
-                <video width="320" height="240" controls style={{width:150, height:150}}>
-                  <source src={value} type="video/mp4"/>
-
-
-                </video>
-                
+                <Col span={lengText == 1? 24:lengText==2?12:8}> 
+                  <video width="320" height="240" controls style={{width:150, height:150}}>
+                    <source src={value} type="video/mp4"/>
+                  </video>
+                </Col>
               )
               else  
               return (
-                  <img src={value} className="mess_file"/>
+                <Col span={lengText == 1? 24:lengText==2?12:8}> 
+                  <img src={value} className="text_image"/>
+                </Col>
                 );
             })
           
@@ -89,13 +98,13 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
             
           {!seen && message.sender == AuthStore.user._id &&
             <>
-            {/* <img src="https://img.icons8.com/material-outlined/13/000000/ok.png"/>  */}
+            
             <img className="image_text" src="https://img.icons8.com/external-kiranshastry-gradient-kiranshastry/13/000000/external-check-multimedia-kiranshastry-gradient-kiranshastry.png"/>
             
             </>
            } 
           
-        </div>
+        </Row>
        
       </div>
       <div className="messageBottom">{format(message.createdAt)}</div>

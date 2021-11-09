@@ -6,6 +6,7 @@
 
 .messageTop {
   display: flex;
+  margin-right: 10px;
 }
 
 .messageImg {
@@ -24,11 +25,19 @@
   max-width: 300px;
   word-break: break-word;
 }
+.own .messageText {
+  margin-left: auto;
+}
+.notOwn .messageText {
+  background-color: gray;
+}
 .massafeTextAndSeen {
   /* position: relative; */
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   align-items: center;
+  width: 200px;
+  min-height: 0;
 }
 
 .massafeTextAndSeen img {
@@ -54,7 +63,33 @@
   color: black;
 }
 .mess_file {
-  height: 90%;
+  color: black;
+  word-break: break-word;
+  font-size: 16px;
+  font-weight: 550;
+  margin-left: 10px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+}
+.mess_file:hover {
+  color: black;
+}
+.text_file {
+  padding: 15px;
+  background-color: #cddbe8;
+  display: flex;
+  /* justify-content: space-between; */
+  align-items: center;
+  width: 200px;
+  border-radius: 16px;
+}
+.text_file svg {
+  font-size: 18px;
+}
+.text_image {
   width: 100%;
-  border: black 1px solid;
+  height: auto;
 }

@@ -16,6 +16,7 @@ import UploadFile from '../UploadFile/UploadFile';
 import { format } from "timeago.js";
 import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
+import Emoji from '../Emoji/Emoji';
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
   faArrowAltCircleRight,faThumbsUp,faSearch,faChevronDown,faChevronUp,faUpload,faSearch,faSmileWink,faImage) 
 
@@ -36,6 +37,7 @@ const ContrainerMess = observer((props) => {
     const [files,setFiles] = useState([]);
     const [openGif, setOpenGif] = useState(false);
     const [profileFriend,setProfileFriend] = useState({});
+    const emojiRef = useRef(null);
     //set ProfileFriend
     useEffect(() => {
       if(!_.isEmpty(currentConversation)) {
@@ -104,30 +106,32 @@ const ContrainerMess = observer((props) => {
           
 
 
-
-              if(!_.isEmpty(AuthStore.textFile)) {
+          setTimeout(async () => {
+            if(!_.isEmpty(AuthStore.textFile)) {
 
                
 
-                const message = {
-                  sender: user._id,
-                  text: JSON.stringify(AuthStore.textFile),
-                  conversationId: covId,
-                  seens: statusSeen,
-                  seen: !_.isEmpty(seen),
-                };
-                const res = await ActionStore.action_saveMessage(message);
-                const {conversationId,...lastText} = message;
-                if(indexConversation !== null){
+              const message = {
+                sender: user._id,
+                text: JSON.stringify(AuthStore.textFile),
+                conversationId: covId,
+                seens: statusSeen,
+                seen: !_.isEmpty(seen),
+              };
+              const res = await ActionStore.action_saveMessage(message);
+              const {conversationId,...lastText} = message;
+              if(indexConversation !== null){
 
-                  ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
-                }
-                AuthStore.socket?.emit("sendMessage", res);
-
-                AuthStore.action_resetTextFile(); 
-                setMessages([...messages, res]);
-                setFiles([]);
+                ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
               }
+              AuthStore.socket?.emit("sendMessage", res);
+
+              AuthStore.action_resetTextFile(); 
+              setMessages([...messages, res]);
+              setFiles([]);
+            }
+          },0)
+             
        } catch(err) {
             console.log(err);
       }
@@ -135,7 +139,6 @@ const ContrainerMess = observer((props) => {
       };
 
       //Gif Text
-
       useEffect(() => {
         if(AuthStore.textGif)  setMessages([...messages, AuthStore.textGif]);
       },[AuthStore.textGif])
@@ -271,6 +274,14 @@ const ContrainerMess = observer((props) => {
     setFiles([...result]);
   }
 
+  //EMOJI
+  const handleShowEmoJi = () => {
+    const element =   emojiRef.current.getAttribute("class");
+    if(element.indexOf("hidden_icon") != -1) {
+      emojiRef.current.classList.remove("hidden_icon");
+    } else emojiRef.current.classList.add("hidden_icon");
+  }
+
     return (
         <>
             <div className="container-main">
@@ -397,33 +408,11 @@ const ContrainerMess = observer((props) => {
                               // onKeyPress={handleSendMessByEnter}
                               />
                               
-                            <div className="container-main__bottom-search__icon">
-                            <FontAwesomeIcon icon={faSmileWink} />
-                                <div className="container-main__bottom-search__list-icon">
-                                    <div className="container-main__bottom-icon-item">
-                                        <i  alt="&#xf4da;" className="fas fa-smile-wink"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf5b4;" className="fas fa-sad-tear"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf586;" className="fas fa-grin-squint-tears"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf556;" className="fas fa-angry"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf579;" className="fas fa-flushed"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf5a4;" className="fas fa-meh-blank"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf5a5;" className="fas fa-meh-rolling-eyes"></i>
-                                    </div>
-                                    <div className="container-main__bottom-icon-item">
-                                        <i alt="&#xf11a;" className="fas fa-meh"></i>
-                                    </div>
+                            <div className="container-main__bottom-search__icon" >
+                              <FontAwesomeIcon icon={faSmileWink} onClick={handleShowEmoJi}/>
+                                <div className="container-main__bottom-search__list-icon hidden_icon" ref={emojiRef}>
+                                    <Emoji/>
+                                   
                                 </div>
                             </div>
                         </div>

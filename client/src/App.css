@@ -1092,7 +1092,7 @@ footer span:hover {
   background: var(--white-color);
   padding: 8px;
   border-radius: 4px;
-  display: none;
+  /* display: none; */
 }
 
 .container-main__bottom-search__list-icon.active {
