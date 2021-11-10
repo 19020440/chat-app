@@ -49,7 +49,7 @@ export const showMessageError = (msg, onOk) => {
 
   export const findIndexLastTextSeen = (data) => {
     if(_.size(data) >=1){
-      for(let i = _.size(data)-1; i >=0;--i)   if(data[i].seens) return i;
+      for(let i = _.size(data)-1; i >=0;--i)   if(data[i].seen) return i;
       return null;
     }
 
@@ -66,7 +66,7 @@ export const showMessageError = (msg, onOk) => {
     let count = 0;
     try {
       conversations.map((value) => {
-        if(value?.lastText?.seens === false && value.lastText?.sender != userId) count++;
+        if(value?.lastText?.seens.seen === false && value.lastText?.sender != userId) count++;
       })
     } catch(err) {
       console.log(err);
@@ -77,7 +77,7 @@ export const showMessageError = (msg, onOk) => {
 
   export const findMessenger = (data,string) => {
     const result  = data.map((value,index) => {
-      if(value.text.indexOf(string) != -1) return index;
+      if(value.text.indexOf(string) != -1 && !_.isArray(JSON.parse(value.text))) return index;
     })
     const rs = result.filter(value => value != undefined)
     return rs;

@@ -3,7 +3,7 @@ import {observable, makeAutoObservable, action} from 'mobx'
 import {WsCode} from '../helper/Wscode'
 import {CONFIG_URL} from "../helper/constant"
 import {Request} from "../helper/Request"
-import {getLessProfile, countTextNotSeen,findIndexFromArrayLodash,sortConversationByUpdateAt} from '../helper/function';
+import {getLessProfile, countTextNotSeen,findIndexFromArrayLodash,sortConversationByUpdateAt,findObjectFromArrayLodash} from '../helper/function';
 export class ActionStore {
     
     profileOfFriend = {};
@@ -57,7 +57,34 @@ export class ActionStore {
             action_countTextNotSeen: action,
             action_setCurrentConversation: action,
             action_resetListSearchFriend: action,
+            action_changePropertyConversation: action,
         })
+    }
+
+    //chang-property-conversation
+    action_changePropertyConversation(type,covId,data) {
+        switch(type) {
+            case "members": {
+                const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
+                this.conversations[covIndex].members = [...data];
+                break;
+            }    
+
+            case "name": {
+                const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
+                this.conversations[covIndex] = {...this.conversations[covIndex],name: data};
+                break;
+            }
+
+            case 'leave': {
+                _.remove(this.conversations, function (value)  {
+                    return value._id  == covId;
+                })
+                break;
+            }
+            default: break;
+        }
+        
     }
 
     action_setCurrentConversation(convId) {
@@ -68,16 +95,28 @@ export class ActionStore {
         this.countTextNotSeen = countTextNotSeen(data);
     }
     ///update Status
-    action_updateStatusSeenConversation(covId, string) {
-        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
+    action_updateStatusSeenConversation({conversationId,senderId}, string) {
+        const result = findIndexFromArrayLodash(this.conversations, {_id: conversationId});
         if(result != -1) {
             try {
                 if(string == "join") {
-                    this.conversations[result].lastText.receiveSeen = true;
+                        this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) {
+                            value.seen = true;
+                            value.joinRoom = true;
+                        }
+                        return value;
+                    });
                     console.log("join room with ID: ",result);
                 }
                 else  {
-                    this.conversations[result].lastText.receiveSeen = false;
+                    this.conversations[result].lastText.seens =  this.conversations[result].lastText.seens.map((value) =>{
+                        if(value.id == senderId) {
+                            value.seen = false;
+                            value.joinRoom = false;
+                        }
+                        return value;
+                    });
                     console.log("out room with ID: ",result);}
                 
             } catch(err) {
@@ -86,39 +125,56 @@ export class ActionStore {
         }
     }
 
-    action_updateConversationSeenOutRoomSeft(covId) {
-        const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
-        if(!this.conversations[index].lastText) this.conversations[index].lastText = {sendSeen: false}
-        else this.conversations[index].lastText.sendSeen = false;
-       
-    }
-
-    action_updateConversationSeenOutRoom(index) {
-        if(!this.conversations[index].lastText) this.conversations[index].lastText = {receiveSeen: false}
-        else this.conversations[index].lastText.receiveSeen = false;
-    }
-    action_updateStatusSeenSelf(covId) {
-        const result = findIndexFromArrayLodash(this.conversations, {_id: covId});
-        console.log("this is result: ",  this.conversations[result]);
+    action_updateStatusSeenMembers({conversationId,senderId}, string) {
+        // console.log(senderId);
+        const result = findIndexFromArrayLodash(this.conversations, {_id: conversationId});
         if(result != -1) {
             try {
-                if(!this.conversations[result].lastText) this.conversations[result].lastText = {sendSeen: true}
-                else this.conversations[result].lastText.sendSeen = true;
-                if(this.conversations[result].lastText.seens != undefined) this.conversations[result].lastText.seens = true;
-                
+                if(string == "join") {
+                    this.conversations[result].members =  this.conversations[result].members.map((value) =>{
+                        if(value.id == senderId) value.status = true;
+                        return value;
+                    });
+                    // console.log("join online with ID: ",result);
+                }
+                else  {
+                    this.conversations[result].members =  this.conversations[result].members.map((value) =>{
+                        if(value.id == senderId) value.status = false;
+                        return value;
+                    });
+                    // console.log("out offline with ID: ",result);
+                }
                 
             } catch(err) {
                 console.log(err);
             }
         }
+    }
+
+
+    action_updateConversationSeenOutRoom(index) {
+        if(!this.conversations[index].lastText) this.conversations[index].lastText = {receiveSeen: false}
+        else this.conversations[index].lastText.receiveSeen = false;
+    }
+    action_updateStatusSeenSelf({conversationId, senderId}) {
+       const cov = findObjectFromArrayLodash(this.conversations, {_id: conversationId});
+
+       cov.lastText.seens.map(value => {
+           if(value.id == senderId) {
+               value.joinRoom = true;
+               value.seen = true;
+           } else {
+               if(value.joinRoom) value.seen = true;
+               else value.seen = false;
+           }
+       })
+
         
-        console.log(this.conversations[result]);
     }
 
     async action_setConverSationByIndex(data, index) {
         try {
-            const receiveSeen = this.conversations[index].lastText.receiveSeen
-            if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+
             this.conversations[index] = {...this.conversations[index],updatedAt: data.updatedAt};
             this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
         } catch(err) {
@@ -130,8 +186,8 @@ export class ActionStore {
         const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
         if(index != -1) {
             try {
-                const receiveSeen = this.conversations[index].lastText.receiveSeen
-                if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
+                // const receiveSeen = this.conversations[index].lastText.receiveSeen
+                // if(!receiveSeen) this.conversations[index].lastText.receiveSeen = false;
                 this.conversations[index].updatedAt = data.updatedAt;
                 this.conversations[index].lastText = {...this.conversations[index].lastText,...data.lastText};
             } catch(err) {
@@ -295,7 +351,21 @@ export class ActionStore {
                 else return [];
             }
         } else this.listSearch = [];
-      
+    }
+
+    async action_searchFriendInfo(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.searchFriend}`;
+        const json = {
+            "word": data,
+        }
+            const result = await Request.post(json, DOMAIN);
+            if(result) {
+                if(!_.isEmpty(result.content)) {
+                    const res = getLessProfile(result.content);
+                    return res;
+                }
+                else return [];
+            }
     }
 
     action_resetListSearchFriend() {

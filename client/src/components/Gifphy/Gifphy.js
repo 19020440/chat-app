@@ -9,7 +9,7 @@ import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash';
 library.add(fab,faSearch)
-const  Gifphy = observer(({currentConversation})  => {
+const  Gifphy = observer(({currentConversation,indexCov})  => {
     const AuthStore = useStore('AuthStore');
     const ActionStore = useStore('ActionStore');
     const {user} = AuthStore;
@@ -20,27 +20,26 @@ const  Gifphy = observer(({currentConversation})  => {
 
     const handleSendGif = async (e) => {
         try {
-            const statusSeen = currentConversation?.lastText?.receiveSeen ? true:false;
-            const receiverId = currentConversation.members.find(
-                (member) => member !== user._id
-            );
+            const statusSeen = currentConversation.lastText.seens;
+            const seen = statusSeen.filter(value => value.seen == true && value.id != AuthStore.user._id);
+            // const receiverId = currentConversation.members.find(
+            //     (member) => member !== user._id
+            // );
 
             const message = {
                 sender: user._id,
                 text: JSON.stringify([e.target.src]),
                 conversationId: currentConversation?._id,
                 seens: statusSeen,
+                seen: !_.isEmpty(seen),
               };
               const res = await ActionStore.action_saveMessage(message);
+              const {conversationId,...lastText} = message;
+              if(indexCov !== null){
+                ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexCov);
+              }
               AuthStore.action_setTextGif(res);
-              AuthStore.socket?.emit("sendMessage", {
-                senderId: user._id,
-                receiverId,
-                text: JSON.stringify([e.target.src]),
-                updatedAt: Date.now(),
-                conversationId: currentConversation?._id,
-                seens: statusSeen,
-            });
+              AuthStore.socket?.emit("sendMessage", res);
            
         } catch(err) {
             console.log(err);

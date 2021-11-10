@@ -22,8 +22,12 @@ export  class AuthStore {
     textGif = null;
     textFileName = [];
     cancelImageIndex = null;
+    listRoom = [];
+    listStatusCov = [];
     constructor() {
         makeAutoObservable(this,{
+            listStatusCov: observable,
+            listRoom: observable,
             stt:observable,
             textGif: observable,
             themePage: observable,
@@ -49,10 +53,26 @@ export  class AuthStore {
             action_resetTextFile: action,
             cancelImageIndex: observable,
             action_setCancelImageIndex: action,
+            action_setListRoom: action,
+            action_addFriend: action,
         })
     }
-
-
+    //ADd Friend and Cancel Friends
+    async action_addFriend(status,userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/${status?"follow": "unfollow"}`;
+        const json = {
+            userId: this.user._id,
+        }
+        const result = await Request.post(json, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+    action_setListStatusCov(data) {
+        this.listStatusCov = [...this.listStatusCov, data]; 
+    }
+    action_setListRoom(data) {
+        this.listRoom = data;
+    }
     async action_setCancelImageIndex(index) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.deleteImage}`;
         const json = {
@@ -169,8 +189,9 @@ export  class AuthStore {
         if(result) {
             this.user = result.content;
             this.login  = 1;
-            !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
+            // !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
+            return true;
         }
 
     }
@@ -180,13 +201,15 @@ export  class AuthStore {
         const result = await Request.get({}, DOMAIN);
         if(result) {
             if(! _.isEmpty(result.content)) {
-                this.login = 1;
                 this.user = result.content;
+                
+                
                 this.socket?.emit('validLogin');
                 this.socket?.on('setvalidLogin', (socketId) => {
                     this.user.socketId = socketId;
-                  this.socket?.emit("online",{email: this.user?.email, id : socketId});
+                    this.login = 1;
                 })
+                
             }
         }
 

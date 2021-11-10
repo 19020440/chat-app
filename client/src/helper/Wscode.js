@@ -15,5 +15,6 @@ export const WsCode = {
     searchFriend: "users/search",
     searchCov: 'conversations/find',
     updateConversation: "conversations/update",
-    deleteImage: 'upload/delete'
+    deleteImage: 'upload/delete',
+    follow: 'users'
 }

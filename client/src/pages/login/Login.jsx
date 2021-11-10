@@ -1,6 +1,6 @@
 import { useContext, useRef } from "react";
 import "./login.css";
-import { loginCall } from "../../apiCalls";
+import {useHistory} from 'react-router-dom'
 import { AuthContext } from "../../context/AuthContext";
 import { CircularProgress } from "@material-ui/core";
 import {Link} from 'react-router-dom'
@@ -13,11 +13,11 @@ const  Login = observer(() => {
   const email = useRef();
   const password = useRef();
   const { isFetching, dispatch } = useContext(AuthContext);
-
+  const history = useHistory();
   const handleClick = async (e) => {
     e.preventDefault();
-    await AuthStore.action_login( { email: email.current.value, password: password.current.value });
-    
+    const result = await AuthStore.action_login( { email: email.current.value, password: password.current.value });
+    if(result) history.push('/messenger')
     // console.log(AuthStore.socket.id);
 
   };

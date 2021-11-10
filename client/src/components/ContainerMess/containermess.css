@@ -62,3 +62,6 @@
 .container-main__bottom-left-icon-gifphy {
   position: relative;
 }
+.ant-layout-header {
+  height: 25px;
+}

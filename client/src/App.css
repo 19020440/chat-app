@@ -533,7 +533,7 @@ footer span:hover {
   cursor: pointer;
 }
 .container {
-  margin-top: var(--header-height);
+  margin-top: 40px;
   display: flex;
   height: calc(100vh - var(--header-height));
   overflow-y: hidden;
@@ -1092,7 +1092,7 @@ footer span:hover {
   background: var(--white-color);
   padding: 8px;
   border-radius: 4px;
-  display: none;
+  /* display: none; */
 }
 
 .container-main__bottom-search__list-icon.active {
@@ -1362,11 +1362,6 @@ footer span:hover {
 .hidden {
   display: block;
 }
-.image_text {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
 .hight_light-text {
   background-color: yellow;
 }
@@ -1374,4 +1369,10 @@ footer span:hover {
 .loading_component {
   margin-top: 20%;
   margin-left: 50%;
+}
+.ant-modal-title {
+  text-align: center;
+}
+p {
+  margin-bottom: 0;
 }

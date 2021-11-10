@@ -10,10 +10,11 @@ import ProfileRight from '../ProfileRight/ProfileRight'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faVideo } from '@fortawesome/free-solid-svg-icons'
-import { useHistory } from "react-router-dom";
+import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faUsers,faVideo } from '@fortawesome/free-solid-svg-icons'
+import { useHistory,useParams } from "react-router-dom";
 import SearchFriend from '../searchFriend/search'
-library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft) 
+import {Modal} from 'antd'
+library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft,faUsers) 
 
 const Conversation = observer(() => {
     const ActionStore = useStore('ActionStore');
@@ -23,31 +24,12 @@ const Conversation = observer(() => {
     const beforeConversation = useRef(null);
     const currentConversation = useRef(null);
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
-    useEffect(() => {
-        currentConversation.current = ActionStore.currentConversation;
-        beforeConversation.current = ActionStore.currentConversation;
-    },[ActionStore.currentConversation])
-  const handlePassPage =  (conversation) => {
-    history.push(`/messenger/${conversation._id}`);
-    handleOutRoom();
-  }
-
-  const handleOutRoom = async () => {
-      
-    if(beforeConversation.current != currentConversation.current) {
-        try {
-            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: beforeConversation.current});
-            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
-            const res = await ActionStore.action_getProfile(friendId);
-
-            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
-            ActionStore.action_updateConversationSeenOutRoomSeft(beforeConversation.current);
-  
-          } catch(err) {
-            console.log(err);
-          }
+    const [showModalGroup,setShowModalGroup] = useState(false);
+    const [modalSearchList,setModalSearchList] = useState([])
+    const handlePassPage =  (conversation) => {
+      history.push(`/messenger/${conversation._id}`);  
     }
-  }
+  
   //SEARCH FRIEND
   const handleSearchPeople = (e) => {
       setActionSearchPeople(true);
@@ -59,34 +41,65 @@ const Conversation = observer(() => {
     ActionStore.action_resetListSearchFriend();
     setActionSearchPeople(false);
   }
-  const handleOutComponent = async () => {
-    if(currentConversation.current !== null) {
-        try {
-            const conversations = findObjectFromArrayLodash(ActionStore.conversations, {_id: currentConversation.current});
-            const friendId = conversations.members.find((m) => m !== AuthStore.user?._id);
-            const res = await ActionStore.action_getProfile(friendId);
-            ActionStore.action_updateConversationSeenOutRoomSeft(currentConversation.current);
-            AuthStore.socket?.emit("out_room",  {socketId: res?.socketId, conversationId: conversations._id});
-  
-          } catch(err) {
-            console.log(err);
-          }
-    }
-  }
 
   // create new conversation 
   const handlenewConversation = async (user) => {
     const result = await ActionStore.action_getCovBySearch(AuthStore?.user._id,user?._id);
+    setActionSearchPeople(false);
     history.push(`/messenger/${result._id}`);
   }
 
-  useEffect(() => {
-    return () => {
-        handleOutComponent();
-        window.removeEventListener('beforeunload', handleOutComponent);
-        
+  //show modal create group
+  const modalGroup = (isModalVisible) => {
+    const handleInviteGroup = (e,userId) => {
+      AuthStore.socket.emit("invite_to_group",{from: AuthStore.user, to: userId})
     }
+    return (
+      <Modal title="Tạo nhóm" visible={isModalVisible}  onCancel={handleCancelGroup} className="modal-group">
+        <div className="main-modal_showGroup">
+            <div className="main-modal_showGroup-search">
+                <FontAwesomeIcon icon={faSearch}/>
+                <input type="text" />
+            </div>
+            <span>Bạn bè</span>
+            <div className="main-modal_showGroup-row">
+                {modalSearchList.map(value => {
+                  return (
+                    <div className="main-modal_showGroup-col">
+                      <div className="main-modal_showGroup-col-info">
+                        <img src={value.profilePicture} className="main-modal_showGroup-col-img"/>
+                        <span>{value.username}</span>
+                      </div>
+                      <button onClick={(e) => {
+                        handleInviteGroup(e,value._id)
+                        }}
+                        >Mời vào nhóm</button>
+                    </div>
+                  )
+                })}
+               
+
+                
+            </div>
+        </div>
+        
+      </Modal>
+    )
+  }
+  console.log("re-render conversation");
+  const handleCancelGroup = () => {
+    setShowModalGroup(false);
+  }
+
+  useEffect(() => {
+    getListModalGroup();
   },[])
+  const getListModalGroup = async () => {
+    const result = await ActionStore.action_getListFriend(AuthStore.user._id);
+    setModalSearchList(result)
+  }
+
+
 
   
   return (
@@ -103,8 +116,11 @@ const Conversation = observer(() => {
                                 <div className="container-left__head-group-btn">
                                     <FontAwesomeIcon icon="fa-solid fa-video" />
                                 </div>
-                                <div className="container-left__head-group-btn">
-                                    <FontAwesomeIcon icon={faPenSquare} />
+                                <div className="container-left__head-group-btn" onClick={async() => {
+                                 
+                                  setShowModalGroup(true);
+                                }}>
+                                    <FontAwesomeIcon icon={faUsers} />
                                 </div>
                             </div>
                         </div>
@@ -143,7 +159,12 @@ const Conversation = observer(() => {
                                         beforeConversation.current = conversation?._id;
                                         
                                     }}>
-                                        <ProfileRight conversation={conversation} seen={conversation.lastText?.seens?true:false}/>
+                                        <ProfileRight 
+                                        conversation={conversation} 
+                                        seen={conversation.lastText?.seens.filter(value => value.id == AuthStore.user._id)}
+                                        isGroup={_.size(conversation.members) > 2? true:false}
+                                        
+                                        />
                                     </li>
                                     </>
                                 )
@@ -153,6 +174,7 @@ const Conversation = observer(() => {
 
                         </ul>
                     </div>
+                    {modalGroup(showModalGroup)}
                 </div>
   );
 });

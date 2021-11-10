@@ -98,15 +98,15 @@ module.exports  = new class UserController {
                 if (!user.followers.includes(req.body.userId)) {
                   await user.updateOne({ $push: { followers: req.body.userId } });
                   await currentUser.updateOne({ $push: { followings: req.params.id } });
-                  res.status(200).json("user has been followed");
+                  res.status(200).json({content: "user has been followed", status: 1});
                 } else {
-                  res.status(403).json("you allready follow this user");
+                  res.status(403).json({content: "you allready follow this user", status: 0});
                 }
               } catch (err) {
-                res.status(500).json(err);
+                res.status(500).json({content: err, status: 0});
               }
             } else {
-              res.status(403).json("you cant follow yourself");
+              res.status(403).json({content: "you cant follow yourself", status: 0});
             }
           }
 //unfollow a user
@@ -119,15 +119,15 @@ module.exports  = new class UserController {
                     if (user.followers.includes(req.body.userId)) {
                       await user.updateOne({ $pull: { followers: req.body.userId } });
                       await currentUser.updateOne({ $pull: { followings: req.params.id } });
-                      res.status(200).json("user has been unfollowed");
+                      res.status(200).json({status: 1,content: "user has been unfollowed"});
                     } else {
-                      res.status(403).json("you dont follow this user");
+                      res.status(403).json({content: "you dont follow this user", status: 0});
                     }
                   } catch (err) {
-                    res.status(500).json(err);
+                    res.status(500).json({content: err,status: 0});
                   }
                 } else {
-                  res.status(403).json("you cant unfollow yourself");
+                  res.status(403).json({content: "you cant unfollow yourself", status: 0});
                 }
 
           }

@@ -17,13 +17,12 @@ const Profile = observer(() => {
   const ActionStore = useStore('ActionStore');
   const AuthStore = useStore('AuthStore');
   useEffect(() => {
-    
+    console.log(userId);
     fetchUser();
   }, [userId]);
 
   const fetchUser = async () => {
-    // const res = await axios.get(`/users?userId=${userId}`);
-    if(userId === AuthStore.user._id){
+    if(userId == AuthStore.user._id){
       setUser(AuthStore.user);
       return;
     }
@@ -31,7 +30,6 @@ const Profile = observer(() => {
     !res && history.goBack();
     setUser(res);
   }; 
-
   return (
     <>
       <Topbar />
