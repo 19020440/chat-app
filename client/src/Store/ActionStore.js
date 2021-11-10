@@ -57,7 +57,34 @@ export class ActionStore {
             action_countTextNotSeen: action,
             action_setCurrentConversation: action,
             action_resetListSearchFriend: action,
+            action_changePropertyConversation: action,
         })
+    }
+
+    //chang-property-conversation
+    action_changePropertyConversation(type,covId,data) {
+        switch(type) {
+            case "members": {
+                const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
+                this.conversations[covIndex].members = [...data];
+                break;
+            }    
+
+            case "name": {
+                const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
+                this.conversations[covIndex] = {...this.conversations[covIndex],name: data};
+                break;
+            }
+
+            case 'leave': {
+                _.remove(this.conversations, function (value)  {
+                    return value._id  == covId;
+                })
+                break;
+            }
+            default: break;
+        }
+        
     }
 
     action_setCurrentConversation(convId) {

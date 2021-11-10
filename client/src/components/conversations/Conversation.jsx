@@ -86,7 +86,7 @@ const Conversation = observer(() => {
       </Modal>
     )
   }
-
+  console.log("re-render conversation");
   const handleCancelGroup = () => {
     setShowModalGroup(false);
   }

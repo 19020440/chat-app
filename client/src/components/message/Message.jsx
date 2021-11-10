@@ -20,15 +20,16 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
   const profileFriends = message.seens.filter(value => value.id == message.sender)
   const [profileFriend, setProfileFriend] = useState({});
   const lengText = _.size(JSON.parse(message.text));
+  const text = JSON.parse(message.text)
   useEffect(() => {
-    const text = JSON.parse(message.text)
+    
     if(!_.isArray(text)) {
       setIsText(true);
     } else setIsFile(true);
   },[])
   useEffect(() => {
     if(!_.isEmpty(profileFriends)) setProfileFriend(profileFriends[0]);
-    console.log(JSON.parse(message.text));
+    // console.log(JSON.parse(message.text));
   },[])
   return (
     <div className={own ? "message own" : "message notOwn"}>
@@ -50,7 +51,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
         <Row className="massafeTextAndSeen">
           {isText && <p className="messageText">{JSON.parse(message.text)}</p>}
           {isFile && 
-            JSON.parse(message.text).map((value) => {
+            text.map((value) => {
               const arr = value.split('.');
               const arrName = value.split('_');
              
@@ -82,8 +83,9 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
             })
           
           }
-          <div className="list_seen_messenger">
-              {lastTextSeen && message.sender == AuthStore.user._id &&
+           {lastTextSeen && message.sender == AuthStore.user._id &&
+             <div className="list_seen_messenger">
+             
                 <>
                 {message.seens.map(value => {
                   if(value.id != AuthStore.user._id && value.seen)
@@ -93,9 +95,9 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
                 })}
               
                 </>
-              }
+             
           </div>
-            
+             }
           {!seen && message.sender == AuthStore.user._id &&
             <>
             
@@ -103,7 +105,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
             
             </>
            } 
-          
+          {/* {console.log(text + " :" + isFile)} */}
         </Row>
        
       </div>

@@ -14,7 +14,6 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
     useEffect(() => {   
         if(isGroup) {
             const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
-            console.log(conversation.lastText);
             setUser({
                 username: conversation.name,
                 profilePicture: conversation.covImage,
@@ -25,7 +24,7 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
             setUser(userProfile);  
         }
            
-    }, [ActionStore.offlineStatus]);
+    }, [ActionStore.offlineStatus,conversation]);
 
     
     
@@ -59,7 +58,7 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
                                                 ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
                                                 : `${JSON.parse(conversation?.lastText?.text)}`
                                                 : ""}
-                                                {console.log(seenStatus)}
+
                                             </span>
                                             
                                             }

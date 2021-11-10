@@ -1,0 +1,45 @@
+.modal-edit-profile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+}
+.modal-edit-profile img {
+  width: 35px;
+  height: 35px;
+}
+.modal-edit_name .modal-profile-fix img {
+  border-radius: 50px;
+  width: 35px;
+  height: 35px;
+}
+.modal-profile-fix input::placeholder {
+  color: black;
+}
+.modal-profile-fix {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.modal-edit_name .modal-profile-fix input {
+  margin-left: 10px;
+  flex: 1;
+  font-weight: 550;
+  margin-right: 10px;
+  border: none;
+  padding: 5px;
+  outline: none;
+  /* border: 2px #8a8ad8 solid; */
+}
+.modal-profile-fix:hover {
+}
+.modal-edit_name .ant-modal-footer {
+  display: none;
+}
+.right-bar-out_room {
+  color: rgb(241, 35, 35);
+}
+.dropdown-item-rename img {
+  width: auto;
+  height: auto;
+}

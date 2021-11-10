@@ -48,7 +48,8 @@ const ContrainerMess = observer((props) => {
           setProfileFriend({
             username: currentConversation.name,
             profilePicture: currentConversation.covImage,
-            status
+            status,
+            isGroup: true
           })
         } else {
           const [userProfile] = currentConversation.members.filter(value => value.id != AuthStore?.user._id);
@@ -233,6 +234,8 @@ const ContrainerMess = observer((props) => {
   useEffect(() => {
     return () => {
       console.log("out this room: ", conversationId);
+      setMessages([]);
+   
     conversationId &&  handleOutComponent();
     }
   },[conversationId])
@@ -282,6 +285,12 @@ const ContrainerMess = observer((props) => {
     } else emojiRef.current.classList.add("hidden_icon");
   }
 
+  useEffect(() => {
+    return () => {
+      console.log("delete mes");
+      setMessages([]);
+    }
+  },[])
     return (
         <>
             <div className="container-main">
@@ -349,6 +358,7 @@ const ContrainerMess = observer((props) => {
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
                                                     seen={m.seen}
                                                     lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
+                                                    key={conversationId + index}
                                                 />
                                             </li>
                                         );
@@ -371,8 +381,8 @@ const ContrainerMess = observer((props) => {
                                 <FontAwesomeIcon icon={faImage} />
                             </label>
                             <div className="container-main__bottom-left-icon hide container-main__bottom-left-icon-gifphy">
-                                {openGif && <Gifphy currentConversation={currentConversation} indexCov={indexConversation}/> }
-                              <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList}/>
+                                {openGif && <Gifphy currentConversation={currentConversation} indexCov={indexConversation} /> }
+                              <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList} />
                             </div>
                         </div>
                         <div className="container-main__bottom-search">
@@ -380,7 +390,6 @@ const ContrainerMess = observer((props) => {
                                     {!_.isEmpty(files) && 
   
                                       <div className="container-main__bottom-search-multi-input-upload">
-                                       {console.log(files)}
                                         {
                                           files.map((value, index) => {
                                             return (
@@ -417,9 +426,6 @@ const ContrainerMess = observer((props) => {
                             </div>
                         </div>
                         <div className="container-main__bottom-right">
-                            {/* <div className="container-main__bottom-thumb-up">
-                                <FontAwesomeIcon icon={faThumbsUp} />
-                            </div> */}
                             <div className="container-main__bottom-send"  onClick={handleSubmit}>
                                 <FontAwesomeIcon icon={faArrowAltCircleRight} />
                             </div>
@@ -427,7 +433,7 @@ const ContrainerMess = observer((props) => {
                     </div>
                 </div>
         
-                                <ContainerRight />
+                                <ContainerRight infoRoom={profileFriend} members={currentConversation?.members}/>
         </>
     );
 })

@@ -7,7 +7,6 @@ function Emoji(props) {
     const onEmojiClick = (event, emojiObject) => {
         setEmoJi(prev => prev+emojiObject.emoji)
         setChosenEmoji(emojiObject);
-        console.log(emoJi);
     }
     const handleDelete = (e) => {
         // if(e.which == 8 && emoJi != "" ) {
