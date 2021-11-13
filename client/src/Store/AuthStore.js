@@ -55,7 +55,28 @@ export  class AuthStore {
             action_setCancelImageIndex: action,
             action_setListRoom: action,
             action_addFriend: action,
+            action_resetAllData:action,
         })
+    }
+    //ResetAllData
+    action_resetAllData() {
+        this.login = 2;
+        this.user = {};
+        this.socket = null;
+        this.statusSeenText = false;
+        this.themePage = true;
+        this.activeContainer = false;
+        this.CallVideoSocketId = "";
+        this.statusSearchMess = false;
+        this.stt = null;
+        this.textSearch = null;
+        this.textFile = [];
+        this.GifphyList = [];
+        this.textGif = null;
+        this.textFileName = [];
+        this.cancelImageIndex = null;
+        this.listRoom = [];
+        this.listStatusCov = [];
     }
     //ADd Friend and Cancel Friends
     async action_addFriend(status,userId) {
@@ -137,7 +158,7 @@ export  class AuthStore {
        const result =  await file.map(async (value) => {
 
             const formData = new FormData();
-            const fileName = Date.now() + value.name;
+            const fileName = Date.now() +"_"+ value.name;
             formData.append("name", fileName);
             formData.append("file", value);
             
@@ -223,6 +244,7 @@ export  class AuthStore {
         if(result) {
             this.login = 0;
             await sessionStorage.removeItem("token");
+            this.action_resetAllData();
             
         }
 

@@ -590,13 +590,13 @@ footer span:hover {
 }
 
 .container-left__head-search {
-  margin-top: 12px;
+  /* margin-top: 12px; */
 }
 
 .container-left__search-box {
   display: flex;
   align-items: center;
-  background: var(--bg-color);
+  background: #c2cad6;
   height: 36px;
   border-radius: 20px;
   overflow: hidden;
@@ -613,7 +613,7 @@ footer span:hover {
   flex: 1;
   outline: none;
   border: none;
-  background: var(--bg-color);
+  background: #c5cbd4;
   font-size: 1.4rem;
   color: var(--text-color);
 }
@@ -1072,7 +1072,7 @@ footer span:hover {
   border: none;
   outline: none;
   color: var(--text-color);
-  background: var(--bg-color);
+  background: #80808052;
   padding: 0 16px;
   font-size: 1.5rem;
   border-radius: 20px;

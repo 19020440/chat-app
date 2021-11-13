@@ -30,6 +30,7 @@ const header = observer((props) => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
         await AuthStore.action_logout();
+        ActionStore.action_resetAllData();
         setVisible(false); 
       }
     
@@ -67,6 +68,7 @@ const header = observer((props) => {
                     </Col>
                     <Col span={24} className="sideBar-conversation sideBar-active-class" onClick={handlePassMess}>
                         <FontAwesomeIcon icon={faFacebookMessenger} />
+                        {console.log(countMess)}
                         {countMess != 0 && <span>{countMess} </span> }
                     </Col>
 

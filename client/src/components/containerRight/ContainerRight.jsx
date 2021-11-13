@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './containerRight.css'
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash'
@@ -10,7 +10,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch, faWrench, faCheck, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash,faWrench,faCheck,faSignOutAlt) 
-const ContainerRight = observer(({infoRoom,members}) => {
+const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const AuthStore = useStore('AuthStore')
     const ActionStore = useStore('ActionStore')
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
@@ -21,6 +21,31 @@ const ContainerRight = observer(({infoRoom,members}) => {
     const [leaveGroup,setLeaveGroup] = useState(false);
     const {conversationId} = useParams(); 
     const history = useHistory();
+    const fileShareRef = useRef(null);
+    const imageShareRef = useRef(null);
+    const [listImage,setListImage] = useState([]);
+    const [listFile,setListFile] = useState([]);
+
+    useEffect(() => {
+        messenger.map(value => {
+            if(_.isArray(JSON.parse(value.text))) {
+                JSON.parse(value.text).map(file => {
+                    const arr = file.split('.');
+                    const arrName = file.split('_');
+                
+                    if(arr[arr.length -1] == "pdf" || arr[arr.length -1] == "docx") setListFile(prev => [...prev,{link:file,name: arrName[arrName.length-1]}])
+    
+                    else if(arr[arr.length -1] == "mp4" )  setListImage(prev => [...prev,file]);
+                    else setListImage(prev => [...prev,file]);
+                })  
+            }
+        }) 
+        return () => {
+            setListFile([]);
+            setListImage([]);
+        }
+    },[messenger])
+    console.log("render right:", infoRoom.username);
     const handleShow = () => {
         setActive(!active);
     }
@@ -127,7 +152,7 @@ const ContainerRight = observer(({infoRoom,members}) => {
     const handleAcceptReName = (e) => {
        
         ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
-        
+        setReNameGroup(false);
         
     }
     const handleCancelEditNameModal = () => {
@@ -220,6 +245,7 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                 </li>
                             </ul>
                         </div>
+
                         <div className="container-right__menu-dropdown" onClick={handleShowQVR}>
                             <div className="dropdown-head">
                                 <div className="dropdown-head__title">
@@ -268,7 +294,14 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                 </li>
                             </ul>
                         </div>
-                        <div className="container-right__menu-dropdown">
+
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-file_share" 
+                            onClick={(e) => {
+                                const element = fileShareRef.current.getAttribute("class");
+                                if(element.indexOf("hidden_icon") != -1) {
+                                    fileShareRef.current.classList.remove("hidden_icon");
+                                } else fileShareRef.current.classList.add("hidden_icon");
+                            }}>
                             <div className="dropdown-head">
                                 <div className="dropdown-head__title">
                                     Tệp được chia sẻ
@@ -277,8 +310,27 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                     <FontAwesomeIcon icon={faChevronDown} />
                                 </div>
                             </div>
+                            <Row ref={fileShareRef} className="hidden_icon">
+                                {!_.isEmpty(listFile)?
+                                    listFile.map(file => {
+                                        return (
+                                            <Col span={24}>
+                                                <a href={file.link}>{file.name}</a>
+                                            </Col>
+                                        )
+                                    }):
+                                    <Col span={6} className="file_share-no_data">No files</Col>
+                            
+                                }
+                            </Row>
                         </div>
-                        <div className="container-right__menu-dropdown">
+
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-image-share" onClick={() =>{
+                            const element = imageShareRef.current.getAttribute("class");
+                            if(element.indexOf("hidden_icon") != -1) {
+                                imageShareRef.current.classList.remove("hidden_icon");
+                            } else imageShareRef.current.classList.add("hidden_icon");
+                        }}>
                             <div className="dropdown-head">
                                 <div className="dropdown-head__title">
                                     File phương tiện được chia sẻ
@@ -287,7 +339,19 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                     <FontAwesomeIcon icon={faChevronDown} />
                                 </div>
                             </div>
+
+                            <Row ref={imageShareRef} className="hidden_icon">
+                               {listImage.map(link => {
+                                   return (
+                                    <Col span={8}>
+                                        <img src={link} alt="" />
+                                    </Col>
+                                   )
+                               })}
+                            </Row>
                         </div>
+
+
                         {infoRoom.isGroup && 
                             <div className="container-right__menu-dropdown right-bar-out_room" onClick={() => {
                                 setLeaveGroup(true);

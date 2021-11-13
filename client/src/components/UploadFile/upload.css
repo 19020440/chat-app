@@ -4,13 +4,38 @@ img {
   object-fit: cover;
 }
 .container_mess-uploadFile {
-  padding: 5px;
+  padding: 5px 3px 0 3px;
   position: relative;
+  height: 47px;
 }
 .Upload_cancel {
   width: 15px !important;
   height: 15px;
   position: absolute;
-  top: 8px;
+  top: 0;
   right: 0;
+}
+.container_upload-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: gray;
+  border-radius: 9px;
+  width: 106px;
+  height: 100%;
+  height: 40px;
+  font-size: 12px;
+  margin-left: 10px;
+}
+.container_upload-file span {
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+}
+.container-image-upload_file {
+  height: 40px;
+  border-radius: 5px;
 }

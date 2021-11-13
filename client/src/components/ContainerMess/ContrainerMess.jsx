@@ -376,7 +376,7 @@ const ContrainerMess = observer((props) => {
                             <div className="container-main__bottom-left-icon hide" onClick={handleSelfie}>
                                 <FontAwesomeIcon icon={faPortrait} />
                             </div>
-                            <label for="upload_files" className="container-main__bottom-left-icon hide">
+                            <label for="upload_files" className="container-main__bottom-left-icon hide container-upload-label">
                             
                                 <FontAwesomeIcon icon={faImage} />
                             </label>
@@ -433,7 +433,7 @@ const ContrainerMess = observer((props) => {
                     </div>
                 </div>
         
-                                <ContainerRight infoRoom={profileFriend} members={currentConversation?.members}/>
+                                <ContainerRight infoRoom={profileFriend} members={currentConversation?.members} messenger={messages}/>
         </>
     );
 })

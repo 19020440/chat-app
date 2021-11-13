@@ -66,7 +66,12 @@ export const showMessageError = (msg, onOk) => {
     let count = 0;
     try {
       conversations.map((value) => {
-        if(value?.lastText?.seens.seen === false && value.lastText?.sender != userId) count++;
+        if(value.lastText.sender != userId) {
+          value.lastText.seens.map(user => {
+            if(user.id == userId && !user.seen) count++;
+          })
+        }
+        
       })
     } catch(err) {
       console.log(err);
@@ -93,4 +98,8 @@ export const showMessageError = (msg, onOk) => {
     arr.splice(index,1);
     console.log(arr);
     return arr;
+  }
+
+  export const MapCreateGroupData = (data) => {
+  
   }

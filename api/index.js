@@ -128,23 +128,29 @@ io.on("connection", (socket) => {
   })
 
   //invite_join_group
-  socket.on('invite_to_group', async ({from,to}) => {
+  socket.on('invite_to_group', async ({name,members}) => {
       try {
-        const newNotify = {
-          senderId: from._id,
-          senderPicture: from.profilePicture,
-          description: `${from.username} đã gửi lời mời kết bạn`,
-          status: false
-        }
+        const newConversation = new Conversation({
+          name: name,
+          members,
+          lastText: {
+            sender: "",
+            text: "",
+            seens: members
+          }
+        });
+        newConversation.save();
+        console.log(newConversation);
+        // newConversation && socket
         // const result = await Conversation.findOne({
         //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
         // });
-        const [rsNotify, rsCov] = Promise.all([Notify.update({ $push: { listNotify: newNotify } }), Conversation.findOne({
-          members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
-        })]);
-        !rsNotify && socket.emit("send_error", "Không thể update thông báo");
-        !rsCov && socket.emit("send_error", "Không tìm thấy cuộc trò chuyện");
-        socket.to(rsCov._id).emit("answer_invite_group", newNotify);
+        // const [rsNotify, rsCov] = Promise.all([Notify.update({ $push: { listNotify: newNotify } }), Conversation.findOne({
+        //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
+        // })]);
+        // !rsNotify && socket.emit("send_error", "Không thể update thông báo");
+        // !rsCov && socket.emit("send_error", "Không tìm thấy cuộc trò chuyện");
+        // socket.to(rsCov._id).emit("answer_invite_group", newNotify);
 
        
       } catch(err) {

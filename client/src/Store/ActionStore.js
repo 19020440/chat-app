@@ -58,9 +58,24 @@ export class ActionStore {
             action_setCurrentConversation: action,
             action_resetListSearchFriend: action,
             action_changePropertyConversation: action,
+            action_resetAllData:action,
         })
     }
-
+    //Restet All DAta 
+    action_resetAllData() {
+        this.profileOfFriend = {};
+        this.posts = [];
+        this.statusPost = false;
+        this.listSearch = [];
+        this.lastText = [];
+        this.offlineStatus = false;
+        this.conversations = [];
+        this.preventCallApi=true;
+        this.currentStatus = {};
+        this.countTextNotSeen = 0;
+        this.currentConversation = null;
+        this.listMess = [];
+    }
     //chang-property-conversation
     action_changePropertyConversation(type,covId,data) {
         switch(type) {

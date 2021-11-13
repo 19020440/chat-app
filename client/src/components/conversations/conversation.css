@@ -89,7 +89,7 @@
   padding: 5px;
 }
 .modal-group .ant-modal-footer {
-  display: none;
+  /* display: none; */
 }
 .main-modal_showGroup-row {
   display: flex;
