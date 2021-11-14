@@ -84,7 +84,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
           
           }
            {lastTextSeen && message.sender == AuthStore.user._id &&
-             <div className="list_seen_messenger">
+            //  <div className="list_seen_messenger" hidden>
              
                 <>
                 {message.seens.map(value => {
@@ -96,7 +96,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
               
                 </>
              
-          </div>
+          // </div>
              }
           {!seen && message.sender == AuthStore.user._id &&
             <>
