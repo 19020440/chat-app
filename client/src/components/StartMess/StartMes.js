@@ -24,7 +24,7 @@ function StartMes(props) {
         <Col span={22} offset={1}>
             <Row>
                 <Col span={8} offset={8} className="header_emptychat-container">
-                    <h3>Chào mừng bạn đến với Wilina</h3>
+                    <h3>Chào mừng bạn đến với Social App</h3>
                     <p>Khám phá những tiện ích hỗ trợ và làm việc cùng người thân, bạn bè được tối ưu cho máy tính</p>
                 </Col>
 

@@ -11,6 +11,9 @@
   margin-bottom: 50px;
   margin-top: 50px;
 }
+.header_emptychat-container h3 {
+  font-size: 21px;
+}
 .carousel_chat-container {
   display: flex;
   align-items: center;
