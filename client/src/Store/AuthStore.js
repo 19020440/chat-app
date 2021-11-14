@@ -56,7 +56,18 @@ export  class AuthStore {
             action_setListRoom: action,
             action_addFriend: action,
             action_resetAllData:action,
+            action_register: action,
         })
+    }
+    //REGISTER
+    async action_register(data) {
+        const DOMAIN = `${CONFIG_URL}/${WsCode.register}`
+        
+        const result = await Request.post(data,DOMAIN);
+
+        if(result) {
+            return true;
+        } else return false;
     }
     //ResetAllData
     action_resetAllData() {

@@ -38,6 +38,8 @@
 }
 .content_chatempty h3 {
   text-align: center;
+  font-size: 19px;
+  font-weight: 550;
 }
 .content_chatempty p {
   text-align: center;

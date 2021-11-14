@@ -13,7 +13,8 @@ import { fab } from '@fortawesome/free-brands-svg-icons'
 import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faUsers,faVideo } from '@fortawesome/free-solid-svg-icons'
 import { useHistory,useParams } from "react-router-dom";
 import SearchFriend from '../searchFriend/search'
-import {Modal} from 'antd'
+import {Modal,Tooltip} from 'antd'
+import {PersonAdd,GroupAdd} from '@material-ui/icons'
 library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft,faUsers) 
 
 const Conversation = observer(() => {
@@ -170,14 +171,22 @@ const Conversation = observer(() => {
 
                             <div className="container-left__head-top-group">
                                 
-                                <div className="container-left__head-group-btn">
-                                    <FontAwesomeIcon icon="fa-solid fa-video" />
+                                <div className="container-left__head-group-btn" onClick={() => {
+                                  
+                                }}>
+                                    <Tooltip title="Thêm bạn"  overlayStyle={{color: "black"}}>
+                                      <PersonAdd />
+                                    </Tooltip>
+                                   
                                 </div>
                                 <div className="container-left__head-group-btn" onClick={async() => {
                                   getListModalGroup();
                                   setShowModalGroup(true);
                                 }}>
-                                    <FontAwesomeIcon icon={faUsers} />
+                                  <Tooltip title="Tạo nhóm"  overlayStyle={{color: "black"}}>
+                                    <GroupAdd />
+                                  </Tooltip>
+                                    
                                 </div>
                             </div>
                         </div>

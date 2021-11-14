@@ -4,10 +4,11 @@ import {observer} from 'mobx-react-lite'
 import _ from 'lodash'
 import {useStore} from '../../hook'
 import { useHistory, useParams } from 'react-router';
-import { Modal,Row,Col,Input } from 'antd';
+import { Modal,Row,Col,Input,Popover,Button } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
+import {People,MoreHoriz} from '@material-ui/icons'
 import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch, faWrench, faCheck, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash,faWrench,faCheck,faSignOutAlt) 
 const ContainerRight = observer(({infoRoom,members,messenger}) => {
@@ -25,7 +26,8 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const imageShareRef = useRef(null);
     const [listImage,setListImage] = useState([]);
     const [listFile,setListFile] = useState([]);
-
+    const [member,setMember] = useState(members);
+    const [modalMember,setModalMember] = useState(false);
     useEffect(() => {
         messenger.map(value => {
             if(_.isArray(JSON.parse(value.text))) {
@@ -40,12 +42,16 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 })  
             }
         }) 
+
         return () => {
             setListFile([]);
             setListImage([]);
         }
+        
     },[messenger])
-    console.log("render right:", infoRoom.username);
+    useEffect(() => {
+        setMember(members)
+    },[members])
     const handleShow = () => {
         setActive(!active);
     }
@@ -58,18 +64,20 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     }
     //EDIT_Name_Modal
     const editName = (isModalVisible) => {
-        
+        const handleCancelEditNameModal = () => {
+            setEditNameStatus(false);
+        }
         return (
             <Modal title="Chỉnh sửa biệt danh" visible={isModalVisible}  onCancel={handleCancelEditNameModal} className="modal-edit_name">
                 <Row>
-                    {!_.isEmpty(members) && members.map(value => {
+                    {!_.isEmpty(member) && member.map(value => {
                         return (
                             <Col span={24} className="modal-edit-profile">
                                 <div className="modal-profile-fix">
                                     <img src={value.profilePicture} alt="" />
-                                    <input disabled placeholder={value.username} onChange={(e) => {
+                                    <input disabled value={value.username} onChange={(e) => {
                                         // e.target.value = e.which
-                                        e.target.placeholder = e.target.value
+                                        value.username = e.target.value;
                                     }}/>
                                 </div>
                                 <img src="https://img.icons8.com/pastel-glyph/35/000000/edit--v1.png" 
@@ -93,7 +101,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                         input.style.border = "none"
                                         edit.hidden = false;
                                         input.disabled = true;
-                                        value.username = input.placeholder
+                                        value.username = input.value
                                         ActionStore.action_changePropertyConversation("members",conversationId,members);
                                     }}
                                 />
@@ -155,8 +163,41 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
         setReNameGroup(false);
         
     }
-    const handleCancelEditNameModal = () => {
-        setEditNameStatus(false);
+   
+
+    //Modal Member
+    const modalMembers = (isModalVisible) => {
+        const handleCancelMembers = () => {
+            setModalMember(false);
+        }
+        return (
+            <Modal title="Thành viên" visible={isModalVisible}  
+                onCancel={handleCancelMembers} 
+                
+                okText="Có"
+                cancelText="Hủy"
+            >
+                <Row>
+                    {!_.isEmpty(member) && member.map(value => {
+                        return (
+                            <Col span={24} style={{display: "flex", alignItems: "center", justifyContent: "space-between",padding: "10px"}}> 
+                                <div style={{display: "flex", alignItems: "center"}}>
+                                    <img src={value.profilePicture} style={{borderRadius: "50px"}}/>
+                                    <div >
+                                        <span style={{marginLeft: "10px",fontWeight: "550"}}>{value.username}</span>
+                                        <p style={{marginLeft: "10px",fontWeight: "500",color: "#cec3c3",fontSize: "12px"}}>Quản trị viên</p>
+                                    </div>
+                                   
+                                </div>
+                                <Popover placement="bottom"  content={<><p>Xóa khỏi nhóm</p></>} trigger="click">
+                                    <MoreHoriz style={{fontSize: "20px"}}/>
+                                </Popover>
+                            </Col>
+                        )
+                    })}
+                </Row>
+            </Modal>    
+        )
     }
     
     return (
@@ -207,15 +248,19 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                     }
                                
 
-
-                                <li className="dropdown-item">
-                                    <div className="dropdown-item__icon">
-                                        <FontAwesomeIcon icon={faDotCircle} />
-                                    </div>
-                                    <div className="dropdown-item__text">
-                                        Đổi chủ đề
-                                    </div>
-                                </li>
+                                    {infoRoom.isGroup && 
+                                        <li className="dropdown-item" onClick={() => {
+                                            setModalMember(true);
+                                        }}>
+                                            <div className="dropdown-item__icon">
+                                                <People/>
+                                            </div>
+                                            <div className="dropdown-item__text">
+                                                Thành viên trong nhóm
+                                            </div>
+                                        </li>
+                                    }
+                                
 
                                
                                 
@@ -370,6 +415,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 {editName(editNameStatus)}
                 {ModalRename(reNameGroup)}
                 {LeaveGroupModal(leaveGroup)}
+                {modalMembers(modalMember)}
                 </>
     );
 })

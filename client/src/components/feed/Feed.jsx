@@ -3,7 +3,6 @@ import Post from "../post/Post";
 import Share from "../share/Share";
 import "./feed.css";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook';
 import _ from 'lodash';
@@ -12,7 +11,6 @@ import _ from 'lodash';
 
 const Feed = observer(({ userId }) => {
   const [posts, setPosts] = useState([]);
-  // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;

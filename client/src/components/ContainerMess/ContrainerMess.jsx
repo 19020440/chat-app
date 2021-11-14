@@ -44,7 +44,7 @@ const ContrainerMess = observer((props) => {
         const sizeUserInRoom = _.size(currentConversation.members) > 2 ? true:false;
         
         if(sizeUserInRoom) {
-          const status = _.size(currentConversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
+          const status = _.size(currentConversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=1 ? true : false;
           setProfileFriend({
             username: currentConversation.name,
             profilePicture: currentConversation.covImage,
@@ -77,7 +77,7 @@ const ContrainerMess = observer((props) => {
       };
       //send message
       const handleSubmit = async (e) => {
-        e.preventDefault();
+        // e.preventDefault();
         try {
 
           const statusSeen = currentConversation.lastText.seens;
@@ -317,7 +317,7 @@ const ContrainerMess = observer((props) => {
                         </div>
                         <div className="container-main__head-right">
                             <div className="container-main__head-right-btn">
-                                <FontAwesomeIcon icon={faPhone} />
+                                <FontAwesomeIcon icon={faPhone} style={{transform: `rotate(90deg)`}}/>
                             </div>
                             <div className="container-main__head-right-btn" onClick={handleCallVideo}>
                                 <FontAwesomeIcon icon="fa-solid fa-video" />
@@ -414,7 +414,9 @@ const ContrainerMess = observer((props) => {
                               <input type="text" placeholder="Aa" className="container-main__bottom-search-input"  
                               onChange={(e) => setNewMessage(e.target.value)}
                               value={newMessage}
-                              // onKeyPress={handleSendMessByEnter}
+                              onKeyPress={(e) => {
+                                if(e.which == 13) handleSubmit();
+                              }}
                               />
                               
                             <div className="container-main__bottom-search__icon" >

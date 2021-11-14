@@ -13,7 +13,7 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
     const seenStatus = seen[0].seen;
     useEffect(() => {   
         if(isGroup) {
-            const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
+            const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=1 ? true : false;
             setUser({
                 username: conversation.name,
                 profilePicture: conversation.covImage,

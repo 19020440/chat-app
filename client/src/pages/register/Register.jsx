@@ -3,13 +3,15 @@ import { useRef } from "react";
 import {Link} from 'react-router-dom'
 import "./register.css";
 import { useHistory } from "react-router";
-
-export default function Register() {
+import {observer} from 'mobx-react-lite';
+import {useStore} from '../../hook'
+ const Register = observer(() =>  {
   const username = useRef();
   const email = useRef();
   const password = useRef();
   const passwordAgain = useRef();
   const history = useHistory();
+  const AuthStore = useStore('AuthStore');
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -21,12 +23,8 @@ export default function Register() {
         email: email.current.value,
         password: password.current.value,
       };
-      try {
-        await axios.post("/auth/register", user);
-        history.push("/login");
-      } catch (err) {
-        console.log(err);
-      }
+      const result = await AuthStore.action_register(user);
+      result && history.push("/login");
     }
   };
 
@@ -78,4 +76,5 @@ export default function Register() {
       </div>
     </div>
   );
-}
+});
+export default Register;

@@ -1,18 +1,16 @@
 import { useContext, useRef } from "react";
 import "./login.css";
 import {useHistory} from 'react-router-dom'
-import { AuthContext } from "../../context/AuthContext";
 import { CircularProgress } from "@material-ui/core";
 import {Link} from 'react-router-dom'
 import {useStore} from '../../hook'
 import {observer} from 'mobx-react-lite'
 import _, { isEmpty } from 'lodash'
-import { AuthStore } from "../../Store/AuthStore";
 const  Login = observer(() => {
   const AuthStore = useStore('AuthStore');
   const email = useRef();
   const password = useRef();
-  const { isFetching, dispatch } = useContext(AuthContext);
+
   const history = useHistory();
   const handleClick = async (e) => {
     e.preventDefault();
