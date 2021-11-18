@@ -215,51 +215,45 @@ io.on("connection", (socket) => {
   })
 
   //call video
-  socket.on("join room", async ({roomID,from}) => {
-      socket.join(roomID)
+  socket.on("join room", async ({roomId,from,newRoomId,status}) => {
+    socket.join(newRoomId)
+    if (users[newRoomId]) {
+      const length = users[newRoomId].length;
+      if (length === 4) {
+          socket.emit("room full");
+          return;
+      }
+      users[newRoomId].push(socket.id);
+      } else {
+          users[newRoomId] = [socket.id];
+      }
+      console.log("user in room: ", users);
+      socketToRoom[socket.id] = newRoomId;
+      const usersInThisRoom = users[newRoomId].filter(id => id !== socket.id);
+      socket.emit("all users", usersInThisRoom);
+
+      
       try {
-        const userF = await User.findById(from).exec();
-      //   if (users[roomID]) {
-      //     const length = users[roomID].length;
-      //     if (length === 4) {
-      //         socket.emit("room full");
-      //         return;
-      //     }
-      //     users[roomID].push(socket.id);
-      //   } else {
-      //         users[roomID] = [socket.id];
-              // const memberInRoom = await Conversation.findById(roomID).exec();
-              
-              // !memberInRoom && socket.emit('log bug', "Conversation not exist");
-              // const membersA = memberInRoom.members.filter(item => item!=from);
-              // membersA.forEach(async (item) => {
-              //   const user = await User.findById(item).exec();
-                socket.to(roomID).emit("callUser", {roomID,from: userF});
-              // })
-              
-        // }
-       
-      // socketToRoom[socket.id] = roomID;
-      // const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
-  
-      // socket.emit("all users", usersInThisRoom);
+        if(status != 1) {
+          const userF = await User.findById(from).exec();
+          socket.to(roomId).emit("callUser", {roomId,from: userF});
+        }
+        
       } catch(err) {
         console.log(err);
       }
-    
-  
 
-   
-    
+  });
+
+  socket.on("sending signal", payload => {
+
+    socket.to(payload.roomID).emit('user joined', { signal: payload.signal, callerID: payload.callerID });
 });
 
-socket.on("sending signal", payload => {
-    socket.join(payload.roomID)
-    socket.to(payload.roomID).emit('user joined', { signal: payload.signal, userId: payload.userId});
-});
 
-socket.on("returning signal", payload => {
-    socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, userId: payload.userId });
+
+  socket.on("returning signal", payload => {
+    socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
 });
 
 

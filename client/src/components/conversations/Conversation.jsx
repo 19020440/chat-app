@@ -1,20 +1,20 @@
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
-import { format } from "timeago.js";
-import "./conversation.css";
-import {useStore} from '../../hook';
-import {observer} from 'mobx-react-lite'
-import _, { set } from 'lodash'
-import {sortConversationByUpdateAt,MapCreateGroupData} from '../../helper/function'
-import ProfileRight from '../ProfileRight/ProfileRight'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faUsers,faVideo } from '@fortawesome/free-solid-svg-icons'
-import { useHistory,useParams } from "react-router-dom";
-import SearchFriend from '../searchFriend/search'
-import {Modal,Tooltip} from 'antd'
-import {PersonAdd,GroupAdd} from '@material-ui/icons'
+
+  import {  useRef, useState } from "react";
+
+  import "./conversation.css";
+  import {useStore} from '../../hook';
+  import {observer} from 'mobx-react-lite'
+  import _ from 'lodash'
+  import {sortConversationByUpdateAt} from '../../helper/function'
+  import ProfileRight from '../ProfileRight/ProfileRight'
+  import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+  import { library } from '@fortawesome/fontawesome-svg-core'
+  import { fab } from '@fortawesome/free-brands-svg-icons'
+  import {faArrowLeft, faEllipsisH,faPenSquare,faSearch,faUsers,faVideo } from '@fortawesome/free-solid-svg-icons'
+  import { useHistory } from "react-router-dom";
+  import SearchFriend from '../searchFriend/search'
+  import {Modal,Tooltip} from 'antd'
+  import {PersonAdd,GroupAdd} from '@material-ui/icons'
 library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft,faUsers) 
 
 const Conversation = observer(() => {
@@ -22,8 +22,6 @@ const Conversation = observer(() => {
     const AuthStore = useStore('AuthStore');      
     const conversations = sortConversationByUpdateAt(ActionStore.conversations);
     const history = useHistory();
-    const beforeConversation = useRef(null);
-    const currentConversation = useRef(null);
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
     const [showModalGroup,setShowModalGroup] = useState(false);
     const [modalSearchList,setModalSearchList] = useState([]);
@@ -51,6 +49,7 @@ const Conversation = observer(() => {
     setActionSearchPeople(false);
     history.push(`/messenger/${result._id}`);
   }
+
 
   //show modal create group
   const modalGroup = (isModalVisible) => {
@@ -118,9 +117,6 @@ const Conversation = observer(() => {
                     </div>
                   )
                 })}
-               
-
-                
             </div>
             
         </div>
@@ -131,15 +127,13 @@ const Conversation = observer(() => {
     )
   }
 
+
   const handleCancelGroup = () => {
     listUserInvite.current ={};
     setModalSearchList([]);
     setShowModalGroup(false);
   }
 
-  // useEffect(() => {
-  //   getListModalGroup();
-  // },[])
   const getListModalGroup = async () => {
     const result = await ActionStore.action_getListFriend(AuthStore.user._id);
     setModalSearchList(result)
@@ -207,16 +201,12 @@ const Conversation = observer(() => {
                                 return (
                                     < >
                                     <li className="container-left__item" onClick={async () => {
-                                        currentConversation.current = conversation?._id
                                         await handlePassPage(conversation);
-                                        beforeConversation.current = conversation?._id;
-                                        
                                     }}>
                                         <ProfileRight 
-                                        conversation={conversation} 
-                                        seen={conversation.lastText?.seens.filter(value => value.id == AuthStore.user._id)}
-                                        isGroup={_.size(conversation.members) > 2? true:false}
-                                        
+                                          conversation={conversation} 
+                                          seen={conversation.lastText?.seens.filter(value => value.id == AuthStore.user._id)}
+                                          isGroup={_.size(conversation.members) > 2? true:false}
                                         />
                                     </li>
                                     </>

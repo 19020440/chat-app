@@ -130,7 +130,7 @@ const App = observer(() => {
     AuthStore.socket?.on('callUser', async (data) => {
       if(data.from._id != AuthStore.user?._id) {
         console.log(data);
-        from.current = data.roomID;
+        from.current = data.roomId;
         setUserCall(data.from)
         setVisible(true);
       }

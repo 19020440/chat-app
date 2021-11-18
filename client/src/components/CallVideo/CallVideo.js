@@ -3,15 +3,10 @@ import Peer from 'simple-peer'
 import './callvideo.css'
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fab } from '@fortawesome/free-brands-svg-icons'
-import {faMicrophone, faPhone} from '@fortawesome/free-solid-svg-icons'
 import { useLocation } from 'react-router';
 import _ from 'lodash';
-
-library.add(fab,faPhone,faMicrophone) 
-
+import {Row, Col} from 'antd';
+import {ChevronRight} from '@material-ui/icons'
 
 const  CallVideo = observer((props) => {
     const search = useLocation().search;
@@ -22,107 +17,103 @@ const  CallVideo = observer((props) => {
     const ActionStore = useStore('ActionStore')
     const myVideo = useRef();
     const [peers, setPeers] = useState([]);
+    const [hiddenMyVideo,setHiddenMyVideo] = useState(false);
     const peersRef = useRef([]);
 
-
     useEffect(() => {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-          if(status != 1) AuthStore?.socket.emit("join room", {roomID,from});
-				  myVideo.current.srcObject = stream;
-
-                  const peer = new Peer({
-                    initiator: true,
-                    trickle: false,
-                    stream,
-                    });        
-                peer.on("signal", signal => {
-                   AuthStore?.socket.emit("sending signal", { signal,roomID,userId: from })
-                })
-                setPeers([peer]);
-
-        //    AuthStore?.socket.on("all users", users => {
-        //         const peers = [];
-        //         users.forEach(userID => {
-        //             const peer = createPeer(userID,AuthStore?.socket.id, stream);
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            myVideo.current.srcObject = stream;
+            AuthStore.socket.emit("join room", {newRoomId: roomID + "1",roomId: roomID, from,status});
+            AuthStore.socket.on("all users", users => {
+                console.log("user: ", users);
+                const peers = [];
+                users.forEach((userID, index) => {
+                    const peer = createPeer(from, stream,index);
                     peersRef.current.push({
-                        // peerID: userID,
+                        peerID: userID,
                         peer,
                     })
-        //             peers.push(peer);
-        //         })
-        //         setPeers(peers);
-        //     })
+                    peers.push(peer);
+                })
+                setPeers(peers);
+            })
 
-           AuthStore?.socket.on("user joined", payload => {
-               if(from != payload.userId) {
+            AuthStore.socket.on("user joined", payload => {
+                console.log(" iam joinded");
                 const peer = addPeer(payload.signal, stream);
-                // peersRef.current.push({
-                //     peerID: payload.userId,
-                //     peer,
-                // })
+                peersRef.current.push({
+                    peerID: payload.callerID,
+                    peer,
+                })
 
                 setPeers(users => [...users, peer]);
-               }
-               
             });
 
-           AuthStore?.socket.on("receiving returned signal", payload => {
-                // const item = peersRef.current.find(p => p.peerID === payload.id);
-                // item.peer.signal(payload.signal);
-                console.log("trturn");
-                if(from != payload.userId   )  {
-                    console.log(peersRef.current[0]);
-                    peersRef.current[0].peer.signal(payload.signal )
-                }
-               
+            AuthStore.socket.on("receiving returned signal", payload => {
+                const item = peersRef.current.find(p => p.peerID === payload.id);
+                item.peer.signal(payload.signal);
             });
-       
-		    })
-            
-    },[]);
+        })
+    }, []);
 
-//     function createPeer(userToSignal, callerID, stream) {
-//       const peer = new Peer({
-//           initiator: true,
-//           trickle: false,
-//           stream,
-//       });
+    function createPeer( callerID, stream, index) {
+        const peer = new Peer({
+            initiator: true,
+            trickle: false,
+            stream,
+        });
+        // if(index == 0) {
+            peer.on("signal", signal => {
+                AuthStore.socket.emit("sending signal", { roomID: roomID + "1", callerID, signal })
+            })
+        // }
+        
 
-//       peer.on("signal", signal => {
-//          AuthStore?.socket.emit("sending signal", { userToSignal, callerID, signal })
-//       })
+        return peer;
+    }
 
-//       return peer;
-//   }
+    function addPeer(incomingSignal, stream) {
+        const peer = new Peer({
+            initiator: false,
+            trickle: false,
+            stream,
+        })
 
-  function addPeer(incomingSignal, stream) {
-      const peer = new Peer({
-          initiator: false,
-          trickle: false,
-          stream,
-      })
+        peer.on("signal", signal => {
+            AuthStore.socket.emit("returning signal", { signal, roomID: roomID + "1", from})
+        })
 
-      peer.on("signal", signal => {
-         AuthStore?.socket.emit("returning signal", { signal, roomID,userId: from })
-      })
+        peer.signal(incomingSignal);
 
-      peer.signal(incomingSignal);
-
-      return peer;
-  }
-    
-   
-
-
+        return peer;
+    }
     
     return (
       <>
-      <video muted ref={myVideo} autoPlay playsInline />
-         {peers.map((peer, index) => {
-                return (
-                    <Video key={index} peer={peer} />
-                );
-            })}
+      
+        
+            <Row style={{padding: '16px 50px',position: "relative",height: '100%'}}>
+                {peers.map((peer, index) => {
+                    return (
+                        <Col span={_.size(peer) == 1 ? 24 : _.size(peer) == 2 ? 12 : 3}>
+                            <Video key={index} peer={peer} />
+                        </Col>
+                        
+                    );
+                })}
+                <Col span={6} style={{position: "absolute",bottom: 0,right: 0}} className={hiddenMyVideo ? "smooth-my-video" : ""}>
+                    <Row>
+                        <Col span={2} onClick={() => {
+                            setHiddenMyVideo(!hiddenMyVideo)
+                        }}>
+                            <ChevronRight className="icon-chevronRight-callvideo"/>
+                        </Col>
+                        <Col span={22} className="My-video-call">
+                            <video muted ref={myVideo} autoPlay playsInline />
+                        </Col>
+                    </Row>
+                </Col>
+            </Row>
       </>
      
     );
