@@ -37,9 +37,14 @@ const ContrainerMess = observer((props) => {
     const history = useHistory(); 
     const [files,setFiles] = useState([]);
     const [openGif, setOpenGif] = useState(false);
+    const [openEmoji, setOpenEmoji] = useState(false);
     const [profileFriend,setProfileFriend] = useState({});
     const emojiRef = useRef(null);
     const [showModalProfile, setShowModalProfile] = useState(false);
+
+    const getEmoji = (emoji) => {
+      setNewMessage(text => text + emoji);
+    }
     //set ProfileFriend
     useEffect(() => {
       if(!_.isEmpty(currentConversation)) {
@@ -282,10 +287,11 @@ const ContrainerMess = observer((props) => {
 
   //EMOJI
   const handleShowEmoJi = () => {
-    const element =   emojiRef.current.getAttribute("class");
-    if(element.indexOf("hidden_icon") != -1) {
-      emojiRef.current.classList.remove("hidden_icon");
-    } else emojiRef.current.classList.add("hidden_icon");
+    // const element =   emojiRef.current.getAttribute("class");
+    // if(element.indexOf("hidden_icon") != -1) {
+    //   emojiRef.current.classList.remove("hidden_icon");
+    // } else emojiRef.current.classList.add("hidden_icon");
+    setOpenEmoji(!openEmoji)
   }
 
   useEffect(() => {
@@ -470,12 +476,16 @@ const ContrainerMess = observer((props) => {
                               onKeyPress={(e) => {
                                 if(e.which == 13) handleSubmit();
                               }}
+                              onFocus={() => {
+                                setOpenGif(false);
+                                setOpenEmoji(false)
+                              }}
                               />
                               
                             <div className="container-main__bottom-search__icon" >
                               <FontAwesomeIcon icon={faSmileWink} onClick={handleShowEmoJi}/>
-                                <div className="container-main__bottom-search__list-icon hidden_icon" ref={emojiRef}>
-                                    <Emoji/>
+                                <div className="container-main__bottom-search__list-icon">
+                                    {openEmoji && <Emoji getText={getEmoji}/>}
                                    
                                 </div>
                             </div>

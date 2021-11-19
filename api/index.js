@@ -255,7 +255,6 @@ io.on("connection", (socket) => {
     try { 
       
       const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: "",status: false});
-      console.log(removeSocketId);
      const id = removeSocketId._id.toString();
      
       const conversations = await Conversation.find({
