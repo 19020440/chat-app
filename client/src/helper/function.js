@@ -6,17 +6,7 @@ export const showMessageError = (msg, onOk) => {
       onOk: onOk || null,
     });
   };
-  
-//   export const showModalTimeOut = (msg, onOk) => {
-//     Modal.error({
-//       icon: null,
-//       content: <TimeOut onOk={onOk} msg={msg} />,
-//       className: "modalLogout",
-//       width: 1000,
-//       okButtonProps: {
-//       },
-//     });
-//   };
+
   
   export const showMessageSuccess = (msg, onOk) => {
     Modal.success({
@@ -100,6 +90,8 @@ export const showMessageError = (msg, onOk) => {
     return arr;
   }
 
-  export const MapCreateGroupData = (data) => {
-  
+  export const ValidateListFriend = (userId, listFriend) => {
+    const result =  listFriend.filter(value => value == userId);
+    if(!_.isEmpty(result))  return true;
+    return false;
   }

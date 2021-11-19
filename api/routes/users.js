@@ -25,5 +25,8 @@ router.post("/:id/unfollow", UserController.unFollowUser);
 
 //search user
 router.post('/search', UserController.searchUser)
-
+//
+router.post('/update/profile', UserController.update_profile)
+//get list invite
+router.post('/list/invite', UserController.getListInvite)
 module.exports = router;

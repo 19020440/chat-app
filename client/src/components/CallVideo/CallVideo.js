@@ -95,13 +95,13 @@ const  CallVideo = observer((props) => {
             <Row style={{padding: '16px 50px',position: "relative",height: '100%'}}>
                 {peers.map((peer, index) => {
                     return (
-                        <Col span={_.size(peer) == 1 ? 24 : _.size(peer) == 2 ? 12 : 3}>
+                        <Col span={_.size(peer) == 1 ? 24 : _.size(peer) == 2 ? 12 : 24} style={{position: 'fixed', top: 0,bottom: 0, right:0,left: 0}}>
                             <Video key={index} peer={peer} />
                         </Col>
                         
                     );
                 })}
-                <Col span={6} style={{position: "absolute",bottom: 0,right: 0}} className={hiddenMyVideo ? "smooth-my-video" : ""}>
+                <Col span={6} style={{position: "fixed",bottom: 0,right: 0}} className={hiddenMyVideo ? "smooth-my-video" : ""}>
                     <Row>
                         <Col span={2} onClick={() => {
                             setHiddenMyVideo(!hiddenMyVideo)

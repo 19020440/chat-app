@@ -26,6 +26,9 @@ const Conversation = observer(() => {
     const [showModalGroup,setShowModalGroup] = useState(false);
     const [modalSearchList,setModalSearchList] = useState([]);
     const listUserInvite = useRef({});
+    const [showModalInvite, setShowModalInvite] = useState(false);
+    const [listUserAdd, setListUserAdd] = useState([]);
+    const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const createNameGroup = useRef(null);
     const handlePassPage =  (conversation) => {
       history.push(`/messenger/${conversation._id}`);  
@@ -139,6 +142,66 @@ const Conversation = observer(() => {
     setModalSearchList(result)
   }
 
+  //invited friend
+
+  const invitedModal = (visible) => {
+
+    const addUser = async (e,userId) => {
+      const res = await AuthStore.action_addFriend(true, userId._id);
+      if(res) {
+        const result = listUserAdd.map(user => {
+          console.log(user);
+            if(user._id == userId._id) user.seen = true;
+            return user;
+          })
+          AuthStore.action_addUser();
+        setListUserAdd(result)
+      }
+     
+    }
+
+    const handleCancelAdd = () => {
+      setShowModalInvite(false)
+    }
+    return (
+     <Modal
+      title="Thêm bạn bè"
+      visible={visible}
+      onCancel={handleCancelAdd}
+     >
+          <div className="main-modal_showGroup">
+            
+            <span>Bạn bè</span>
+            <div className="main-modal_showGroup-row">
+                {listUserAdd.map(value => {
+                  return (
+                    <div className="main-modal_showGroup-col">
+                      <div className="main-modal_showGroup-col-info">
+                        <img src={value.profilePicture ? value.profilePicture : PF + "person/noAvatar.png"} className="main-modal_showGroup-col-img" />
+                        <span>{value.username}</span>
+                      </div>
+                      <button onClick={(e) => addUser(e, value)}
+                        className="modal-group-button_invite"
+                        hidden={value?.seen?true:false}
+                        >Thêm bạn</button>
+                        <button 
+                        className="modal-group-button_cancel_invite"
+                        hidden={value?.seen?false:true}
+                        >Đã thêm</button>
+                    </div>
+                  )
+                })}
+            </div>
+            
+        </div>
+        
+     
+
+    
+    </Modal>
+    )
+  } 
+
 
 
   
@@ -156,7 +219,7 @@ const Conversation = observer(() => {
                                     </div>
                                     <input type="text" 
                                     className="container-left__search-box-input" 
-                                    placeholder="Tìm kiếm trên Messenger"
+                                    placeholder="Tìm kiếm cuộc hội thoại"
                                     onChange={(e) => handleSearchPeople(e)}
                                     />
                                 </div>
@@ -165,8 +228,10 @@ const Conversation = observer(() => {
 
                             <div className="container-left__head-top-group">
                                 
-                                <div className="container-left__head-group-btn" onClick={() => {
-                                  
+                                <div className="container-left__head-group-btn" onClick={async () => {
+                                  setShowModalInvite(true);
+                                  const result  = await AuthStore.action_get_list_invite(AuthStore.user?._id);
+                                  setListUserAdd(result)
                                 }}>
                                     <Tooltip title="Thêm bạn"  overlayStyle={{color: "black"}}>
                                       <PersonAdd />
@@ -218,6 +283,7 @@ const Conversation = observer(() => {
                         </ul>
                     </div>
                     {modalGroup(showModalGroup)}
+                    {invitedModal(showModalInvite)}
                 </div>
   );
 });

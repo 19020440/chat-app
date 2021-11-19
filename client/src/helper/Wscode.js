@@ -17,5 +17,8 @@ export const WsCode = {
     updateConversation: "conversations/update",
     deleteImage: 'upload/delete',
     follow: 'users',
-    register: 'auth/register'
+    register: 'auth/register',
+    updateConversation: 'conversations/update/property',
+    update_profile: 'users/update/profile',
+    listInvite: 'users/list/invite',
 }

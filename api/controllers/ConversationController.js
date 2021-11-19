@@ -4,9 +4,6 @@ const Notify = require('../models/Notify')
 module.exports  = new class ConversationController {
     //new Cov
     async newCov(req, res, next) {
-
-            // const sender = await User.findById(req.body.senderId).exec();
-            // const receive = await User.findById(req.body.receiverId).exec();
             Promise.all([User.findById(req.body.senderId).exec(),User.findById(req.body.receiverId).exec()])
               .then(async ([sender1, receive1]) => {
                 if(sender1 && receive1) {
@@ -156,6 +153,26 @@ module.exports  = new class ConversationController {
       }
       
      
+    }
+
+    //Update conversation 
+    async update_cov(req, res, next) {
+
+      const {covId, text, data} = req.body;
+
+      try {
+        if(text == "members") {
+          const result = await Conversation.findByIdAndUpdate(covId, {members: data});
+          result && res.status(200).json({content: result, status: 1});
+        } else if(text == "name") {
+          const result = await Conversation.findByIdAndUpdate(covId, {name: data});
+          result && res.status(200).json({content: result, status: 1});
+        }
+          
+
+      } catch(err) {
+          res.status(500).json({content: err,status: 0})
+      }
     }
 
 }

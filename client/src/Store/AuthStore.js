@@ -24,8 +24,12 @@ export  class AuthStore {
     cancelImageIndex = null;
     listRoom = [];
     listStatusCov = [];
+    listFollow = [];
+    status_addUser = false;
     constructor() {
         makeAutoObservable(this,{
+            listFollow: observable,
+            status_addUser: observable,
             listStatusCov: observable,
             listRoom: observable,
             stt:observable,
@@ -57,8 +61,15 @@ export  class AuthStore {
             action_addFriend: action,
             action_resetAllData:action,
             action_register: action,
-            action_uploadFileHeader: action
+            action_uploadFileHeader: action,
+            action_update_profile: action,
+            action_get_list_invite: action,
+            action_addUser: action,
         })
+    }
+    //action add suer
+    action_addUser() {
+        this.status_addUser = !this.status_addUser
     }
     //REGISTER
     async action_register(data) {
@@ -242,6 +253,7 @@ export  class AuthStore {
 
         if(result) {
             this.user = result.content;
+            this.listFollow = result.content.followings;
             this.login  = 1;
             // !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
@@ -256,7 +268,7 @@ export  class AuthStore {
         if(result) {
             if(! _.isEmpty(result.content)) {
                 this.user = result.content;
-                
+                this.listFollow = result.content.followings;
                 
                 this.socket?.emit('validLogin');
                 this.socket?.on('setvalidLogin', (socketId) => {
@@ -283,5 +295,25 @@ export  class AuthStore {
 
         
     }
+    // update profile
+    async action_update_profile(urlBody) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.update_profile}`;
+        const body = {
+            userId: this.user._id,
+            data: urlBody
+        }
+        const result = await Request.post(body, DOMAIN);
 
+        if(result) return true;
+        return false;
+    }
+    // Get list user invite
+    async action_get_list_invite(userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.listInvite}`;
+        const body = {
+            userId
+        }
+        const result = await Request.post(body, DOMAIN);
+        if(result) return result.content;
+    }
 }

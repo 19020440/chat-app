@@ -4,11 +4,12 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {faAirFreshener, faGift, faInfoCircle, faPhone, faPlusCircle, faPortrait,faArrowAltCircleRight,faThumbsUp, faSearch, faChevronDown, faChevronUp, faUpload, faSmileWink, faImage} from '@fortawesome/free-solid-svg-icons'
 import Message from "../../components/message/Message";
-import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash, findObjectFromArrayLodash} from '../../helper/function'
+import {findIndexLastTextSeen,addSpantoText,findIndexFromArrayLodash, findObjectFromArrayLodash,ValidateListFriend} from '../../helper/function'
 import { useEffect, useRef, useState } from "react";
 import {useParams,useHistory} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
+import {Modal, Tooltip} from 'antd'
 import _ from 'lodash';
 import ContainerRight from '../containerRight/ContainerRight'
 import SearchMess from '../searchMess/searchMess'
@@ -38,6 +39,7 @@ const ContrainerMess = observer((props) => {
     const [openGif, setOpenGif] = useState(false);
     const [profileFriend,setProfileFriend] = useState({});
     const emojiRef = useRef(null);
+    const [showModalProfile, setShowModalProfile] = useState(false);
     //set ProfileFriend
     useEffect(() => {
       if(!_.isEmpty(currentConversation)) {
@@ -49,7 +51,8 @@ const ContrainerMess = observer((props) => {
             username: currentConversation.name,
             profilePicture: currentConversation.covImage,
             status,
-            isGroup: true
+            isGroup: true,
+            size: _.size(currentConversation.members),
           })
         } else {
           const [userProfile] = currentConversation.members.filter(value => value.id != AuthStore?.user._id);
@@ -287,16 +290,59 @@ const ContrainerMess = observer((props) => {
 
   useEffect(() => {
     return () => {
-      console.log("delete mes");
       setMessages([]);
     }
   },[])
+
+  //user Profile
+
+  const profileModal = (visible) => {
+
+    const handleOutProfile = () => {
+      setShowModalProfile(false);
+    }
+    return (
+      <Modal
+      title="Thông tin cá nhân"
+      visible={visible}
+      // confirmLoading={confirmLoading}
+      onCancel={handleOutProfile}
+      className="modal_profile"
+      >
+        
+    <div class="card">
+      <div class="banner" style={{position: 'relative'}}>
+         <img src={profileFriend.profilePicture ? profileFriend.profilePicture : PF + "person/noAvatar.png"} alt="" />
+      </div>
+      <div class="menu">
+        <div class="opener"><span></span><span></span><span></span></div>
+      </div>
+      <h2 class="name">{profileFriend.username}</h2>
+      <div class="actions">
+        <div class="follow-info">
+          {/* {/* <h2><a href="#"><span>12</span><small>Followers</small></a></h2> */}
+          {profileFriend.isGroup && <h2><a href="#"><span>{profileFriend.size}</span><small>Thành viên</small></a></h2> }
+        </div>
+        <div class="follow-btn">
+          {!profileFriend.isGroup &&<button>{ValidateListFriend(profileFriend.id, AuthStore.listFollow) ? "UnFollow" : "Follow"}</button>}
+          {profileFriend.isGroup && <button>Thông tin nhóm</button>}
+        </div>
+      </div>
+      <div class="desc">{profileFriend.username} has collected ants since they were six years old and now has many dozen ants but none in their pants.</div>
+    </div>
+
+     
+  </Modal>
+    )
+  }
     return (
         <>
             <div className="container-main">
                     <div className="container-main__head">
                         <div className="container-main__head-left">
-                            <div className="container-main__head-left-avt">
+                            <div className="container-main__head-left-avt" onClick={() => {
+                              setShowModalProfile(true);
+                            }}>
                                 <img className="container-main__head-left-avt-img avt-mess" src={
                                     profileFriend?.profilePicture
                                         ? profileFriend?.profilePicture
@@ -310,14 +356,14 @@ const ContrainerMess = observer((props) => {
                                 </div>
                                 <div className="container-main__head-left-info-time online">
                                     
-                                    <span>{profileFriend.status?"Đang hoạt động":`Hoạt động cách đây ${format(currentConversation?.updatedAt)}`}</span>
+                                    <span>{profileFriend.status?"Đang hoạt động":`Không hoạt động`}</span>
                                     
                                 </div>
                             </div>
                         </div>
                         <div className="container-main__head-right">
                             <div className="container-main__head-right-btn">
-                                <FontAwesomeIcon icon={faPhone} style={{transform: `rotate(90deg)`}}/>
+                                {/* <FontAwesomeIcon icon={faPhone} style={{transform: `rotate(90deg)`}}/> */}
                             </div>
                             <div className="container-main__head-right-btn" onClick={handleCallVideo}>
                                 <FontAwesomeIcon icon="fa-solid fa-video" />
@@ -374,15 +420,22 @@ const ContrainerMess = observer((props) => {
                                 <FontAwesomeIcon icon={faPlusCircle} />
                             </div>
                             <div className="container-main__bottom-left-icon hide" onClick={handleSelfie}>
-                                <FontAwesomeIcon icon={faPortrait} />
+                                <Tooltip title="Chụp ảnh"> 
+                                  <FontAwesomeIcon icon={faPortrait} />
+                                </Tooltip>
                             </div>
                             <label for="upload_files" className="container-main__bottom-left-icon hide container-upload-label">
-                            
-                                <FontAwesomeIcon icon={faImage} />
+                                <Tooltip title="Gửi file hoặc ảnh"> 
+                                  <FontAwesomeIcon icon={faImage} />
+                                </Tooltip>
+                                
                             </label>
                             <div className="container-main__bottom-left-icon hide container-main__bottom-left-icon-gifphy">
                                 {openGif && <Gifphy currentConversation={currentConversation} indexCov={indexConversation} /> }
-                              <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList} />
+                                <Tooltip title="Gửi GIF"> 
+                                  <FontAwesomeIcon icon={faGift} onClick={handleGetGifphyList} />
+                                </Tooltip>
+                               
                             </div>
                         </div>
                         <div className="container-main__bottom-search">
@@ -429,13 +482,17 @@ const ContrainerMess = observer((props) => {
                         </div>
                         <div className="container-main__bottom-right">
                             <div className="container-main__bottom-send"  onClick={handleSubmit}>
-                                <FontAwesomeIcon icon={faArrowAltCircleRight} />
+                                
+                                <Tooltip title="Gửi tin nhắn"> 
+                                  <FontAwesomeIcon icon={faArrowAltCircleRight} />
+                                </Tooltip>
                             </div>
                         </div>
                     </div>
                 </div>
         
-                                <ContainerRight infoRoom={profileFriend} members={currentConversation?.members} messenger={messages}/>
+                <ContainerRight infoRoom={profileFriend} members={currentConversation?.members} messenger={messages}/>
+                {profileModal(showModalProfile)}
         </>
     );
 })

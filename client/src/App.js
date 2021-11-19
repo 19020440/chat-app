@@ -2,7 +2,7 @@ import Home from "./pages/home/Home";
 import Login from "./pages/login/Login";
 import Profile from "./pages/profile/Profile";
 import Register from "./pages/register/Register";
-import { Modal } from "antd";
+import { Modal, Row, Col } from "antd";
 import {
   BrowserRouter as Router,
   Switch,
@@ -43,8 +43,7 @@ const App = observer(() => {
   useEffect(() => {
     const getConversations = async () => {
      
-      if(!_.isEmpty(AuthStore.user) && _.isEmpty(ActionStore.conversations)) {
-        console.log("login: ", login);
+     
         try {
           const res = await ActionStore.action_getConversation(AuthStore.user?._id);
           const arrCovId = res.map((value) => {
@@ -57,11 +56,11 @@ const App = observer(() => {
         } catch (err) {
           console.log(err);
         } 
-      }
+      
       
     };
    if(login == 1) getConversations();
-  }, [login]);
+  }, [login, AuthStore.status_addUser]);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -203,7 +202,7 @@ const App = observer(() => {
     {/* </Router> */}
 
             <Modal
-                title="Call Video"
+                title="Có cuộc gọi"
                 visible={visible}
                 onOk={handleOk}
                 // confirmLoading={confirmLoading}
@@ -211,13 +210,23 @@ const App = observer(() => {
                 okText="Trả lời"
                 cancelText="Từ chối"
             >
-              <img src={
-                userCall?.profilePicture
-                    ? userCall?.profilePicture
-                    : PF + "person/noAvatar.png"
-                } alt="" className="header-profile__img avt" />
+              <Row align="middle">
+                <Col span={2}>
+                  <img src={
+                  userCall?.profilePicture
+                      ? userCall?.profilePicture
+                      : PF + "person/noAvatar.png"
+                  } alt="" className="header-profile__img avt" 
+                    style={{borderRadius: '50%'}}
+                  />
+                </Col>
+                <Col span={6} style={{marginLeft: '20px'}}>
+                  <span>{userCall?.username}</span>
+                </Col>
+              </Row>
+              
 
-                <span>{userCall?.username}</span>
+               
 
           </Modal>
           </>

@@ -77,17 +77,33 @@ export class ActionStore {
         this.listMess = [];
     }
     //chang-property-conversation
-    action_changePropertyConversation(type,covId,data) {
+    async action_changePropertyConversation(type,covId,data) {
         switch(type) {
             case "members": {
                 const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
                 this.conversations[covIndex].members = [...data];
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateConversation}`
+                const urlBody = {
+                    data,
+                    text: "members",
+                    covId
+                }
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) console.log("update members: ",result.content);
                 break;
             }    
 
             case "name": {
                 const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
                 this.conversations[covIndex] = {...this.conversations[covIndex],name: data};
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateConversation}`
+                const urlBody = {
+                    data,
+                    text: "name",
+                    covId
+                }
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) console.log("update name: ",result.content);
                 break;
             }
 

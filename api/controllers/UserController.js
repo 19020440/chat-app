@@ -1,6 +1,7 @@
 const {getLessProfile} = require('../helper/funtion')
 const User = require("../models/User");
-
+const bcrypt = require("bcrypt");
+const Conversation = require('../models/Conversation')
 module.exports  = new class UserController {
 
 
@@ -95,9 +96,44 @@ module.exports  = new class UserController {
               try {
                 const user = await User.findById(req.params.id);
                 const currentUser = await User.findById(req.body.userId);
+                const member1 = {
+                  id: req.body.userId,
+                  profilePicture: currentUser.profilePicture,
+                  username: currentUser.username,
+                }
+
+                const member2 = {
+                  id: req.params.id,
+                  profilePicture: user.profilePicture,
+                  username: user.username,
+                }
+
+                const lastText1 = {
+                  id:req.body.userId,
+                  profilePicture: currentUser.profilePicture,
+                  seen: false,
+                }
+
+                const lastText2 = {
+                  id: req.params.id,
+                  profilePicture: user.profilePicture,
+                  seen: false,
+                }
+
+
+                const newConversation = new Conversation({
+                  members: [member1, member2],
+                  lastText: {
+                    sender: "",
+                    text: "",
+                    seens: [lastText1,lastText2]
+                  }
+                });
+
                 if (!user.followers.includes(req.body.userId)) {
-                  await user.updateOne({ $push: { followers: req.body.userId } });
-                  await currentUser.updateOne({ $push: { followings: req.params.id } });
+                 
+                  // await user.updateOne({ $push: { followings: req.body.userId } });
+                  Promise.all([await newConversation.save(), await user.updateOne({ $push: { followings: req.body.userId } }),  await currentUser.updateOne({ $push: { followings: req.params.id } })])
                   res.status(200).json({content: "user has been followed", status: 1});
                 } else {
                   res.status(403).json({content: "you allready follow this user", status: 0});
@@ -142,5 +178,36 @@ module.exports  = new class UserController {
             }T
             
           }
-   
+
+          //get List invite
+          async getListInvite(req, res, next) {
+            const {userId} = req.body;
+            try {
+              const [allUser, user] = await Promise.all([ User.find(),  User.findById(userId).exec()])
+              const result = allUser.filter(value => user.followings.includes(value._id.toString()) == 0 && userId != value._id.toString() );
+              res.status(200).json({content: result, status: 1})
+            } catch(err) {
+              res.json(err)
+            }
+          }
+            //Update Profile
+            async update_profile(req, res, next) {
+              const {userId, data} = req.body;
+              try {
+                const user = await User.findById(userId).exec();
+                
+                const validPassword = await bcrypt.compare(data.password, user.password);
+                !validPassword && res.status(200).json({content: "Mật khẩu sai !",status:0});
+                // res.status(200).json({content: user.password,status: 1})
+                const salt = await bcrypt.genSalt(10);
+               const hashedPassword = await bcrypt.hash(data.newpassword, salt);
+                const newPass = await User.findOneAndUpdate(userId, {password: hashedPassword});
+                if(data.username) User.findOneAndUpdate(userId, {username: data.username});
+                newPass && res.status(200).json({content: "Cập nhật thông tin thành công", status: 1})
+              } catch(err) {
+
+                res.status(500).json({content: err, status: 0})
+
+              }
+            }
 }

@@ -144,17 +144,6 @@ io.on("connection", (socket) => {
           }
         });
         newConversation.save();
-        console.log(newConversation);
-        // newConversation && socket
-        // const result = await Conversation.findOne({
-        //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
-        // });
-        // const [rsNotify, rsCov] = Promise.all([Notify.update({ $push: { listNotify: newNotify } }), Conversation.findOne({
-        //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
-        // })]);
-        // !rsNotify && socket.emit("send_error", "Không thể update thông báo");
-        // !rsCov && socket.emit("send_error", "Không tìm thấy cuộc trò chuyện");
-        // socket.to(rsCov._id).emit("answer_invite_group", newNotify);
 
        
       } catch(err) {
@@ -181,10 +170,7 @@ io.on("connection", (socket) => {
 
   //send and get message
   socket.on("sendMessage", async (res) => {
-    // console.log("sendMessage: ", res.conversationId);
     try {
-      // const user = await User.findById(receiverId).exec();
-      // console.log("this is user: ",user);
       socket.to(res.conversationId).emit("getMessage", res);
     }catch(err) {
 

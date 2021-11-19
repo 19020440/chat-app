@@ -8,8 +8,8 @@ import {CONFIG_URL} from '../../helper/constant'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
-import {Modal,Row,Col,Tooltip, Upload} from 'antd'
-import {countTextNotSeen} from '../../helper/function'
+import {Modal,Row,Col,Tooltip,  Form, Input, Button} from 'antd'
+import {countTextNotSeen, showMessageSuccess} from '../../helper/function'
 import {CameraAlt} from '@material-ui/icons'
 import { faBell, faChevronRight, faCog, faExclamation, faGamepad, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight,faFacebookMessenger,faGamepad,faBell) 
@@ -25,6 +25,7 @@ const header = observer((props) => {
     const notifyRef = useRef(null);
     const [modalProfile,setModalProfile] = useState(false);
     const [srcImage, setSrcImage] = useState(user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png");
+    const [hidden, setHidden] = useState(true);
     const handleLogOut = async () => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
@@ -41,18 +42,6 @@ const header = observer((props) => {
         setVisible(true); 
       }
 
-      const handleSetting = async (e) => {
-        const element = ref.current.getAttribute("class");
-        if(element.indexOf("hidden") != -1) {
-          ref.current.classList.remove("hidden");
-        } else ref.current.classList.add("hidden");
-        
-      }
-    
-      //pass page
-      const handlePassProfile = (e) => {
-          history.push(`/profile/${AuthStore.user?._id}`)
-      }
       const handlePassMess = () => {
         history.push(`/messenger`)
       }
@@ -61,6 +50,13 @@ const header = observer((props) => {
       const showModalProfile = (visible) => {
         const handleOutProfile = () => {
           setModalProfile(false)
+          setHidden(true)
+        }
+
+        const onFinish = async (urlBody) => {
+          const result = await AuthStore.action_update_profile(urlBody);
+          result && showMessageSuccess("Cập nhật thành công !")
+          setHidden(true)
         }
 
         const onChange = async file => {
@@ -73,7 +69,6 @@ const header = observer((props) => {
           <Modal
                 title="Thông tin cá nhân"
                 visible={visible}
-                // confirmLoading={confirmLoading}
                 onCancel={handleOutProfile}
                 className="modal_profile"
                 >
@@ -103,17 +98,82 @@ const header = observer((props) => {
                   <div class="opener"><span></span><span></span><span></span></div>
                 </div>
                 <h2 class="name">{user.username}</h2>
-                <div class="title">{user.email}</div>
+                <div class="title" style={{}}>{user.email}</div>
                 <div class="actions">
                   <div class="follow-info">
-                    <h2><a href="#"><span>12</span><small>Followers</small></a></h2>
-                    <h2><a href="#"><span>1000</span><small>Following</small></a></h2>
+                    <h2><a href="#"><span>{_.size(AuthStore.listFollow)}</span><small>Bạn Bè</small></a></h2>
+                    {/* <h2><a href="#"><span>1000</span><small>Following</small></a></h2> */}
                   </div>
                   <div class="follow-btn">
                     <button>Thông tin cá nhân</button>
                   </div>
                 </div>
-                <div class="desc">{user.username} has collected ants since they were six years old and now has many dozen ants but none in their pants.</div>
+                <div class="desc">
+                      <Form
+                          name="basic"
+                          onFinish={onFinish}
+                          autoComplete="off"
+      
+                        >
+                          <Form.Item
+                            label={<span style={{fontSize: '10px', fontWeight: 550}}>Tên</span>}
+                            name="username"
+                        
+                            
+                          >
+                            <Input defaultValue={user?.username} disabled={hidden} style={{border: "none"}} />
+                          </Form.Item>
+                          
+
+                          <Form.Item
+                            label={<span style={{fontSize: '10px', fontWeight: 550}}>Mật khẩu hiện tại</span>}
+                            name="password"
+                            rules={[
+                              {
+                                required: true,
+                                message: 'Please input your password!',
+                              },
+                            ]}
+                         
+                          >
+                            <Input.Password disabled={hidden} style={{border: "none"}} defaultValue={hidden ? "*****" : ""}/>
+                          </Form.Item>
+
+                          <Form.Item
+                            label={<span style={{fontSize: '10px', fontWeight: 550}}>Mật khẩu mới</span>}
+                            name="newpassword"
+                            rules={[
+                              {
+                                required: true,
+                                message: 'Please input your new password!',
+                              },
+                            ]}
+                            hidden={hidden}
+                          >
+                            <Input.Password />
+                          </Form.Item>
+
+                          <Form.Item
+                            wrapperCol={{
+                              offset: hidden ? 18 : 12,
+                              span: hidden ? 6 : 12,
+                            }}
+                          >
+                            <Button type="primary" htmlType="submit" hidden hidden={hidden} style={{borderRadius: '10px', border: "none", background: '#ffd01a', color: 'black'}}>
+                              Submit
+                            </Button>
+                            <Button hidden={!hidden} style={{borderRadius: '10px', border: "none", background: '#ffd01a', color: 'black'}} onClick={() => {
+                              setHidden(false);
+                            }}>
+                              Sửa
+                            </Button>
+                            <Button  hidden={hidden} style={{borderRadius: '10px', border: "none", background: '#ffd01a', color: 'black', marginLeft: '12px'}} onClick={() => {
+                              setHidden(true);
+                            }}>Huỷ</Button>
+                          </Form.Item>
+                        </Form>
+
+                </div>
               </div>
 
                
