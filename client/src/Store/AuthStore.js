@@ -57,6 +57,7 @@ export  class AuthStore {
             action_addFriend: action,
             action_resetAllData:action,
             action_register: action,
+            action_uploadFileHeader: action
         })
     }
     //REGISTER
@@ -183,6 +184,27 @@ export  class AuthStore {
             }
         })
         return result;
+       
+    }
+
+    async action_uploadFileHeader({file, userId}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`
+
+ 
+             const formData = new FormData();
+             const fileName = Date.now() +"_"+ file.name;
+             formData.append("name", fileName);
+             formData.append("file", file);
+             formData.append("userId", userId);
+
+             const result = await Request.post(formData,DOMAIN);
+             if(result) {
+                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`;
+                 return url;
+             }
+
+
+       
        
     }
     action_setTextSearch(data) {

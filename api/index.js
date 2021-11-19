@@ -20,6 +20,7 @@ const User = require('./models/User');
 const Messenger = require('./models/Message');
 const Conversation = require("./models/Conversation");
 const fs = require('fs')
+
 const { promisify } = require('util')
 
 const unlinkAsync = promisify(fs.unlink)
@@ -64,8 +65,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-app.post("/api/upload", upload.single("file"), (req, res) => {
+app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
+    if(req.body.userId) {
+      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `http://localhost:8800/images/${req.body.name}`});
+    }
     return res.status(200).json({content: req.body.name , status: 1});
   } catch (error) {
     console.error(error);
@@ -117,7 +121,7 @@ io.on("connection", (socket) => {
                 {
                 $set:  {'lastText.seens.$.seen': true },
               }
-                )
+                ) 
           
     } catch(err) {
       console.log(err);

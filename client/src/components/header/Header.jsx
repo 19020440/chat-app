@@ -4,12 +4,13 @@ import {useHistory} from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
-import { Link } from 'react-router-dom';
+import {CONFIG_URL} from '../../helper/constant'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
-import {Modal,Row,Col,Tooltip} from 'antd'
+import {Modal,Row,Col,Tooltip, Upload} from 'antd'
 import {countTextNotSeen} from '../../helper/function'
+import {CameraAlt} from '@material-ui/icons'
 import { faBell, faChevronRight, faCog, faExclamation, faGamepad, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 library.add( fab, faExclamation, faCog, faQuestionCircle, faMoon, faSignOutAlt,faChevronRight,faFacebookMessenger,faGamepad,faBell) 
 const header = observer((props) => {
@@ -23,6 +24,7 @@ const header = observer((props) => {
     const history = useHistory();
     const notifyRef = useRef(null);
     const [modalProfile,setModalProfile] = useState(false);
+    const [srcImage, setSrcImage] = useState(user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png");
     const handleLogOut = async () => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
@@ -60,6 +62,13 @@ const header = observer((props) => {
         const handleOutProfile = () => {
           setModalProfile(false)
         }
+
+        const onChange = async file => {
+          console.log(file.target.files[0]);
+           const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id})
+          setSrcImage(src);
+        };
+
         return (
           <Modal
                 title="Thông tin cá nhân"
@@ -70,10 +79,24 @@ const header = observer((props) => {
                 >
                   
               <div class="card">
-                <div class="banner">
+                <div class="banner" style={{position: 'relative'}}>
                  
-                   <img src={user.profilePicture} alt="" />
-                
+                   <img src={srcImage} alt="" />
+                    <div hidden>
+                      <input 
+                      onChange={onChange}
+                      type="file"
+                      id="upload_header"
+                    /> 
+                    </div>
+                    <label style={{position: 'absolute', bottom: '-37%',right: '42%',zIndex: 10}} for="upload_header" > 
+                      <CameraAlt  />  
+                    </label>
+                    
+                    
+                  
+                 
+                  
                   
                 </div>
                 <div class="menu">
@@ -87,10 +110,10 @@ const header = observer((props) => {
                     <h2><a href="#"><span>1000</span><small>Following</small></a></h2>
                   </div>
                   <div class="follow-btn">
-                    <button>Follow</button>
+                    <button>Thông tin cá nhân</button>
                   </div>
                 </div>
-                <div class="desc">Morgan has collected ants since they were six years old and now has many dozen ants but none in their pants.</div>
+                <div class="desc">{user.username} has collected ants since they were six years old and now has many dozen ants but none in their pants.</div>
               </div>
 
                
@@ -107,7 +130,7 @@ const header = observer((props) => {
                       setModalProfile(true);
                     }}>
                       <Tooltip title="Thông tin cá nhân" placement="rightTop"> 
-                        <img src={user.profilePicture}  />
+                        <img src={srcImage}  />
                       </Tooltip>
                     </Col>
                     <Col span={24} className="sideBar-conversation sideBar-active-class" onClick={handlePassMess}>
