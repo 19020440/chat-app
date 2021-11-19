@@ -61,7 +61,7 @@ export  class AuthStore {
     }
     //REGISTER
     async action_register(data) {
-        const DOMAIN = `${CONFIG_URL}/${WsCode.register}`
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.register}`
         
         const result = await Request.post(data,DOMAIN);
 
