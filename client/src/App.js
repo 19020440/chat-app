@@ -11,7 +11,7 @@ import {
   
 } from "react-router-dom";
 import {  useEffect, useLayoutEffect, useRef, useState } from "react";
-import{showMessageError} from './helper/function'
+import{showMessageError, showMessageSuccess} from './helper/function'
 import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
@@ -35,6 +35,7 @@ const App = observer(() => {
   const [userCall, setUserCall] = useState();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const signal = useRef();
+  const [createGroup, setCreateStatus] = useState(false);
   useEffect(() => {
     AuthStore.action_setSocket(socket)
     validLogin();
@@ -60,7 +61,7 @@ const App = observer(() => {
       
     };
    if(login == 1) getConversations();
-  }, [login, AuthStore.status_addUser]);
+  }, [login, AuthStore.status_addUser,createGroup]);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -140,6 +141,14 @@ const App = observer(() => {
       showMessageError(text);
     })
 
+
+    AuthStore.socket.on("invite_to_group", status => {
+      if(!status) showMessageError("Tạo nhóm thất bại !");
+      else {
+        showMessageSuccess("Tạo nhóm thành công");
+        setCreateStatus(!createGroup)
+      }
+    })
   
    
  },[]);

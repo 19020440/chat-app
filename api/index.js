@@ -143,8 +143,9 @@ io.on("connection", (socket) => {
             seens: members
           }
         });
-        newConversation.save();
-
+        const result = await newConversation.save();
+        result && socket.emit("invite_to_group", true)
+        !result && socket.emit("invite_to_group", true)
        
       } catch(err) {
         console.log(err);

@@ -102,7 +102,7 @@ const Conversation = observer(() => {
                   return (
                     <div className="main-modal_showGroup-col">
                       <div className="main-modal_showGroup-col-info">
-                        <img src={value.profilePicture} className="main-modal_showGroup-col-img" />
+                        <img src={value.profilePicture ? value.profilePicture  : PF + "person/noAvatar.png"} className="main-modal_showGroup-col-img" />
                         <span>{value.username}</span>
                       </div>
                       <button onClick={(e) => {
