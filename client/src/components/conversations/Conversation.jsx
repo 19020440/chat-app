@@ -77,7 +77,11 @@ const Conversation = observer(() => {
     const handleCreateGroup = () => {
       if(createNameGroup.current.value != "") {
         const arrMembers = Object.values(listUserInvite.current)
-        AuthStore.socket.emit("invite_to_group", {name: createNameGroup.current.value, members: arrMembers});
+        const truearr = arrMembers.map(value => {
+          const {_id,...rest} = value;
+          return {...rest,id: value._id}
+        })
+        AuthStore.socket.emit("invite_to_group", {name: createNameGroup.current.value, members: [...truearr,{id: AuthStore.user._id, profilePicture: AuthStore.user?.profilePicture, username: AuthStore.user?.username}]});
         setModalSearchList([]);
         listUserInvite.current ={};
         setShowModalGroup(false);
