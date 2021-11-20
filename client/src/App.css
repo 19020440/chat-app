@@ -620,6 +620,7 @@ footer span:hover {
 
 .container-left__body {
   position: relative;
+  height: 100%;
 }
 
 .container-left__body::before {
@@ -637,7 +638,7 @@ footer span:hover {
   overflow-y: auto;
   list-style: none;
   padding: 4px;
-  height: 400px;
+  height: 100%;
 }
 
 .container-left__list::-webkit-scrollbar {
@@ -1088,8 +1089,8 @@ footer span:hover {
   right: -8px;
   transform: translateY(-100%);
   grid-template-columns: repeat(4, 1fr);
-  box-shadow: 0 1px 2px var(--rgba-black), -1px -1px 2px var(--rgba-black);
-  background: var(--white-color);
+  /* box-shadow: 0 1px 2px var(--rgba-black), -1px -1px 2px var(--rgba-black);
+  background: var(--white-color); */
   padding: 8px;
   border-radius: 4px;
   /* display: none; */
@@ -1106,7 +1107,7 @@ footer span:hover {
   right: 12px;
   border-width: 8px;
   border-style: solid;
-  border-color: var(--white-color) transparent transparent transparent;
+  border-color: transparent transparent transparent transparent;
 }
 
 .container-main__bottom-icon-item {

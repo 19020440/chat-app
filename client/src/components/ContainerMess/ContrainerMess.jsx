@@ -153,7 +153,7 @@ const ContrainerMess = observer((props) => {
       },[AuthStore.textGif])
       /// call video
       const handleCallVideo =  () => {
-        window.open(`http://localhost:3000/callvideo?from=${user._id}&room=${conversationId}&status=${0}`)
+        window.open(`/callvideo?from=${user._id}&room=${conversationId}&status=${0}`)
       }
 
       // Files

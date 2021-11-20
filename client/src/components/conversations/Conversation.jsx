@@ -152,9 +152,10 @@ const Conversation = observer(() => {
 
     const addUser = async (e,userId) => {
       const res = await AuthStore.action_addFriend(true, userId._id);
+      
       if(res) {
+        AuthStore.socket.emit("invite_success", userId._id)
         const result = listUserAdd.map(user => {
-          console.log(user);
             if(user._id == userId._id) user.seen = true;
             return user;
           })
@@ -171,7 +172,9 @@ const Conversation = observer(() => {
      <Modal
       title="Thêm bạn bè"
       visible={visible}
-      onCancel={handleCancelAdd}
+      cancelText={<></>}
+      okText="Hủy"
+      onOk={handleCancelAdd}
      >
           <div className="main-modal_showGroup">
             
