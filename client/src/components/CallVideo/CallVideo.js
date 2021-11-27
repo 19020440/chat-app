@@ -6,7 +6,7 @@ import {useStore} from '../../hook'
 import { useLocation } from 'react-router';
 import _ from 'lodash';
 import {Row, Col} from 'antd';
-import {ChevronRight} from '@material-ui/icons'
+import {ChevronRight, PhoneDisabled, DuoOutlined, Mic, MicOff} from '@material-ui/icons'
 
 const  CallVideo = observer((props) => {
     const search = useLocation().search;
@@ -14,14 +14,15 @@ const  CallVideo = observer((props) => {
     const roomID = new URLSearchParams(search).get('room');
     const status = new URLSearchParams(search).get('status');
     const AuthStore = useStore('AuthStore');
-    const ActionStore = useStore('ActionStore')
+    const [statusMic, setStatusMic] = useState(false);
     const myVideo = useRef();
     const [peers, setPeers] = useState([]);
     const [hiddenMyVideo,setHiddenMyVideo] = useState(false);
     const peersRef = useRef([]);
-
+    const myStreamRef = useRef();
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            myStreamRef.current = stream;
             myVideo.current.srcObject = stream;
             AuthStore.socket.emit("join room", {newRoomId: roomID + "1",roomId: roomID, from,status});
             AuthStore.socket.on("all users", users => {
@@ -114,6 +115,35 @@ const  CallVideo = observer((props) => {
                     </Row>
                 </Col>
             </Row>
+            
+            <div className="turn_off_video"  onClick={() => {
+                const videoTrack = myStreamRef.current.getTracks().find(track => track.kind === "video");
+                videoTrack.enabled = false;
+            }}>
+                <DuoOutlined />
+            </div>
+            <div className="turn_off_mic" hidden={statusMic} onClick={() => {
+                 const audioTrack = myStreamRef.current.getTracks().find(track => track.kind === "audio");
+                 audioTrack.enabled = false;
+                setStatusMic(true)
+            }}>
+                <Mic />
+            </div>
+
+            <div className="turn_off_mic" hidden={!statusMic} onClick={() => {
+                const audioTrack = myStreamRef.current.getTracks().find(track => track.kind === "audio");
+                audioTrack.enabled = true;
+
+            }}>
+                <MicOff />
+            </div>
+
+            <div className="end_call_video" onClick={() => {
+                window.close();
+            }}>
+                <PhoneDisabled/>
+            </div>
+            
       </>
      
     );

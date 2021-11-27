@@ -70,7 +70,7 @@
   border-top-left-radius: 10px;
 }
 .smooth-my-video {
-  animation: smooth 0.5s linear forwards;
+  animation: smooth 0.5s ease-in-out forwards;
 }
 
 @keyframes smooth {
@@ -80,4 +80,54 @@
   to {
     transform: translateX(92%);
   }
+}
+
+.end_call_video {
+  height: 40px;
+  width: 40px;
+  padding: 10px;
+  border-radius: 50%;
+  background: cadetblue;
+  text-align: center;
+  position: fixed;
+  bottom: 5px;
+  left: 50%;
+  transform: rotate(90deg);
+}
+.end_call_video svg {
+  width: 100%;
+  height: 100%;
+  color: white;
+}
+.turn_off_mic {
+  height: 40px;
+  width: 40px;
+  padding: 10px;
+  border-radius: 50%;
+  background: cadetblue;
+  text-align: center;
+  position: fixed;
+  bottom: 5px;
+  left: 45%;
+}
+.turn_off_mic svg {
+  width: 100%;
+  height: 100%;
+  color: white;
+}
+.turn_off_video {
+  height: 40px;
+  width: 40px;
+  padding: 10px;
+  border-radius: 50%;
+  background: cadetblue;
+  text-align: center;
+  position: fixed;
+  bottom: 5px;
+  left: 40%;
+}
+.turn_off_video svg {
+  width: 100%;
+  height: 100%;
+  color: white;
 }

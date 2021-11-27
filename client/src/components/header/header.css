@@ -63,7 +63,7 @@
   height: 50px;
   margin-bottom: 20px;
 }
-.sideBar-Notify span {
+.sideBar-Notify .count-noti {
   position: absolute;
   top: 0;
   right: 8px;

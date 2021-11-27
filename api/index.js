@@ -102,7 +102,6 @@ io.on("connection", (socket) => {
 
   //first_join_room
   socket.on("first_join_room", data => {
-    console.log(data);
     socket.join(data);
   })
 
@@ -111,9 +110,9 @@ io.on("connection", (socket) => {
     try {
 
 
-            const updateStatusSeen = await Messenger.updateMany(
-              {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
-              {$set: {seen: true,"seens.$.seen": true}});
+            // const updateStatusSeen = await Messenger.update(
+            //   {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
+            //   {$set: {seen: true,"seens.$.seen": true}});
 
             const updateConversation = await Conversation.update(
               {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
@@ -124,15 +123,38 @@ io.on("connection", (socket) => {
                 ) 
           
     } catch(err) {
-      console.log(err);
+      socket.emit("send_error", "gặp vấn đề khi join phòng!")
     }
     // socket.join(conversationId);
     console.log("conversation join room: ",conversationId);
     socket.to(conversationId).emit("setJoin_room", {senderId, conversationId});
   })
 
+  socket.on("answer_join_room", ({conversationId, senderId}) => {
+    socket.to(conversationId).emit("answer_join_room", {conversationId, senderId})
+  })
+
+  //chinh suar biet danh
+  socket.on("edit_bietdanh", (data) => {
+    socket.to(data.conversationId).emit("edit_bietdanh", data);
+  })
+
+  //sua ten nhom
+  socket.on("edit_tennhom", data => {
+    socket.to(data.conversationId).emit("edit_tennhom", data)
+  })
+  //xoa thanh vien
+  socket.on("delete_user", (data) => {
+    socket.to(data.conversationId).emit("delete_user", data);
+  })
+  //leave group
+  socket.on("leave_group", (data) => {
+    console.log("leave_room");
+    socket.to(data.conversationId).emit("leave_group", data);
+  })
+
   //invite_join_group
-  socket.on('invite_to_group', async ({name,members}) => {
+  socket.on('invite_to_group', async ({name,members, listUser, user}) => {
       try {
         const newConversation = new Conversation({
           name: name,
@@ -143,10 +165,15 @@ io.on("connection", (socket) => {
             seens: members
           }
         });
+        console.log("listUser:", listUser);
         const result = await newConversation.save();
-        result && socket.emit("invite_to_group", true)
-        !result && socket.emit("invite_to_group", true)
-       
+        result && socket.emit("status_invite_to_group", true)
+        !result && socket.emit("status_invite_to_group", false)
+        listUser.forEach( (element) => {
+              User.findById(element).then(res => {
+                socket.to(res.socketId).emit("invite_to_group", {name, user})
+              })
+        });
       } catch(err) {
         console.log(err);
       }
@@ -182,7 +209,9 @@ io.on("connection", (socket) => {
 //OOFLINE
   socket.on("userOffline", async({userId,arrCov}) => {
     // console.log("this is offline :" ,userId);
+    
     socket.to(arrCov).emit("setUserOffline", {userId, arrCov});
+    // socket.leave(arrCov)
   })
 
   //ONLINE
@@ -247,7 +276,15 @@ io.on("connection", (socket) => {
     socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
 });
 
-
+//Gui loi moi ket ban 
+  socket.on("invite_success", async (data) => {
+    try {
+      const user = await User.findById(data.userId).exec();
+      user && socket.to(user.socketId).emit("invite_success", {username: data.name, profilePicture: data.profilePicture});
+    } catch(err) {
+      socket.emit("send_error", "Kết bạn thành công nhưng có thể người dùng sẽ chưa thấy lời mời của bạn!")
+    }
+  })
 
 
   //when disconnect

@@ -18,10 +18,12 @@ export class ActionStore {
     countTextNotSeen = 0;
     currentConversation = null;
     listMess = [];
+    answerJoinRoom = [];
 
     constructor() {
         makeAutoObservable(this, {
             listMess: observable,
+            answerJoinRoom: observable,
             profileOfFriend: observable,
             currentConversation: observable,
             countTextNotSeen: observable,
@@ -59,7 +61,45 @@ export class ActionStore {
             action_resetListSearchFriend: action,
             action_changePropertyConversation: action,
             action_resetAllData:action,
+            action_deleteUserGroup: action,
+            action_updateLastMess: action,
+            action_setAnswerJoinRoom: action,
         })
+    }
+    //set tra loi join room 
+    action_setAnswerJoinRoom() {
+        this.answerJoinRoom = ! this.answerJoinRoom;
+    }
+    //update last Mess
+    async action_updateLastMess({messId, userId}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateLastMess}`
+        const urlBody = {
+            messId,
+            userId
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) return true;
+        return false;
+
+    }
+    //action_deleteUserGroup
+
+    async action_deleteUserGroup(covId, userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.leaveGroup}`
+        const urlBody = {
+            covId,
+            userId
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            const indexCov = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            _.remove(this.conversations[indexCov].members, function (value)  {
+                return value.id  == userId;
+            })
+            return true;
+        }
+         
+        else return false;
     }
     //Restet All DAta 
     action_resetAllData() {
@@ -89,8 +129,8 @@ export class ActionStore {
                     covId
                 }
                 const result = await Request.post(urlBody, DOMAIN);
-                if(result) console.log("update members: ",result.content);
-                break;
+                if(result) return true;
+                return false;
             }    
 
             case "name": {
@@ -103,15 +143,24 @@ export class ActionStore {
                     covId
                 }
                 const result = await Request.post(urlBody, DOMAIN);
-                if(result) console.log("update name: ",result.content);
-                break;
+                if(result) return true;
+                return false;
             }
 
             case 'leave': {
-                _.remove(this.conversations, function (value)  {
-                    return value._id  == covId;
-                })
-                break;
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.leaveGroup}`
+                const urlBody = {
+                    covId,
+                    userId: data,
+                } 
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) {
+                    _.remove(this.conversations, function (value)  {
+                        return value._id  == covId;
+                    })
+                    return true;
+                }
+               else return false;
             }
             default: break;
         }
@@ -291,7 +340,7 @@ export class ActionStore {
     async action_getListFriend(userId) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getListFriend}/${userId}`
 
-        const result = await Request.get({}, DOMAIN);
+        const result = await Request.post({userId}, DOMAIN);
 
         if(result) {
             if(!_.isEmpty(result.content)) return result.content;

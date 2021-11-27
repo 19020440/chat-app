@@ -24,7 +24,7 @@ const  Login = observer(() => {
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">Lamasocial</h3>
+          <h3 className="loginLogo">DBMS Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -47,11 +47,11 @@ const  Login = observer(() => {
               ref={password}
             />
             <button className="loginButton" type="submit">
-              Log In
+              Đăng nhập
             </button>
-            <span className="loginForgot">Forgot Password?</span>
+            <span className="loginForgot">Quên mật khẩu?</span>
             <button className="loginRegisterButton">
-                <Link to="/register">Create a New Account</Link>
+                <Link to="/register">Đăng ký</Link>
             </button>
           </form>
         </div>

@@ -16,7 +16,7 @@ import {observer} from 'mobx-react-lite'
 import {useStore} from './hook'
 import Loading from "./components/Loading/Loading";
 import PrRouter from "./pages/PrRouter";
-
+import 'antd/dist/antd.css';
 import _ from 'lodash';
 import io from 'socket.io-client';
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -30,38 +30,46 @@ const App = observer(() => {
   const [visible, setVisible] = useState(false);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
+  AuthStore.action_setSocket(socket)
   const {user, login} = AuthStore;
   const from = useRef();
   const [userCall, setUserCall] = useState();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const signal = useRef();
   const [createGroup, setCreateGroup] = useState(false);
+  const [bietdanh, setBietdanh] = useState(false);
+  const [xoaUser, setXoaUser] = useState(false);
+  const [doiten, setDoiten] = useState(false);
   useEffect(() => {
-    AuthStore.action_setSocket(socket)
+    
     validLogin();
   },[]) 
-  //get conversation 
+
   useEffect(() => {
+    //get conversation 
     const getConversations = async () => {
      
-     
-        try {
-          const res = await ActionStore.action_getConversation(AuthStore.user?._id);
-          const arrCovId = res.map((value) => {
-            return value._id;
-          })
-          AuthStore.action_setListRoom(arrCovId);
+    
+      try {
+        const res = await ActionStore.action_getConversation(AuthStore.user?._id);
+        const arrCovId = res.map((value) => {
+          return value._id;
+        })
+        AuthStore.action_setListRoom(arrCovId);
+        // if(!_.isEmpty(AuthStore?.socket)) {
           AuthStore.socket.emit("first_join_room", arrCovId);
-          console.log(AuthStore.user?.socketId);
-          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  AuthStore.user?.socketId,arrCovId: arrCovId});
-        } catch (err) {
-          console.log(err);
-        } 
+          console.log(socket.id);
+          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  socket.id,arrCovId: arrCovId});
+        // }
+      } catch (err) {
+        console.log(err);
+      } 
+     
       
-      
-    };
+  };
    if(login == 1) getConversations();
-  }, [login, AuthStore.status_addUser,createGroup]);
+  }, [login, AuthStore.status_addUser,AuthStore?.socket, AuthStore.doiten]);
+
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -73,7 +81,29 @@ const App = observer(() => {
     AuthStore.socket?.on("setJoin_room", (data) => {
       console.log("user send is:", data.senderId);
       ActionStore.action_updateStatusSeenConversation(data , "join");
+      AuthStore.socket.emit("answer_join_room", {senderId: user?._id, conversationId: data.conversationId});
       AuthStore.action_setSatusSeenText();
+    })
+    //CHinh sua biet danh
+    AuthStore.socket?.on("edit_bietdanh", () => {
+      AuthStore.action_doiten();
+    })
+
+    AuthStore.socket?.on("edit_tennhom", () => {
+      AuthStore.action_doiten();
+    })
+
+    AuthStore.socket?.on("delete_user", () => {
+      AuthStore.action_doiten();
+    })
+
+    AuthStore.socket?.on("leave_group", () => {
+      AuthStore.action_doiten();
+    })
+//tra loi join room
+    AuthStore.socket.on("answer_join_room", data => {
+      ActionStore.action_updateStatusSeenConversation(data , "join");
+      ActionStore.action_setAnswerJoinRoom();
     })
 
     //setjoin_room
@@ -143,19 +173,37 @@ const App = observer(() => {
 
 
     AuthStore.socket.on("invite_to_group", status => {
-      if(!status) showMessageError("Tạo nhóm thất bại !");
+      if(_.isEmpty(status)) showMessageError("Tạo nhóm thất bại !");
       else {
-        showMessageSuccess("Tạo nhóm thành công");
-        setCreateGroup(!createGroup)
+        // 
+        AuthStore.action_doiten();
       }
     })
 
-    AuthStore.socket.on("invite_success", status => {
-      status && setCreateGroup(!createGroup);
+    AuthStore.socket.on("status_invite_to_group", status => {
+      if(!status) showMessageError("Tạo nhóm thất bại !");
+      else {
+        AuthStore.action_doiten();
+        showMessageSuccess("Tạo nhóm thành công");
+        
+      }
+    })
+
+    AuthStore.socket.on("invite_success", () => {
+      AuthStore.action_doiten();
     })
   
    
  },[]);
+
+//  useEffect(() => {
+//     return () => {
+//       setBietdanh(!bietdanh);
+//       setCreateGroup(!createGroup);
+//       setDoiten(!doiten);
+//       setXoaUser(!xoaUser);
+//     }
+//  },[])
  
 
   const validLogin = async () => {

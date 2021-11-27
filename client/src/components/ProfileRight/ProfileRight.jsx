@@ -53,9 +53,9 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
                                                     
                                                     
                                                     {conversation?.lastText?.sender === AuthStore.user?._id &&  !_.isEmpty(conversation?.lastText) 
-                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} ảnh` :`You: ${JSON.parse(conversation.lastText?.text)}` 
+                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} tập tin` :`You: ${JSON.parse(conversation.lastText?.text)}` 
                                                 : !_.isEmpty(conversation?.lastText?.text) 
-                                                ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
+                                                ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} tập tin` 
                                                 : `${JSON.parse(conversation?.lastText?.text)}`
                                                 : ""}
 

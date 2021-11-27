@@ -1,14 +1,15 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import './header.css'
+import moment from 'moment'
 import {useHistory} from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
-import {CONFIG_URL} from '../../helper/constant'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
-import {Modal,Row,Col,Tooltip,  Form, Input, Button} from 'antd'
+import {sortNotify} from '../../helper/function'
+import {Modal,Row,Col,Tooltip,  Form, Input, Button, Popover, Image} from 'antd'
 import {countTextNotSeen, showMessageSuccess} from '../../helper/function'
 import {CameraAlt} from '@material-ui/icons'
 import { faBell, faChevronRight, faCog, faExclamation, faGamepad, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
@@ -19,10 +20,9 @@ const header = observer((props) => {
     const {user} = AuthStore;
     const [visible, setVisible] = useState(false);
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
-    const ref = useRef(null);
     const countMess = countTextNotSeen(ActionStore.conversations, AuthStore.user?._id);
     const history = useHistory();
-    const notifyRef = useRef(null);
+    const [listNotify, setListNotify] = useState([])
     const [modalProfile,setModalProfile] = useState(false);
     const [srcImage, setSrcImage] = useState(user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png");
     const [hidden, setHidden] = useState(true);
@@ -45,6 +45,53 @@ const header = observer((props) => {
       const handlePassMess = () => {
         history.push(`/messenger`)
       }
+
+      useEffect(() => {
+        if(!_.isEmpty(AuthStore?.socket)) {
+          AuthStore?.socket.on('invite_to_group', ({name, user}) => {
+            setListNotify(prev => [...prev,{profilePicture: user?.profilePicture, 
+              des: `${user.username} đã mời bạn vào nhóm ${name}`, 
+              created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY")}]);
+          })
+    
+          AuthStore?.socket.on("invite_success", ({username, profilePicture}) => {
+              setListNotify(prev => [...prev,{profilePicture, 
+                des: `${username} đã kết bạn với bạn`,
+                created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+              }])
+          })
+        }
+
+        AuthStore.socket?.on("delete_user", ({profilePicture, name, groupName, id}) => {
+          setListNotify(prev => [...prev,{profilePicture, 
+            des: `Quản trị viên đã xóa ${id == user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`,
+            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+          }])
+        })
+
+        AuthStore.socket?.on("edit_tennhom", (data) => {
+          setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
+            des: data.des,
+            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+          }])
+        })
+
+        AuthStore.socket?.on("edit_bietdanh", (data) => {
+          setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
+            des: data.isGroup ? `${data.userChange} đã đổi biệt danh của ${data?.id == user?._id ? "bạn" : data.name } thành ${data?.newName} trong nhóm ${data?.nameGroup}` 
+            : `${data.userChange} đã đổi biệt danh của ${data?.id == user?._id ? "bạn": "họ"} thành ${data?.newName} trong cuộc trò chuyện của hai người`,
+            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+          }])
+        })
+       
+        AuthStore.socket?.on("leave_group", (data) => {
+          setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
+            des: data.des,
+            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+          }])
+        })
+
+      },[])
       //Modal Profile
 
       const showModalProfile = (visible) => {
@@ -55,12 +102,14 @@ const header = observer((props) => {
 
         const onFinish = async (urlBody) => {
           const result = await AuthStore.action_update_profile(urlBody);
-          result && showMessageSuccess("Cập nhật thành công !")
+          if(result) {
+            AuthStore.action_editProfile("name", urlBody.username)
+            showMessageSuccess("Cập nhật thành công !")
+          } 
           setHidden(true)
         }
 
         const onChange = async file => {
-          console.log(file.target.files[0]);
            const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id})
           setSrcImage(src);
         };
@@ -87,12 +136,7 @@ const header = observer((props) => {
                     <label style={{position: 'absolute', bottom: '-37%',right: '42%',zIndex: 10}} for="upload_header" > 
                       <CameraAlt  />  
                     </label>
-                    
-                    
-                  
-                 
-                  
-                  
+
                 </div>
                 <div class="menu">
                   <div class="opener"><span></span><span></span><span></span></div>
@@ -181,7 +225,35 @@ const header = observer((props) => {
    
         )
       }
-     
+     const renderNotify = () => {
+       return (
+          <Row style={{width: '311px', height: '270px', overflowY: 'scroll'}}>
+              
+                      <Col span={24} style={{height: '45px'}}>
+                      {sortNotify(listNotify).map(value => {
+                        return (
+                          <Row justify="space-between" align="middle" style={{boxShadow: "rgb(0 0 0 / 15%) 1.95px 1.95px 2.6px", border: '1px solid #e0d8d8'}}>
+                              <Col span={3} >
+                                  <Image src={value.profilePicture} preview={false} style={{borderRadius: '50%'}}/>
+                              </Col>
+                              <Col span={20}> 
+                                  <Row>
+                                      <Col span={24} style={{fontSize: '13px', fontWeight: '550'}}>
+                                        {value.des}
+                                      </Col>
+                                      <Col span={24} style={{fontSize: '13px', fontWeight: '550', color: 'gray'}}>
+                                        {value.created_at}
+                                      </Col>
+                                  </Row>
+                              </Col>
+                          </Row>
+                     
+                  )
+              })}
+               </Col>
+          </Row>
+       )
+     }
     return (
         <>
             <div className="sideBar-chat">
@@ -195,15 +267,24 @@ const header = observer((props) => {
                     </Col>
                     <Col span={24} className="sideBar-conversation sideBar-active-class" onClick={handlePassMess}>
                         <FontAwesomeIcon icon={faFacebookMessenger} />
-                        {console.log(countMess)}
                         {countMess != 0 && <span>{countMess} </span> }
                     </Col>
 
                     <Col span={24} className="sideBar-game">
                         <FontAwesomeIcon icon={faGamepad} />
                     </Col>
-                    <Col span={24} className="sideBar-Notify">
-                        <FontAwesomeIcon icon={faBell} />
+                    <Col span={24} className="sideBar-Notify" onClick={() => {
+                      
+                    }}>
+                        <Popover placement="right" title={<b>Thông báo</b>} 
+                          trigger="click" 
+                          style={{background: 'transparent', padding: '13px'}}
+                          content={renderNotify}
+                        >
+                          <FontAwesomeIcon icon={faBell} />
+                          {_.size(listNotify) != 0 && <span className="count-noti">{_.size(listNotify)}</span> }
+                        </Popover>
+                        
                         
                     </Col>
                     <Col span={24} className="sideBar-logOut" onClick={showModal}>

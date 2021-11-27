@@ -19,7 +19,8 @@ library.add( fab,faEllipsisH,faVideo,faPenSquare,faSearch,faArrowLeft,faUsers)
 
 const Conversation = observer(() => {
     const ActionStore = useStore('ActionStore');
-    const AuthStore = useStore('AuthStore');      
+    const AuthStore = useStore('AuthStore');   
+    const {user} = AuthStore;   
     const conversations = sortConversationByUpdateAt(ActionStore.conversations);
     const history = useHistory();
     const [actionSearchPeple,setActionSearchPeople] = useState(false);
@@ -60,7 +61,8 @@ const Conversation = observer(() => {
     const handleInviteGroup = (e,userId) => {
       
       Object.assign(listUserInvite.current, {[userId._id]: {...userId,seen: false}});
-      const result = modalSearchList.map(value => {
+      const dataSourse = [...modalSearchList]
+      const result = dataSourse.map(value => {
         if(value._id == userId._id) value.seen = true;
         return value;
       })
@@ -68,7 +70,8 @@ const Conversation = observer(() => {
     }
     const handleDeleteGroup = (e,userId) => {
       delete listUserInvite.current[userId._id]
-      const result = modalSearchList.map(value => {
+      const dataSourse = [...modalSearchList]
+      const result = dataSourse.map(value => {
         if(value._id == userId._id) value.seen = false;
         return value;
       })
@@ -76,15 +79,26 @@ const Conversation = observer(() => {
     }
     const handleCreateGroup = () => {
       if(createNameGroup.current.value != "") {
-        const arrMembers = Object.values(listUserInvite.current)
+        const arrMembers = Object.values(listUserInvite.current);
+        const listUser = Object.keys(listUserInvite.current)
         const truearr = arrMembers.map(value => {
           const {_id,...rest} = value;
           return {...rest,id: value._id}
         })
-        AuthStore.socket.emit("invite_to_group", {name: createNameGroup.current.value, members: [...truearr,{id: AuthStore.user._id, profilePicture: AuthStore.user?.profilePicture, username: AuthStore.user?.username}]});
+        try {
+          AuthStore.socket.emit("invite_to_group", {name: createNameGroup.current.value, 
+            members: [...truearr,{id: AuthStore.user._id, profilePicture: AuthStore.user?.profilePicture, username: AuthStore.user?.username, isAdmin: true}],
+            listUser,
+            user: AuthStore.user
+          });
+        } catch (err) {
+          console.log(err);
+        }
+        
         setModalSearchList([]);
         listUserInvite.current ={};
         setShowModalGroup(false);
+        createNameGroup.current.value = "";
       }
       
     }
@@ -101,7 +115,7 @@ const Conversation = observer(() => {
             </div>
             <span>Bạn bè</span>
             <div className="main-modal_showGroup-row">
-                {modalSearchList.map(value => {
+                {!_.isEmpty(modalSearchList) && modalSearchList.map(value => {
                   console.log(listUserInvite.current);
                   return (
                     <div className="main-modal_showGroup-col">
@@ -142,7 +156,7 @@ const Conversation = observer(() => {
   }
 
   const getListModalGroup = async () => {
-    const result = await ActionStore.action_getListFriend(AuthStore.user._id);
+    const result = await ActionStore.action_getListFriend(user?._id);
     setModalSearchList(result)
   }
 
@@ -153,8 +167,16 @@ const Conversation = observer(() => {
     const addUser = async (e,userId) => {
       const res = await AuthStore.action_addFriend(true, userId._id);
       
-      if(res) {
-        AuthStore.socket.emit("invite_success", userId._id)
+      if(res && !_.isEmpty(AuthStore?.socket)) {
+        try {
+          AuthStore?.socket?.emit("invite_success", {userId: userId._id, 
+          name: AuthStore?.user?.username,
+          profilePicture: AuthStore?.user?.profilePicture,
+        })
+        } catch(err) {
+          console.log(err);
+        }
+       
         const result = listUserAdd.map(user => {
             if(user._id == userId._id) user.seen = true;
             return user;
@@ -174,6 +196,7 @@ const Conversation = observer(() => {
       visible={visible}
       cancelText={<></>}
       okText="Hủy"
+      onCancel={handleCancelAdd}
       onOk={handleCancelAdd}
      >
           <div className="main-modal_showGroup">
@@ -278,7 +301,7 @@ const Conversation = observer(() => {
                                         <ProfileRight 
                                           conversation={conversation} 
                                           seen={conversation.lastText?.seens.filter(value => value.id == AuthStore.user._id)}
-                                          isGroup={_.size(conversation.members) > 2? true:false}
+                                          isGroup={conversation.name? true:false}
                                         />
                                     </li>
                                     </>

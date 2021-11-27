@@ -1,4 +1,4 @@
-import React from 'react';
+ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
@@ -18,6 +18,7 @@ import { format } from "timeago.js";
 import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
 import Emoji from '../Emoji/Emoji';
+import ListNotify from '../ListNotify/ListNotify';
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
   faArrowAltCircleRight,faThumbsUp,faSearch,faChevronDown,faChevronUp,faUpload,faSearch,faSmileWink,faImage) 
 
@@ -27,6 +28,7 @@ const ContrainerMess = observer((props) => {
     const [messages, setMessages] = useState([]);
     const {conversationId} = useParams();
     const covId = conversationId;
+    const {showListNotify} = AuthStore;
     const {user} = AuthStore;
     const indexConversation = findIndexFromArrayLodash(ActionStore.conversations, {_id: conversationId});
     const currentConversation = ActionStore.conversations[indexConversation];
@@ -40,6 +42,7 @@ const ContrainerMess = observer((props) => {
     const [openEmoji, setOpenEmoji] = useState(false);
     const [profileFriend,setProfileFriend] = useState({});
     const emojiRef = useRef(null);
+    const [statusJoin, setStatusJoin] = useState(false);
     const [showModalProfile, setShowModalProfile] = useState(false);
 
     const getEmoji = (emoji) => {
@@ -48,10 +51,10 @@ const ContrainerMess = observer((props) => {
     //set ProfileFriend
     useEffect(() => {
       if(!_.isEmpty(currentConversation)) {
-        const sizeUserInRoom = _.size(currentConversation.members) > 2 ? true:false;
+        const sizeUserInRoom = currentConversation.name ? true:false;
         
         if(sizeUserInRoom) {
-          const status = _.size(currentConversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=1 ? true : false;
+          const status = _.size(currentConversation.members.filter(value => value.id != user._id && value.status)) >=1 ? true : false;
           setProfileFriend({
             username: currentConversation.name,
             profilePicture: currentConversation.covImage,
@@ -64,7 +67,7 @@ const ContrainerMess = observer((props) => {
           setProfileFriend(userProfile); 
         }
       }
-    },[currentConversation])
+    },[currentConversation, ActionStore.answerJoinRoom])
 
 
     useEffect(() => {
@@ -73,12 +76,25 @@ const ContrainerMess = observer((props) => {
 
     /// get message
     useEffect(() => {
-          getMessages(); 
-      }, [conversationId,AuthStore.statusSeenText]);
+       getMessages(); 
+        console.log(
+          "call get mess"
+        );
+      }, [AuthStore.statusSeenText, statusJoin]);
       const getMessages = async () => {
         try {
           const res = await ActionStore.action_getAllMessageOfConversation(conversationId)
           setMessages(res);
+          if(!statusJoin) {
+            const lastMess = _.last(res);
+            const result = await ActionStore.action_updateLastMess({messId: lastMess?._id, userId: AuthStore?.user?._id});
+            if(result){
+              handleJoinRoom(currentConversation);
+              setStatusJoin(true);
+            }
+          }
+          
+          
         } catch (err) {
           console.log(err);
         }
@@ -90,8 +106,6 @@ const ContrainerMess = observer((props) => {
 
           const statusSeen = currentConversation.lastText.seens;
           const seen = statusSeen.filter(value => value.joinRoom == true && value.id != AuthStore.user._id);
-          console.log(statusSeen);
-          console.log(seen);
 
           if(newMessage != "") {
             const message = {
@@ -176,7 +190,7 @@ const ContrainerMess = observer((props) => {
       // set arrives message
       useEffect(() => {
         arrivalMessage && 
-        !_.isEmpty( currentConversation?.members.filter(value => value.id == arrivalMessage.sender)) &&
+        arrivalMessage.conversationId == covId &&
           setMessages((prev) => [...prev, arrivalMessage]);
       }, [arrivalMessage]);
 
@@ -215,17 +229,17 @@ const ContrainerMess = observer((props) => {
        },[AuthStore.stt])
 
     //Join Room 
-    useEffect(() => {
-      if(!_.isEmpty(currentConversation)) {
-      handleJoinRoom(currentConversation);
-      }
-    },[currentConversation])
+    // useEffect(() => {
+    //   // if(!_.isEmpty(currentConversation)) {
+    //   // handleJoinRoom(currentConversation);
+    //   // }
+    // },[conversationId])
 
   const handleJoinRoom = async (conversation) => {
+    const userId = AuthStore?.user._id;
     try {
-      console.log("action join room");
-     AuthStore.socket?.emit("join_room", {senderId: AuthStore?.user._id, conversationId: conversation._id})
-     ActionStore.action_updateStatusSeenSelf({conversationId: conversation._id,senderId: AuthStore?.user._id}); 
+     AuthStore.socket?.emit("join_room", {senderId: userId, conversationId: covId})
+     ActionStore.action_updateStatusSeenSelf({conversationId: covId,senderId: userId}); 
      
    } catch (err) {
      console.log(err);
@@ -243,6 +257,7 @@ const ContrainerMess = observer((props) => {
     return () => {
       console.log("out this room: ", conversationId);
       setMessages([]);
+      setStatusJoin(false);
    
     conversationId &&  handleOutComponent();
     }
@@ -299,6 +314,8 @@ const ContrainerMess = observer((props) => {
       setMessages([]);
     }
   },[])
+
+
 
   //user Profile
 
@@ -402,20 +419,22 @@ const ContrainerMess = observer((props) => {
                             </div>
                         </div>
                             <ul className="container-main__list">
-                                {/* <div > */}
-                                    {messages.map((m, index) => {
+                              {console.log(!AuthStore.showListNotify)}
+                                {!AuthStore.showListNotify ? 
+                                    messages.map((m, index) => {
                                         return (
                                             <li className="container-main__item1" ref={scrollRef} id={`mess${index}`}>
                                                 <Message message={m} own={m.sender === user._id} 
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
                                                     seen={m.seen}
                                                     lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
-                                                    key={conversationId + index}
+                                                    // key={conversationId + index}
                                                 />
                                             </li>
                                         );
-                                    })}
-                                {/* </div> */}
+                                    }) :
+                                    <ListNotify />
+                               }
                                  
                             </ul>
                     </div>

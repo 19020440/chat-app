@@ -13,7 +13,7 @@ router.delete("/:id", UserController.deleteUser);
 router.get("/", UserController.getUser);
 
 //get friends
-router.get("/friends/:userId", UserController.getFriends);
+router.post("/friends/:userId", UserController.getFriends);
 
 //follow a user
 

@@ -61,8 +61,9 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
                   <a href={value} className="mess_file"
                     onClick={(e) => {
                       e.preventDefault();
+                      window.open(e.target.href);
                     }}
-                    download
+                    download="filename"
                   >{arrName[arrName.length-1]}</a>
               </Col>
               )
@@ -86,7 +87,7 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
            {lastTextSeen && message.sender == AuthStore.user._id &&
             //  <div className="list_seen_messenger" hidden>
              
-                <>
+                <div style={{position: 'absolute', bottom: '-15px',right: '-10px'}}>
                 {message.seens.map(value => {
                   if(value.id != AuthStore.user._id && value.seen)
                   return (
@@ -94,14 +95,14 @@ const  Message = observer(({ message, own,seen,lastTextSeen}) => {
                   )
                 })}
               
-                </>
+                </div>
              
           // </div>
              }
           {!seen && message.sender == AuthStore.user._id &&
             <>
             
-            <img className="image_text" src="https://img.icons8.com/external-kiranshastry-gradient-kiranshastry/13/000000/external-check-multimedia-kiranshastry-gradient-kiranshastry.png"/>
+            <img className="image_text_notseen" src="https://img.icons8.com/external-kiranshastry-gradient-kiranshastry/13/000000/external-check-multimedia-kiranshastry-gradient-kiranshastry.png"/>
             
             </>
            } 

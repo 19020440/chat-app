@@ -26,8 +26,12 @@ export  class AuthStore {
     listStatusCov = [];
     listFollow = [];
     status_addUser = false;
+    showListNotify = false;
+    doiten = false;
     constructor() {
         makeAutoObservable(this,{
+            doiten: observable,
+            showListNotify: observable,
             listFollow: observable,
             status_addUser: observable,
             listStatusCov: observable,
@@ -65,7 +69,34 @@ export  class AuthStore {
             action_update_profile: action,
             action_get_list_invite: action,
             action_addUser: action,
+            action_showListNotify: action,
+            action_doiten: action,
+            action_editProfile: action,
         })
+    }
+    //action edit profile
+    action_editProfile(type, data) {
+        switch (type) {
+            case "picture" : {
+                this.user = {...this.user, profilePicture: data}
+                break;
+            }
+
+            case "name": {
+                this.user = {...this.user, username: data}
+            }
+
+            default: break;
+        }
+        
+    }
+    action_doiten() {
+        this.doiten = !this.doiten;
+    }
+    //show lít otify
+    action_showListNotify(data) {
+        console.log(data);
+        this.showListNotify = data;
     }
     //action add suer
     action_addUser() {
@@ -289,6 +320,7 @@ export  class AuthStore {
         if(result) {
             this.login = 0;
             await sessionStorage.removeItem("token");
+            this.socket?.emit("userOffline",{arrCov: this.listRoom, userId: this.user?._id})
             this.action_resetAllData();
             
         }

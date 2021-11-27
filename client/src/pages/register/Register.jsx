@@ -34,7 +34,7 @@ import  {showMessageError} from '../../helper/function'
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">Lamasocial</h3>
+          <h3 className="loginLogo">DBMS Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -70,9 +70,9 @@ import  {showMessageError} from '../../helper/function'
               type="password"
             />
             <button className="loginButton" type="submit">
-              Sign Up
+              Nhấn để đăng ký
             </button>
-            <button className="loginRegisterButton"><Link to="/login">Log into Account</Link></button>
+            <button className="loginRegisterButton"><Link to="/login">Đăng nhập</Link></button>
           </form>
         </div>
       </div>

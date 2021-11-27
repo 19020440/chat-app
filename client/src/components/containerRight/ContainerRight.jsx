@@ -10,6 +10,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {People,MoreHoriz} from '@material-ui/icons'
 import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch, faWrench, faCheck, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { showMessageInfo, showMessageSuccess } from '../../helper/function';
 library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash,faWrench,faCheck,faSignOutAlt) 
 const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const AuthStore = useStore('AuthStore')
@@ -17,6 +18,8 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const [activeQVR, setActiveQVR] = useState(false);
     const [active, setActive] = useState(false);
+    const oldNameGroup = useRef(infoRoom.username)
+    const idAmin = useRef();
     const [editNameStatus,setEditNameStatus] = useState(false);
     const [reNameGroup,setReNameGroup] = useState(false);
     const [leaveGroup,setLeaveGroup] = useState(false);
@@ -42,7 +45,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 })  
             }
         }) 
-
+        oldNameGroup.current = {...infoRoom}?.username;
         return () => {
             setListFile([]);
             setListImage([]);
@@ -93,7 +96,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                 
                                 />
                                 <img src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/35/000000/external-check-basic-ui-elements-flatart-icons-outline-flatarticons.png" hidden
-                                    onClick={(e) => {
+                                    onClick={ async (e) => {
                                         const input = e.target.previousElementSibling.previousElementSibling.children[1];
                                         const edit = e.target.previousElementSibling;
                                         const check = e.target;
@@ -102,7 +105,18 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                         edit.hidden = false;
                                         input.disabled = true;
                                         value.username = input.value
-                                        ActionStore.action_changePropertyConversation("members",conversationId,members);
+                                       const result  = await ActionStore.action_changePropertyConversation("members",conversationId,members);
+                                        result && AuthStore?.socket?.emit("edit_bietdanh", {
+                                            conversationId,
+                                            profilePicture: AuthStore?.user?.profilePicture,
+                                            isGroup: _.size(members) > 2 ? true : false,
+                                            id: value?.id,
+                                            newName: input.value,
+                                            name: value?.username,
+                                            userChange: AuthStore?.user?.username,
+                                            nameGroup: oldNameGroup.current,
+                                        })
+                                    
                                     }}
                                 />
                             </Col>
@@ -149,18 +163,26 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const handleCancelLeaveGroup = () => {
         setLeaveGroup(false);
     }
-    const handleLeaveGroup =(e) => {
-        ActionStore.action_changePropertyConversation('leave',conversationId);
+    const handleLeaveGroup = async (e) => {
+        const result = await ActionStore.action_changePropertyConversation('leave',conversationId, AuthStore.user._id);
+        result && AuthStore.socket?.emit("leave_group", {conversationId, 
+            profilePicture: AuthStore?.user?.profilePicture, 
+            des: `${AuthStore?.user?.username} đã rời khỏi nhóm ${infoRoom?.username}`})
         history.push('/messenger')
     }   
      
     const handleCancelReName = () => {
         setReNameGroup(false);
     }
-    const handleAcceptReName = (e) => {
+    const handleAcceptReName = async (e) => {
        
-        ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
-        setReNameGroup(false);
+       const result = await ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
+       result && AuthStore.socket.emit("edit_tennhom", {
+        conversationId, 
+        profilePicture: AuthStore?.user?.profilePicture,
+        des: `${AuthStore?.user?.username} đã đổi tên nhóm ${oldNameGroup.current} thành ${infoRoom.username}`
+    });
+       setReNameGroup(false);
         
     }
    
@@ -169,6 +191,28 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const modalMembers = (isModalVisible) => {
         const handleCancelMembers = () => {
             setModalMember(false);
+        }
+        const handleDeleteUser = async (value) => {
+            if(idAmin.current == AuthStore?.user?._id) {
+                if(value.id != idAmin) {
+                    const result = await ActionStore.action_deleteUserGroup(conversationId,value.id);
+                    if(result) {
+                        showMessageSuccess("Xoá thành công thành viên ra khỏi nhóm!")
+                        AuthStore.socket?.emit("delete_user", {conversationId, 
+                            profilePicture: AuthStore?.user?.profilePicture,
+                             name: value?.username,
+                             id: value?.id,
+                             groupName: infoRoom?.username
+                            });
+                    }
+                    else showMessageInfo("Xóa thành viên thất bại!")
+                } else showMessageInfo(`Bạn có thể ấn "Rời khỏi nhóm" ở dưới cùng của thanh công cụ!`)
+                
+            } 
+            else  {
+              
+                showMessageInfo("Chỉ có quản trị viên mới có quyền xóa thành viên !");
+            }
         }
         return (
             <Modal title="Thành viên" visible={isModalVisible}  
@@ -179,17 +223,18 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
             >
                 <Row>
                     {!_.isEmpty(member) && member.map(value => {
+                        if(value.isAdmin) idAmin.current = value.id;
                         return (
                             <Col span={24} style={{display: "flex", alignItems: "center", justifyContent: "space-between",padding: "10px"}}> 
                                 <div style={{display: "flex", alignItems: "center"}}>
                                     <img src={value.profilePicture} style={{borderRadius: "50px"}}/>
                                     <div >
                                         <span style={{marginLeft: "10px",fontWeight: "550"}}>{value.username}</span>
-                                        <p style={{marginLeft: "10px",fontWeight: "500",color: "#cec3c3",fontSize: "12px"}}>Quản trị viên</p>
+                                        {value.isAdmin && <p style={{marginLeft: "10px",fontWeight: "500",color: "#cec3c3",fontSize: "12px"}}>Quản trị viên</p>}
                                     </div>
                                    
                                 </div>
-                                <Popover placement="bottom"  content={<><p>Xóa khỏi nhóm</p></>} trigger="click">
+                                <Popover placement="bottom"  content={<><p onClick={() => handleDeleteUser(value)}>Xóa khỏi nhóm</p></>} trigger="click">
                                     <MoreHoriz style={{fontSize: "20px"}}/>
                                 </Popover>
                             </Col>

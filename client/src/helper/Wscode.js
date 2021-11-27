@@ -21,4 +21,6 @@ export const WsCode = {
     updateConversation: 'conversations/update/property',
     update_profile: 'users/update/profile',
     listInvite: 'users/list/invite',
+    leaveGroup: 'conversations/leave-group',
+    updateLastMess: "messages/update-last-message"
 }

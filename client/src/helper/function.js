@@ -51,6 +51,10 @@ export const showMessageError = (msg, onOk) => {
     const result =  _.orderBy(conversations.slice(), [(obj) => new Date(obj.updatedAt)], ['desc'])
     return result;
   }
+  export const sortNotify = (notify) => {
+    const result  = _.orderBy(notify, [(obj) => new Date(obj.created_at)], ['desc'])
+    return result;
+  }
   
   export const countTextNotSeen = (conversations, userId) => {
     let count = 0;
