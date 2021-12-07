@@ -336,8 +336,8 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                             </ul>
                         </div>
 
-                        <div className="container-right__menu-dropdown" onClick={handleShowQVR}>
-                            <div className="dropdown-head">
+                        <div className="container-right__menu-dropdown" >
+                            <div className="dropdown-head" onClick={handleShowQVR}>
                                 <div className="dropdown-head__title">
                                     {`Quyền riêng tư & hỗ trợ`}
                                 </div>
@@ -385,14 +385,13 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                             </ul>
                         </div>
 
-                        <div className="container-right__menu-dropdown container-right__menu-dropdown-file_share" 
-                            onClick={(e) => {
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-file_share">
+                            <div className="dropdown-head"  onClick={(e) => {
                                 const element = fileShareRef.current.getAttribute("class");
                                 if(element.indexOf("hidden_icon") != -1) {
                                     fileShareRef.current.classList.remove("hidden_icon");
                                 } else fileShareRef.current.classList.add("hidden_icon");
                             }}>
-                            <div className="dropdown-head">
                                 <div className="dropdown-head__title">
                                     Tệp được chia sẻ
                                 </div>
@@ -405,7 +404,11 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                     listFile.map(file => {
                                         return (
                                             <Col span={24}>
-                                                <a href={file.link}>{file.name}</a>
+                                                <a href={file.link} onClick={(e) => {
+                                                    e.preventDefault();
+                                                    window.open(e.target.href)
+                                                    console.log();
+                                                }}>{file.name}</a>
                                             </Col>
                                         )
                                     }):

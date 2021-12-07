@@ -19,10 +19,19 @@ import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
 import Emoji from '../Emoji/Emoji';
 import ListNotify from '../ListNotify/ListNotify';
+import Camera from '../camera/Camera';
+import { AuthStore } from '../../Store/AuthStore';
+
 library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGift,
   faArrowAltCircleRight,faThumbsUp,faSearch,faChevronDown,faChevronUp,faUpload,faSearch,faSmileWink,faImage) 
 
+
+  const requestRecorder = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    return new MediaRecorder(stream);
+  }
 const ContrainerMess = observer((props) => {
+    const [showSelfie, setShowSelfie] = useState(false);
     const AuthStore = useStore('AuthStore')
     const ActionStore = useStore('ActionStore');
     const [messages, setMessages] = useState([]);
@@ -44,6 +53,65 @@ const ContrainerMess = observer((props) => {
     const emojiRef = useRef(null);
     const [statusJoin, setStatusJoin] = useState(false);
     const [showModalProfile, setShowModalProfile] = useState(false);
+    const [recorder, setRecorder] = useState(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioData, setAudioData] = useState(null);
+  const videoRef = useRef();
+    const [recordTime, setRecordTime] = useState(0);
+    const [intervalTime, setIntervalTime] = useState(null);
+    const handleRecord = () => {
+      if (!isRecording) {
+        let interval = setInterval(() => {
+          setRecordTime(recordTime => {
+            return recordTime += 1
+          });
+  
+        }, 1000);
+        setIntervalTime(interval);
+      } else {
+        setIntervalTime(clearInterval(intervalTime))
+      }
+      setIsRecording(!isRecording)
+    }
+  
+    const handleCancelRecord = (e) => {
+      e.preventDefault();
+      setIsRecording(false);
+      setRecorder(null);
+      setAudioData(null);
+      setIntervalTime(clearInterval(intervalTime))
+      setRecordTime(0);
+    }
+
+
+    useEffect(() => {
+      // Lazily obtain recorder first time we're recording.
+      if (recorder === null) {
+        if (isRecording) {
+          requestRecorder().then(setRecorder, (error) => {
+            console.log(error);
+          });
+        }
+        return;
+      }
+  
+      // Manage recorder state.
+      if (isRecording) {
+        recorder.start();
+      } else {
+        recorder.stop();
+        // setRecorder(null);
+      }
+  
+      // Obtain the audio when ready.
+      const handleData = e => {
+        console.log(e.data)
+        setAudioData(e.data);
+      };
+  
+      recorder.addEventListener("dataavailable", handleData);
+      return () => recorder.removeEventListener("dataavailable", handleData);
+    }, [recorder, isRecording]);
 
     const getEmoji = (emoji) => {
       setNewMessage(text => text + emoji);
@@ -126,13 +194,8 @@ const ContrainerMess = observer((props) => {
             setMessages([...messages, res]);
             setNewMessage("");
           }
-          
-
-
-          setTimeout(async () => {
+          console.log(AuthStore.textFile);
             if(!_.isEmpty(AuthStore.textFile)) {
-
-               
 
               const message = {
                 sender: user._id,
@@ -153,7 +216,6 @@ const ContrainerMess = observer((props) => {
               setMessages([...messages, res]);
               setFiles([]);
             }
-          },0)
              
        } catch(err) {
             console.log(err);
@@ -248,10 +310,71 @@ const ContrainerMess = observer((props) => {
 }
 
 //SELFIE 
- const handleSelfie = () => {
-   history.push('/camera')
+ const modalSelfie = (isModalVisible) => {
+    const handleOk = async () => {
+        const src = await AuthStore.action_selfie(videoRef.current.newSrc.split(',')[1]);
+        const statusSeen = currentConversation.lastText.seens;
+        const seen = statusSeen.filter(value => value.joinRoom == true && value.id != AuthStore.user._id);
+          const message = {
+            sender: user._id,
+            text: JSON.stringify([src]),
+            conversationId: covId,
+            seens: statusSeen,
+            seen: !_.isEmpty(seen),
+          };
+          const res = await ActionStore.action_saveMessage(message);
+          const {conversationId,...lastText} = message;
+          if(indexConversation !== null){
+            ActionStore.action_setConverSationByIndex({updatedAt: Date(Date.now()),lastText}, indexConversation);
+          }
+          AuthStore.socket?.emit("sendMessage", res);
+          setMessages([...messages, res]);
+          videoRef.current.srcObject.getTracks()[0].stop();
+        setShowSelfie(false);
+        // videoRef.current.srcObject.getTracks()[0].stop();
+    }
+    const handleCancel = () => {
+      setShowSelfie(false);
+     videoRef.current.srcObject.getTracks()[0].stop();
+    //  const formData = new FormData();
+    //  formData.append('base', videoRef.current.newSrc.split(',')[1])
+    //  fetch('http://localhost:8800/api/upload', {
+    //    method: 'post',
+    //    body: formData,
+    //   //  headers: {
+    //   //    'Content-Type': 'multipart/form-data'
+    //   //  }
+    //  }).then(res => {
+    //    console.log(res);
+    //  })
+    } 
+    return (
+      <Modal 
+        title={<></>} 
+        visible={isModalVisible} 
+        onOk={handleOk} 
+        okText="Gửi"
+        cancelText="Đóng"
+        onCancel={handleCancel}
+        bodyStyle={{width: '500px', height: '520px', padding: '12px'}}
+      >
+        <Camera status={showSelfie} videoRef={videoRef}/>
+      </Modal>
+    )
  }
-
+ const getVideo = () => {
+  navigator.mediaDevices.getUserMedia({
+      video: {width: 500, height: 500}
+  })
+  .then((stream) => {
+      let video = videoRef.current;
+      video.srcObject = stream;
+      video.play();
+  })
+  .catch(err => {
+      console.log(err);
+  })
+}
 //Out room
   useEffect(() => {
     return () => {
@@ -442,9 +565,15 @@ const ContrainerMess = observer((props) => {
                       
                         <div className="container-main__bottom-left">
                             <div className="container-main__bottom-left-icon">
-                                <FontAwesomeIcon icon={faPlusCircle} />
+                                <Tooltip title="Ghi âm"> 
+                                  <FontAwesomeIcon icon={faPlusCircle} onClick={handleRecord}/>
+                                </Tooltip>
+                                
                             </div>
-                            <div className="container-main__bottom-left-icon hide" onClick={handleSelfie}>
+                            <div className="container-main__bottom-left-icon hide" onClick={() => {
+                              getVideo();
+                              setShowSelfie(true)}
+                            }>
                                 <Tooltip title="Chụp ảnh"> 
                                   <FontAwesomeIcon icon={faPortrait} />
                                 </Tooltip>
@@ -522,6 +651,7 @@ const ContrainerMess = observer((props) => {
         
                 <ContainerRight infoRoom={profileFriend} members={currentConversation?.members} messenger={messages}/>
                 {profileModal(showModalProfile)}
+                {modalSelfie(showSelfie)}
         </>
     );
 })

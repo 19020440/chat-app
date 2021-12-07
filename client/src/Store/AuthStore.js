@@ -72,6 +72,7 @@ export  class AuthStore {
             action_showListNotify: action,
             action_doiten: action,
             action_editProfile: action,
+            action_selfie: action,
         })
     }
     //action edit profile
@@ -245,9 +246,18 @@ export  class AuthStore {
                  return url;
              }
 
+       
+    }
 
-       
-       
+    async action_selfie(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`
+             const formData = new FormData();
+            formData.append('base', data)
+             const result = await Request.post(formData,DOMAIN);
+             if(result) {
+                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`;
+                 return url;
+             }
     }
     action_setTextSearch(data) {
         this.textSearch = data;

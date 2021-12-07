@@ -24,9 +24,8 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
             setUser(userProfile);  
         }
            
-    }, [ActionStore.offlineStatus,conversation]);
+    }, [ActionStore.offlineStatus,conversation, AuthStore?.statusSeenText]);
 
-    
     
     return (
         <div className="status">

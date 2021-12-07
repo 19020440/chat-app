@@ -18,6 +18,7 @@ const header = observer((props) => {
     const AuthStore = useStore('AuthStore');
     const ActionStore = useStore('ActionStore');
     const {user} = AuthStore;
+    const [form] = Form.useForm();
     const [visible, setVisible] = useState(false);
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
     const countMess = countTextNotSeen(ActionStore.conversations, AuthStore.user?._id);
@@ -101,16 +102,20 @@ const header = observer((props) => {
         }
 
         const onFinish = async (urlBody) => {
+          if(!urlBody.username) urlBody.username = user?.username;
           const result = await AuthStore.action_update_profile(urlBody);
           if(result) {
             AuthStore.action_editProfile("name", urlBody.username)
+            form.setFieldsValue({"newpassword": ""})
+            form.setFieldsValue({"password": urlBody.newpassword})
+            setHidden(true)
             showMessageSuccess("Cập nhật thành công !")
           } 
-          setHidden(true)
+          
         }
 
         const onChange = async file => {
-           const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id})
+           const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id, arrCov: AuthStore?.listRoom})
           setSrcImage(src);
         };
 
@@ -142,7 +147,7 @@ const header = observer((props) => {
                   <div class="opener"><span></span><span></span><span></span></div>
                 </div>
                 <h2 class="name">{user.username}</h2>
-                <div class="title" style={{}}>{user.email}</div>
+                <div class="title" >{user.email}</div>
                 <div class="actions">
                   <div class="follow-info">
                     <h2><a href="#"><span>{_.size(AuthStore.listFollow)}</span><small>Bạn Bè</small></a></h2>
@@ -156,8 +161,7 @@ const header = observer((props) => {
                       <Form
                           name="basic"
                           onFinish={onFinish}
-                          autoComplete="off"
-      
+                          form={form}
                         >
                           <Form.Item
                             label={<span style={{fontSize: '10px', fontWeight: 550}}>Tên</span>}
@@ -165,7 +169,7 @@ const header = observer((props) => {
                         
                             
                           >
-                            <Input defaultValue={user?.username} disabled={hidden} style={{border: "none"}} />
+                            <Input defaultValue={user?.username} value={user?.username} disabled={hidden} style={{border: "none"}} />
                           </Form.Item>
                           
 
@@ -191,6 +195,16 @@ const header = observer((props) => {
                                 required: true,
                                 message: 'Please input your new password!',
                               },
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  if ( value == form.getFieldValue('password')) {
+                                    
+                                      return Promise.reject("Mật khẩu mới phải khác mật khẩu hiện tại");
+                                    
+                                  }
+                                  return Promise.resolve();
+                                },
+                              }),
                             ]}
                             hidden={hidden}
                           >

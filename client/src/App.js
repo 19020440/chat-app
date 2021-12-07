@@ -36,10 +36,6 @@ const App = observer(() => {
   const [userCall, setUserCall] = useState();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const signal = useRef();
-  const [createGroup, setCreateGroup] = useState(false);
-  const [bietdanh, setBietdanh] = useState(false);
-  const [xoaUser, setXoaUser] = useState(false);
-  const [doiten, setDoiten] = useState(false);
   useEffect(() => {
     
     validLogin();
@@ -58,8 +54,10 @@ const App = observer(() => {
         AuthStore.action_setListRoom(arrCovId);
         // if(!_.isEmpty(AuthStore?.socket)) {
           AuthStore.socket.emit("first_join_room", arrCovId);
-          console.log(socket.id);
-          AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  socket.id,arrCovId: arrCovId});
+          AuthStore?.socket?.on("first_join_room", status => {
+            AuthStore.socket?.emit("online",{email: AuthStore.user?.email, id :  socket.id,arrCovId: arrCovId});
+          })
+         
         // }
       } catch (err) {
         console.log(err);
@@ -77,9 +75,10 @@ const App = observer(() => {
     });
   },[]);
   useEffect(() => {
+
+    
    //join_room
     AuthStore.socket?.on("setJoin_room", (data) => {
-      console.log("user send is:", data.senderId);
       ActionStore.action_updateStatusSeenConversation(data , "join");
       AuthStore.socket.emit("answer_join_room", {senderId: user?._id, conversationId: data.conversationId});
       AuthStore.action_setSatusSeenText();
@@ -109,7 +108,7 @@ const App = observer(() => {
     //setjoin_room
     AuthStore.socket?.on("setOnline", (data) => {
       const result = AuthStore.listRoom.filter(function(n) { return data.arrCovId.indexOf(n) !== -1;});
-      console.log(result);
+      console.log("setOnline:", data);
       if(!_.isEmpty(result)) {
         for(let i=0;i<_.size(result);++i) {
           ActionStore.action_updateStatusSeenMembers({conversationId: result[i], senderId: data.userOnlineId} , "join");
@@ -194,16 +193,8 @@ const App = observer(() => {
     })
   
    
- },[]);
+ },[socket]);
 
-//  useEffect(() => {
-//     return () => {
-//       setBietdanh(!bietdanh);
-//       setCreateGroup(!createGroup);
-//       setDoiten(!doiten);
-//       setXoaUser(!xoaUser);
-//     }
-//  },[])
  
 
   const validLogin = async () => {

@@ -68,9 +68,33 @@ const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
     if(req.body.userId) {
-      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `http://localhost:8800/images/${req.body.name}`});
+      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `${req.body.name}`});
+      // req.body.arrCov.forEach(items => {
+      //     Promise.all([  Conversation.update(
+      //       {$and: [{_id: items}, {'lastText.seens.id': req.body.userId,}]},
+            
+      //         {
+      //         $set:  {'lastText.seens.$.profilePicture': `http://localhost:8800/images/${req.body.name}` },
+      //       }
+      //         ),   Conversation.update(
+      //           {$and: [{_id: items}, {'members.id': req.body.userId,}]},
+                
+      //             {
+      //             $set:  {'members.$.profilePicture': `http://localhost:8800/images/${req.body.name}` },
+      //           }
+      //             )  ])
+      // })
+      return res.status(200).json({content: req.body.name , status: 1});
+    } else {
+        const raw = new Buffer.from (req.body.base, 'base64');
+        const nameFile = Date.now();
+        fs.writeFile(`public/images/${nameFile}.png`, raw, function(err) {
+          if (err) throw err;
+
+          res.status(200).json({content: `${nameFile}.png`, status: 1})
+        })
     }
-    return res.status(200).json({content: req.body.name , status: 1});
+   
   } catch (error) {
     console.error(error);
   }
@@ -103,6 +127,7 @@ io.on("connection", (socket) => {
   //first_join_room
   socket.on("first_join_room", data => {
     socket.join(data);
+    socket.emit("first_join_room", true);
   })
 
   //join room
