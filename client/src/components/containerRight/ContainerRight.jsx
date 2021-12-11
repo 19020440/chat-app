@@ -3,19 +3,22 @@ import './containerRight.css'
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash'
 import {useStore} from '../../hook'
+import {Close, CloudDownload} from '@material-ui/icons'
 import { useHistory, useParams } from 'react-router';
-import { Modal,Row,Col,Input,Popover,Button } from 'antd';
+import { Modal,Row,Col,Input,Popover,Button, Image, Form, message } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import {People,MoreHoriz} from '@material-ui/icons'
 import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch, faWrench, faCheck, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
-import { showMessageInfo, showMessageSuccess } from '../../helper/function';
+import { showMessageInfo, showMessageSuccess, searchSendMess } from '../../helper/function';
 library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash,faWrench,faCheck,faSignOutAlt) 
 const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const AuthStore = useStore('AuthStore')
+    const {Search} = Input;
     const ActionStore = useStore('ActionStore')
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+    const [form] = Form.useForm();
     const [activeQVR, setActiveQVR] = useState(false);
     const [active, setActive] = useState(false);
     const oldNameGroup = useRef(infoRoom.username)
@@ -31,9 +34,78 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const [listFile,setListFile] = useState([]);
     const [member,setMember] = useState(members);
     const [modalMember,setModalMember] = useState(false);
+    const [showModalImage, setShowModalImage] = useState(false);
+    const imageSrcRef = useRef();
+    const dowloadRef = useRef();
+    const [addMemberGroup ,setAddMemberGroup] = useState(false);
+    const [listAddMember, setListAddMember] = useState([]);
+    //Modal add friend into group
+    const ModalAddMember = (status) => {
+         
+        return (
+            <Modal title="Thêm thành viên" visible={status}  className="modal-group" 
+            footer={false}
+            onCancel={() => {
+                setAddMemberGroup(false);
+            }}
+          >
+            <div className="main-modal_showGroup">
+                <div className="main-modal_showGroup-search">
+                <Form 
+                style={{width: '100%'}}
+                form={form}
+                >
+                    <Form.Item> 
+                      <Search  placeholder="Tìm kiếm" allowClear onChange={(e) => {
+                        // searchSendMess(listSend)
+                        const result = searchSendMess(ActionStore.listCreateGroup, e.target.value);
+                        setListAddMember(result);
+                      }}/>
+                    </Form.Item>
+                   
+                </Form>
+                </div>
+                <span>Bạn bè</span>
+                <div className="main-modal_showGroup-row">
+                    {!_.isEmpty(listAddMember) && listAddMember.map(value => {
+                      return (
+                        <div className="main-modal_showGroup-col">
+                          <div className="main-modal_showGroup-col-info">
+                            <img src={value.profilePicture ? value.profilePicture  : PF + "person/noAvatar.png"} className="main-modal_showGroup-col-img" />
+                            <span>{value.username}</span>
+                          </div>
+                          <button onClick={async(e) => {
+                            // handleInviteGroup(e,value)
+                                const result = await ActionStore.action_addUserMemberCov({covId: conversationId, user: {...value, id: value?._id}});
+                                if(result) {
+                                    value.isAdd = true;
+                                    message.success("Thêm thành công!")
+                                    setListAddMember([...listAddMember]);   
+                                }
+                                
+                            }}
+                            className="modal-group-button_invite"
+                            hidden={value?.isAdd?true:false}
+                            >Thêm vào nhóm</button>
+                            <button onClick={(e) => {
+                            // handleDeleteGroup(e,value)
+                            }}
+                            className="modal-group-button_cancel_invite"
+                            hidden={value?.isAdd?false:true}
+                            >Đã thêm</button>
+                        </div>
+                      )
+                    })}
+                </div>
+                
+            </div>
+          </Modal>
+        )
+    }
+  
     useEffect(() => {
         messenger.map(value => {
-            if(_.isArray(JSON.parse(value.text))) {
+            if(_.isArray(JSON.parse(value.text)) && !value?.go) {
                 JSON.parse(value.text).map(file => {
                     const arr = file.split('.');
                     const arrName = file.split('_');
@@ -197,13 +269,18 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 if(value.id != idAmin) {
                     const result = await ActionStore.action_deleteUserGroup(conversationId,value.id);
                     if(result) {
-                        showMessageSuccess("Xoá thành công thành viên ra khỏi nhóm!")
-                        AuthStore.socket?.emit("delete_user", {conversationId, 
-                            profilePicture: AuthStore?.user?.profilePicture,
-                             name: value?.username,
-                             id: value?.id,
-                             groupName: infoRoom?.username
-                            });
+                        const arrUser = members.map(item => {
+                            if(item?.id != AuthStore?.user?._id) return item?._id;
+                        })
+                        showMessageSuccess("Xoá thành công thành viên ra khỏi nhóm!");
+                                AuthStore.socket?.emit("delete_user", {conversationId, 
+                                    profilePicture: AuthStore?.user?.profilePicture,
+                                    name: value?.username,
+                                    id: value?.id,
+                                    groupName: infoRoom?.username,
+                                    arrUser
+                                    
+                                });      
                     }
                     else showMessageInfo("Xóa thành viên thất bại!")
                 } else showMessageInfo(`Bạn có thể ấn "Rời khỏi nhóm" ở dưới cùng của thanh công cụ!`)
@@ -242,6 +319,43 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                     })}
                 </Row>
             </Modal>    
+        )
+    }
+    //Modal image
+    const ModalImage = (isModalVisible) => {
+
+        return (
+            <Modal 
+                style={{width: '1000px', top: '25px'}}
+                bodyStyle={{padding: 0, width: '1000px', height: '720px'}}
+                visible={isModalVisible}  
+                onCancel={() => setShowModalImage(false)}
+                footer={false}
+                width="1000px"
+                destroyOnClose={true}
+                closeIcon={<Row>
+                    <Col span={12}>
+                        <a href={imageSrcRef.current} style={{color: 'black'}} ref={dowloadRef} onClick={(e)=> {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                 console.log(dowloadRef.current);
+                                 dowloadRef.current.download = "asd.png"    
+                            }} download="as.png">
+                            <CloudDownload />
+                        </a>
+                        
+                    </Col>
+                    <Col span={12}>
+                        <Close/>
+                    </Col>
+                </Row>}
+            >
+               <Row style={{width: '100%', height: '100%'}}>
+                   <Col span={24} style={{width: '100%', height: '100%'}}>
+                       <Image preview={false} src={imageSrcRef.current} width="100%" height="100%"/>
+                   </Col>
+               </Row>
+            </Modal> 
         )
     }
     
@@ -308,15 +422,21 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                 
 
                                
-                                
-                                <li className="dropdown-item">
+                                {infoRoom.isGroup && 
+                                    <li className="dropdown-item" onClick={async () => {
+                                        setAddMemberGroup(true);
+                                        const result = await ActionStore.action_getListFriend(AuthStore?.user?._id)
+                                        setListAddMember(result);
+                                    }}>
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faThumbsUp} />
                                     </div>
                                     <div className="dropdown-item__text">
-                                        Thay đổi biểu tượng cảm xúc
+                                        Thêm thành viên
                                     </div>
-                                </li>
+                                    </li>
+                                }
+                               
                                 <li className="dropdown-item" onClick={() => setEditNameStatus(true)}>
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faFont} />
@@ -366,6 +486,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                         Bỏ qua tin nhắn
                                     </div>
                                 </li>
+                                {!infoRoom.isGroup && 
                                 <li className="dropdown-item">
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faUserSlash}/>
@@ -374,14 +495,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                         Chặn
                                     </div>
                                 </li>
-                                <li className="dropdown-item">
-                                    <div className="dropdown-item__icon">
-                                        <i className="fal fa-search"></i>
-                                    </div>
-                                    <div className="dropdown-item__text">
-                                        Có gì đó không ổn 
-                                    </div>
-                                </li>
+                                }
                             </ul>
                         </div>
 
@@ -418,13 +532,13 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                             </Row>
                         </div>
 
-                        <div className="container-right__menu-dropdown container-right__menu-dropdown-image-share" onClick={() =>{
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-image-share" >
+                            <div className="dropdown-head" onClick={() =>{
                             const element = imageShareRef.current.getAttribute("class");
                             if(element.indexOf("hidden_icon") != -1) {
                                 imageShareRef.current.classList.remove("hidden_icon");
                             } else imageShareRef.current.classList.add("hidden_icon");
                         }}>
-                            <div className="dropdown-head">
                                 <div className="dropdown-head__title">
                                     File phương tiện được chia sẻ
                                 </div>
@@ -436,7 +550,10 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                             <Row ref={imageShareRef} className="hidden_icon">
                                {listImage.map(link => {
                                    return (
-                                    <Col span={8}>
+                                    <Col span={8} onClick={(e) => {
+                                        setShowModalImage(true);
+                                        imageSrcRef.current = e.target.src;
+                                    }}>
                                         <img src={link} alt="" />
                                     </Col>
                                    )
@@ -464,6 +581,8 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 {ModalRename(reNameGroup)}
                 {LeaveGroupModal(leaveGroup)}
                 {modalMembers(modalMember)}
+                {ModalImage(showModalImage)}
+                {ModalAddMember(addMemberGroup)}
                 </>
     );
 })

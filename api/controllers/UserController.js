@@ -1,4 +1,4 @@
-const {getLessProfile} = require('../helper/funtion')
+ const {getLessProfile} = require('../helper/funtion')
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const Conversation = require('../models/Conversation')

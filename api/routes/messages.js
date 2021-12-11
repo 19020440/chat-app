@@ -55,4 +55,11 @@ router.post("/update-last-message", async (req, res, next) => {
  
 })
 
+// Go tin nhawn 
+router.post('/gotinnhan', async (req, res, next) => {
+  const {messId} = req.body;
+  const result = await Message.findByIdAndUpdate({_id: messId}, {go: true});
+  result && res.status(200).json({content: result, status: 1});
+})
+
 module.exports = router;

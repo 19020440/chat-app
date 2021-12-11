@@ -4,6 +4,7 @@ import App from "./App";
 import './App.css'
 import {stores, StoresProvider} from './Store/'
 import { BrowserRouter } from "react-router-dom";
+import {store, updateFrame, birdjump, game, states, rungame} from './Store/store'
 ReactDOM.render(
   <React.StrictMode>
       <StoresProvider value={stores}>
@@ -14,3 +15,5 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById("root")
 );
+
+

@@ -27,6 +27,8 @@ const header = observer((props) => {
     const [modalProfile,setModalProfile] = useState(false);
     const [srcImage, setSrcImage] = useState(user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png");
     const [hidden, setHidden] = useState(true);
+    const [statusBackGr, setStatusBackGr] = useState(1);
+    const [renferNotify, setRenderNotify] = useState(false);
     const handleLogOut = async () => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
@@ -43,37 +45,58 @@ const header = observer((props) => {
         setVisible(true); 
       }
 
+      //lay danh saach thong bao
+      useEffect(() => {
+        setListNotify(ActionStore.listNotify)
+      }, [ActionStore.listNotify])
+
       const handlePassMess = () => {
+        AuthStore.action_setShowGame(false);
+        setStatusBackGr(1);
         history.push(`/messenger`)
       }
 
       useEffect(() => {
         if(!_.isEmpty(AuthStore?.socket)) {
-          AuthStore?.socket.on('invite_to_group', ({name, user}) => {
-            setListNotify(prev => [...prev,{profilePicture: user?.profilePicture, 
-              des: `${user.username} đã mời bạn vào nhóm ${name}`, 
-              created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY")}]);
+          AuthStore?.socket.on('invite_to_group', async (result) => {
+            // const updateSave = await ActionStore.action_saveNotify({userId: AuthStore?.user?._id, profilePicture: user?.profilePicture, 
+            //   des: `${user.username} đã mời bạn vào nhóm ${name}`});
+            //   if(updateSave) {
+                setListNotify(prev => [...prev,result]);
+            //   }
+            // setListNotify(prev => [...prev,{profilePicture: user?.profilePicture, 
+            //   des: `${user.username} đã mời bạn vào nhóm ${name}`, 
+            //   createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY")}]);
           })
     
-          AuthStore?.socket.on("invite_success", ({username, profilePicture}) => {
-              setListNotify(prev => [...prev,{profilePicture, 
-                des: `${username} đã kết bạn với bạn`,
-                created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-              }])
+          AuthStore?.socket.on("invite_success", (data) => {
+              // setListNotify(prev => [...prev,{profilePicture, 
+              //   des: `${username} đã kết bạn với bạn`,
+              //   createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+              // }])
+              setListNotify(prev => [...prev, data])
           })
         }
 
-        AuthStore.socket?.on("delete_user", ({profilePicture, name, groupName, id}) => {
-          setListNotify(prev => [...prev,{profilePicture, 
-            des: `Quản trị viên đã xóa ${id == user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`,
-            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-          }])
+        AuthStore.socket?.on("delete_user", async ({profilePicture, name, groupName, id, _id}) => {
+          // const saveNotify = await ActionStore.action_saveNotify({userId: id, profilePicture, 
+          //   des: `Quản trị viên đã xóa ${id == user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`})
+          //   if(saveNotify) {
+              setListNotify(prev => [...prev,{profilePicture, 
+                des: `Quản trị viên đã xóa ${id == AuthStore?.user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`,
+                createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+                _id
+              }])
+              // setListNotify(prev => [...prev, saveNotify]);
+            // }
+         
         })
 
         AuthStore.socket?.on("edit_tennhom", (data) => {
+          console.log("edit_tennhom edit_tennhom");
           setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
             des: data.des,
-            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+            createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
           }])
         })
 
@@ -81,16 +104,21 @@ const header = observer((props) => {
           setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
             des: data.isGroup ? `${data.userChange} đã đổi biệt danh của ${data?.id == user?._id ? "bạn" : data.name } thành ${data?.newName} trong nhóm ${data?.nameGroup}` 
             : `${data.userChange} đã đổi biệt danh của ${data?.id == user?._id ? "bạn": "họ"} thành ${data?.newName} trong cuộc trò chuyện của hai người`,
-            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+            createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
           }])
         })
        
         AuthStore.socket?.on("leave_group", (data) => {
           setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
             des: data.des,
-            created_at: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+            createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
           }])
         })
+
+        //tu choi tra loi 
+      AuthStore.socket.on("end_call", data => {
+        setListNotify(prev => [...prev, {profilePicture: data?.profilePicture, des: `${data?.username} đã từ chối trả lời`, createdAt:  moment(Date.now()).format("hh:mm DD-MM-YYYY"),}])
+      })
 
       },[])
       //Modal Profile
@@ -116,7 +144,14 @@ const header = observer((props) => {
 
         const onChange = async file => {
            const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id, arrCov: AuthStore?.listRoom})
-          setSrcImage(src);
+          if(src) {
+            AuthStore?.listRoom.forEach(async item => {
+              const result = await ActionStore.action_callApiUploadImageCov({covId: item, src,userId: AuthStore.user?._id});
+              if (result) AuthStore.socket.emit("upload_image", {covId: item, src, userId: AuthStore.user?._id})
+            });
+            
+            setSrcImage(src);
+          }
         };
 
         return (
@@ -246,7 +281,16 @@ const header = observer((props) => {
                       <Col span={24} style={{height: '45px'}}>
                       {sortNotify(listNotify).map(value => {
                         return (
-                          <Row justify="space-between" align="middle" style={{boxShadow: "rgb(0 0 0 / 15%) 1.95px 1.95px 2.6px", border: '1px solid #e0d8d8'}}>
+                          <Row justify="space-between" align="middle" style={{boxShadow: "rgb(0 0 0 / 15%) 1.95px 1.95px 2.6px", border: '1px solid #e0d8d8'}}
+                            className={value?.seen ? 'notify_seened' : ''}
+                            onClick={async() => {
+                              const result = await ActionStore.action_updateSeenNotify(value?._id);
+                              if(result) {
+                                value.seen = true;
+                                setListNotify([...listNotify]);
+                              }
+                            }} 
+                          >
                               <Col span={3} >
                                   <Image src={value.profilePicture} preview={false} style={{borderRadius: '50%'}}/>
                               </Col>
@@ -256,7 +300,7 @@ const header = observer((props) => {
                                         {value.des}
                                       </Col>
                                       <Col span={24} style={{fontSize: '13px', fontWeight: '550', color: 'gray'}}>
-                                        {value.created_at}
+                                        {moment(value.createdAt).format("hh:mm DD-MM-YYYY")}
                                       </Col>
                                   </Row>
                               </Col>
@@ -279,15 +323,18 @@ const header = observer((props) => {
                         <img src={srcImage}  />
                       </Tooltip>
                     </Col>
-                    <Col span={24} className="sideBar-conversation sideBar-active-class" onClick={handlePassMess}>
+                    <Col span={24} className={`sideBar-conversation ${statusBackGr == 1 ? "sideBar-active-class" : ""}`} onClick={handlePassMess}>
                         <FontAwesomeIcon icon={faFacebookMessenger} />
                         {countMess != 0 && <span>{countMess} </span> }
                     </Col>
 
-                    <Col span={24} className="sideBar-game">
+                    <Col span={24} className={`sideBar-game ${statusBackGr == 2 ? "sideBar-active-class" : ""}`} onClick={(e) => {
+                      setStatusBackGr(2);
+                      AuthStore.action_setShowGame(true);
+                    }}>
                         <FontAwesomeIcon icon={faGamepad} />
                     </Col>
-                    <Col span={24} className="sideBar-Notify" onClick={() => {
+                    <Col span={24} className={`sideBar-Notify ${statusBackGr == 3 ? "sideBar-active-class" : ""}`} onClick={() => {
                       
                     }}>
                         <Popover placement="right" title={<b>Thông báo</b>} 
@@ -296,7 +343,7 @@ const header = observer((props) => {
                           content={renderNotify}
                         >
                           <FontAwesomeIcon icon={faBell} />
-                          {_.size(listNotify) != 0 && <span className="count-noti">{_.size(listNotify)}</span> }
+                          {_.size(listNotify) != 0 && <span className="count-noti">{_.size(listNotify.filter(items => !items.seen))}</span> }
                         </Popover>
                         
                         

@@ -110,7 +110,7 @@ const  CallVideo = observer((props) => {
                             <ChevronRight className="icon-chevronRight-callvideo"/>
                         </Col>
                         <Col span={22} className="My-video-call">
-                            <video muted ref={myVideo} autoPlay playsInline />
+                            <video muted ref={myVideo} st autoPlay playsInline />
                         </Col>
                     </Row>
                 </Col>
@@ -118,7 +118,12 @@ const  CallVideo = observer((props) => {
             
             <div className="turn_off_video"  onClick={() => {
                 const videoTrack = myStreamRef.current.getTracks().find(track => track.kind === "video");
-                videoTrack.enabled = false;
+                
+                if(videoTrack.enabled) {
+                    videoTrack.enabled = false;
+                } else {
+                    videoTrack.enabled = true
+                }
             }}>
                 <DuoOutlined />
             </div>
@@ -160,7 +165,7 @@ const Video = (props) => {
   }, []);
 
   return (
-      <video playsInline autoPlay ref={ref} />
+      <video playsInline autoPlay style={{width: '100%'}} ref={ref} />
   );
 }
 

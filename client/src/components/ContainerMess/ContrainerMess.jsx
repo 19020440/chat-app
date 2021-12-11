@@ -56,7 +56,8 @@ const ContrainerMess = observer((props) => {
     const [recorder, setRecorder] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [audioData, setAudioData] = useState(null);
-  const videoRef = useRef();
+    const videoRef = useRef();
+    const [changeMess, setChangeMess] = useState(false);
     const [recordTime, setRecordTime] = useState(0);
     const [intervalTime, setIntervalTime] = useState(null);
     const handleRecord = () => {
@@ -143,11 +144,14 @@ const ContrainerMess = observer((props) => {
     },[conversationId])
 
     /// get message
+
+    useEffect(() => {
+      AuthStore.socket.on("gotinnhan", data => {
+        if(data?.covId == covId) getMessages();
+      })
+    }, [])
     useEffect(() => {
        getMessages(); 
-        console.log(
-          "call get mess"
-        );
       }, [AuthStore.statusSeenText, statusJoin]);
       const getMessages = async () => {
         try {
@@ -535,9 +539,7 @@ const ContrainerMess = observer((props) => {
                                 {profileFriend?.username} 
                                 </div>
                                 <div className="no-content__info-sub">
-                                    Facebook
-
-                                    Các bạn là bạn bè trên Facebook
+                                    Các bạn là bạn bè trên social app 
                                 </div>
                             </div>
                         </div>
@@ -546,12 +548,15 @@ const ContrainerMess = observer((props) => {
                                 {!AuthStore.showListNotify ? 
                                     messages.map((m, index) => {
                                         return (
-                                            <li className="container-main__item1" ref={scrollRef} id={`mess${index}`}>
+                                            <li className="container-main__item1" ref={scrollRef} id={`mess${index}`} key={m._id}>
                                                 <Message message={m} own={m.sender === user._id} 
                                                     // seen={(index == (_.size(messages)-1)) && m.seens ? true:false}
                                                     seen={m.seen}
                                                     lastTextSeen = {findIndexLastTextSeen(messages) == index ? true:false}
-                                                    // key={conversationId + index}
+                                                    onChangeMess={setChangeMess}
+                                                    statusMess={changeMess}
+                                                    onChangAllMess={setMessages}
+                                                    currentCov={covId}
                                                 />
                                             </li>
                                         );

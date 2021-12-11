@@ -28,9 +28,13 @@ export  class AuthStore {
     status_addUser = false;
     showListNotify = false;
     doiten = false;
+    showGame = false;
+    listAddFriend = [];
     constructor() {
         makeAutoObservable(this,{
             doiten: observable,
+            listAddFriend: observable,
+            showGame: observable,
             showListNotify: observable,
             listFollow: observable,
             status_addUser: observable,
@@ -73,7 +77,17 @@ export  class AuthStore {
             action_doiten: action,
             action_editProfile: action,
             action_selfie: action,
+            action_setShowGame: action,
+            action_setListAddFriend: action,
         })
+    }
+
+    action_setListAddFriend(data) {
+        this.listAddFriend = data;
+    }
+    //set show game
+    action_setShowGame(data) {
+        this.showGame = data;
     }
     //action edit profile
     action_editProfile(type, data) {
@@ -222,7 +236,8 @@ export  class AuthStore {
             const result = await Request.post(formData,DOMAIN);
             if(result) {
                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`
-                await this.action_setTextFile(url);
+                this.action_setTextFile(url);
+                console.log(this.textFile);
                 this.textFileName = [...this.textFileName, result.content]
             }
         })
@@ -356,6 +371,10 @@ export  class AuthStore {
             userId
         }
         const result = await Request.post(body, DOMAIN);
-        if(result) return result.content;
+        if(result) {
+                this.action_setListAddFriend(result?.content)
+            
+            return result.content;
+        } else return [];
     }
 }

@@ -14,6 +14,11 @@ const ListNotify = observer((props) => {
     AuthStore.socket.on("invite_success", ({username, profilePicture}) => {
         setListNotify(prev => [...prev,{profilePicture, des: `${username} đã kết bạn với bạn`}])
     })
+
+    //tu choi tra loi 
+    AuthStore.socket.on("end_call", data => {
+        setListNotify(prev => [...prev, {profilePicture: data?.profilePicture, des: `${data?.username} đã từ chối trả lời`}])
+    })
     },[])
     return (
         <Row>

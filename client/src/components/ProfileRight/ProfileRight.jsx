@@ -15,7 +15,7 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
         if(isGroup) {
             const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=1 ? true : false;
             setUser({
-                username: conversation.name,
+                username: `Nhóm ${conversation.name}`,
                 profilePicture: conversation.covImage,
                 status: status
             })

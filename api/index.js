@@ -10,6 +10,7 @@ const authRoute = require("./routes/auth");
 const postRoute = require("./routes/posts");
 const conversationRoute = require("./routes/conversations");
 const messageRoute = require("./routes/messages");
+const notifyRoute = require('./routes/notify')
 const router = express.Router();
 const path = require("path");
 const cors = require('cors');
@@ -18,6 +19,7 @@ const {Server} = require('socket.io');
 const server = http.createServer(app);
 const User = require('./models/User');
 const Messenger = require('./models/Message');
+const Notify = require('./models/Notify')
 const Conversation = require("./models/Conversation");
 const fs = require('fs')
 
@@ -68,24 +70,11 @@ const upload = multer({ storage: storage });
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
     if(req.body.userId) {
-      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `${req.body.name}`});
-      // req.body.arrCov.forEach(items => {
-      //     Promise.all([  Conversation.update(
-      //       {$and: [{_id: items}, {'lastText.seens.id': req.body.userId,}]},
-            
-      //         {
-      //         $set:  {'lastText.seens.$.profilePicture': `http://localhost:8800/images/${req.body.name}` },
-      //       }
-      //         ),   Conversation.update(
-      //           {$and: [{_id: items}, {'members.id': req.body.userId,}]},
-                
-      //             {
-      //             $set:  {'members.$.profilePicture': `http://localhost:8800/images/${req.body.name}` },
-      //           }
-      //             )  ])
-      // })
+      
+      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `http://localhost:8800/images/${req.body.name}`});
+     
       return res.status(200).json({content: req.body.name , status: 1});
-    } else {
+    } else if(req.body.base) {
         const raw = new Buffer.from (req.body.base, 'base64');
         const nameFile = Date.now();
         fs.writeFile(`public/images/${nameFile}.png`, raw, function(err) {
@@ -93,7 +82,8 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 
           res.status(200).json({content: `${nameFile}.png`, status: 1})
         })
-    }
+    } else
+    return res.status(200).json({content: req.body.name , status: 1});
    
   } catch (error) {
     console.error(error);
@@ -110,6 +100,7 @@ app.use("/api/users", userRoute);
 app.use("/api/posts", postRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
+app.use("/api/notifys", notifyRoute);
 
 
 //SOCKETIO
@@ -169,8 +160,17 @@ io.on("connection", (socket) => {
     socket.to(data.conversationId).emit("edit_tennhom", data)
   })
   //xoa thanh vien
-  socket.on("delete_user", (data) => {
-    socket.to(data.conversationId).emit("delete_user", data);
+  socket.on("delete_user", async (data) => {
+    const arrPromise = data?.arrUser.map(item => {
+      const newNotify = new Notify({userId: item,  profilePicture: data?.profilePicture, des: `Quản trị viên đã xóa ${data?.id == item ? "bạn": name} ra khỏi nhóm ${groupName}`})
+      return newNotify.save();
+    })
+    const result = await Promise.allSettled(arrPromise);
+    if(result) {
+      socket.to(data.conversationId).emit("delete_user", data);
+    }
+ 
+    
   })
   //leave group
   socket.on("leave_group", (data) => {
@@ -195,13 +195,29 @@ io.on("connection", (socket) => {
         result && socket.emit("status_invite_to_group", true)
         !result && socket.emit("status_invite_to_group", false)
         listUser.forEach( (element) => {
-              User.findById(element).then(res => {
-                socket.to(res.socketId).emit("invite_to_group", {name, user})
+              User.findById(element).then(async res => {
+                // socket.to(res.socketId).emit("invite_to_group", {name, user})
+               
+                const newNotify = new Notify({userId: res?._id, des: `${user.username} đã mời bạn vào nhóm ${name}`, profilePicture: user?.profilePicture});
+                const result = await newNotify.save();
+                if(result) {
+                    socket.to(res.socketId).emit("invite_to_group", result);
+                }
               })
         });
       } catch(err) {
-        console.log(err);
+        socket.emit("send_error", "Gặp vấn đề trong quá trình tạo nhóm!")
       }
+  })
+  //go tin nhan
+  socket.on("gotinnhan", data => {
+    socket.to(data?.covId).emit('gotinnhan', data);
+  })
+
+  //tu choi tra loi call video
+  socket.on("end_call", data => {
+    socket.to(data?.covId).emit("end_call", data?.user);
+    socket.to(data?.newRoomId).emit("close_tab", true);
   })
  
 
@@ -220,6 +236,11 @@ io.on("connection", (socket) => {
       console.log(err);
     }
   });
+
+  // const result  = arr.map(item => {
+  //   return Conversation.findByIdAndUpdate(item, {seen: true});
+  // })
+  // const arrUpdate = await Promise.all(result)
 
   //send and get message
   socket.on("sendMessage", async (res) => {
@@ -281,7 +302,7 @@ io.on("connection", (socket) => {
       try {
         if(status != 1) {
           const userF = await User.findById(from).exec();
-          socket.to(roomId).emit("callUser", {roomId,from: userF});
+          socket.to(roomId).emit("callUser", {roomId,from: userF, newRoomId});
         }
         
       } catch(err) {
@@ -305,10 +326,17 @@ io.on("connection", (socket) => {
   socket.on("invite_success", async (data) => {
     try {
       const user = await User.findById(data.userId).exec();
-      user && socket.to(user.socketId).emit("invite_success", {username: data.name, profilePicture: data.profilePicture});
+      // user && socket.to(user.socketId).emit("invite_success", {username: data.name, profilePicture: data.profilePicture});
+      user && socket.to(user.socketId).emit("invite_success", data);
     } catch(err) {
       socket.emit("send_error", "Kết bạn thành công nhưng có thể người dùng sẽ chưa thấy lời mời của bạn!")
     }
+  })
+  //upload anh
+  socket.on("upload_image", data => {
+    // data.arrCov.forEach(items => {
+      socket.to(data?.covId).emit("upload_image", {src: data?.src, userId: data?.userId, covId: data?.covId})
+    // })
   })
 
 

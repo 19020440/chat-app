@@ -22,5 +22,11 @@ export const WsCode = {
     update_profile: 'users/update/profile',
     listInvite: 'users/list/invite',
     leaveGroup: 'conversations/leave-group',
-    updateLastMess: "messages/update-last-message"
+    updateLastMess: "messages/update-last-message",
+    gotinnhan: 'messages/gotinnhan',
+    saveNotify: 'notifys/save-notify',
+    getListNotify: 'notifys/get-list-notify',
+    updateSeenNotify: 'notifys/update-seen-notify',
+    updateImage: 'conversations/update-image',
+    addUserCov: 'conversations/add-member'
 }

@@ -1,5 +1,6 @@
 import {Modal, message} from 'antd'
 import _ from 'lodash';
+import moment from 'moment';
 export const showMessageError = (msg, onOk) => {
     Modal.error({
       content: msg,
@@ -52,7 +53,7 @@ export const showMessageError = (msg, onOk) => {
     return result;
   }
   export const sortNotify = (notify) => {
-    const result  = _.orderBy(notify, [(obj) => new Date(obj.created_at)], ['desc'])
+    const result  = notify.sort((a,b) =>  moment(b.createdAt).unix() - moment(a.createdAt).unix())
     return result;
   }
   
@@ -98,4 +99,22 @@ export const showMessageError = (msg, onOk) => {
     const result =  listFriend.filter(value => value == userId);
     if(!_.isEmpty(result))  return true;
     return false;
+  }
+
+  export const searchSendMess = (data, text) => {
+    try {
+      return data.filter(items => {
+        return items?.username.toLowerCase().indexOf(text) != -1 
+      })
+    } catch (er) {
+      console.log(er);
+    }
+   
+  }
+
+  export const FilterTypeConversation = (data, type) => {
+    if(type == 1) return data;
+    else if(type == 2) {
+      return data.filter(items => !items?.name)
+    } else return data.filter(item => item?.name);
   }

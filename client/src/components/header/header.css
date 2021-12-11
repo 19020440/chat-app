@@ -272,3 +272,6 @@
   width: 350px;
   margin: auto;
 }
+.notify_seened {
+  background-color: rgb(204, 197, 197);
+}

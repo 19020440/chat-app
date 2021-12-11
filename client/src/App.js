@@ -36,6 +36,7 @@ const App = observer(() => {
   const [userCall, setUserCall] = useState();
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const signal = useRef();
+  const newRoomId = useRef();
   useEffect(() => {
     
     validLogin();
@@ -51,6 +52,7 @@ const App = observer(() => {
         const arrCovId = res.map((value) => {
           return value._id;
         })
+        
         AuthStore.action_setListRoom(arrCovId);
         // if(!_.isEmpty(AuthStore?.socket)) {
           AuthStore.socket.emit("first_join_room", arrCovId);
@@ -65,8 +67,20 @@ const App = observer(() => {
      
       
   };
-   if(login == 1) getConversations();
+   if(login == 1) {
+     getConversations();
+    
+   }
   }, [login, AuthStore.status_addUser,AuthStore?.socket, AuthStore.doiten]);
+
+  //lay thong bao 
+
+  useEffect(() => {
+    getlistNotify();
+  }, [])
+  const getlistNotify = async () => {
+    const listNotify = await ActionStore.action_getListNotify(AuthStore?.user?._id);
+  }
 
 
   useEffect(() => {
@@ -76,7 +90,11 @@ const App = observer(() => {
   },[]);
   useEffect(() => {
 
-    
+    //upload_image
+    AuthStore.socket?.on("upload_image", ({covId, userId, src}) => {
+      console.log("okeee");
+      ActionStore.action_uploadImageInCov({covId, userId, src});
+    })
    //join_room
     AuthStore.socket?.on("setJoin_room", (data) => {
       ActionStore.action_updateStatusSeenConversation(data , "join");
@@ -143,6 +161,15 @@ const App = observer(() => {
       ActionStore.action_updateStatusSeenConversation(data, "out")
     })
 
+    AuthStore.socket.on("update_notify_invite", async ({res, name}) => {
+      try {
+        await ActionStore.action_saveNotify({userId: res?._id, profilePicture: AuthStore?.user?.profilePicture, 
+          des: `${AuthStore?.user?.username} đã mời bạn vào nhóm ${name}`});
+      } catch(err) {
+        console.log(err);
+      }
+    })
+
     AuthStore.socket?.on("getMessage", (data) => {
 
      ActionStore.action_updateConnversationById({
@@ -160,6 +187,7 @@ const App = observer(() => {
       if(data.from._id != AuthStore.user?._id) {
         console.log(data);
         from.current = data.roomId;
+        newRoomId.current = data?.newRoomId;
         setUserCall(data.from)
         setVisible(true);
       }
@@ -191,6 +219,10 @@ const App = observer(() => {
     AuthStore.socket.on("invite_success", () => {
       AuthStore.action_doiten();
     })
+
+    AuthStore.socket.on("close_tab", data => {
+      window.close();
+    })
   
    
  },[socket]);
@@ -218,6 +250,7 @@ const App = observer(() => {
  // tu choi call video
  const handleCancel = () => {
   setVisible(false);
+   AuthStore.socket.emit("end_call", {user: AuthStore?.user, covId: from.current, newRoomId: newRoomId.current});
    
  }
   return (

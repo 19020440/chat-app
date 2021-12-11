@@ -19,10 +19,19 @@ export class ActionStore {
     currentConversation = null;
     listMess = [];
     answerJoinRoom = [];
-
+    listSendMess = [];
+    listSendMessCopy = [];
+    listCreateGroup = [];
+    listAddMembers = [];
+    listNotify = [];
     constructor() {
         makeAutoObservable(this, {
             listMess: observable,
+            listAddMembers: observable,
+            listNotify: observable,
+            listCreateGroup: observable,
+            listSendMessCopy: observable,
+            listSendMess: observable,
             answerJoinRoom: observable,
             profileOfFriend: observable,
             currentConversation: observable,
@@ -64,7 +73,140 @@ export class ActionStore {
             action_deleteUserGroup: action,
             action_updateLastMess: action,
             action_setAnswerJoinRoom: action,
+            action_gotinnhan:action,
+            action_setListSendMess: action,
+            action_setCreateListGroup: action,
+            action_saveNotify: action,
+            action_getListNotify: action,
+            action_setListNotify: action,
+            action_updateSeenNotify: action,
+            action_uploadImageInCov: action,
+            action_callApiUploadImageCov: action,
+            action_setListAddMember: action,
+            action_addUserMemberCov: action,
         })
+    }
+    //them nguoi vao nhom
+    async action_addUserMemberCov({covId, user}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.addUserCov}`
+        const urlBody = {
+            covId,
+            user
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+
+    action_setListAddMember(data){
+        this.listAddMembers = data;
+    }
+    async action_callApiUploadImageCov({covId, src,userId}) {
+
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateImage}`
+        const urlBody = {
+            covId,
+            userId,
+            src
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+
+
+     action_uploadImageInCov({covId, src,userId}) {
+       
+        // const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateImage}`
+        // const urlBody = {
+        //     covId,
+        //     userId,
+        //     src
+        // } 
+        // const result = await Request.post(urlBody, DOMAIN);
+        // if(result) {
+            const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            
+            // this.conversations[index] = this.conversations.map(items => {
+            //     items.members = items.members.map(member => {
+            //          if(member?.id == userId) member.profilePicture = src;
+            //          return member;
+            //      })
+            //      items.lastText.seens = items?.lastText?.seens.map(seen => {
+            //          if(seen?.id == userId) seen.profilePicture = src;
+            //          return seen;
+            //      })
+            //      return items;
+            //  });
+            const members = this.conversations[index].members.map(member => {
+                if(member?.id == userId) member.profilePicture = src;
+                return member;
+            })
+            const seens = this.conversations[index].lastText.seens.map(seen => {
+                         if(seen?.id == userId) seen.profilePicture = src;
+                         return seen;
+                        })
+            this.conversations[index] = {...this.conversations[index], members, lastText: {...this.conversations[index].lastText, seens}}
+            // return true;
+        // }
+        // return false; 
+        
+        
+
+
+        
+    }   
+    //cap nhat trang thai thong bao
+    async action_updateSeenNotify(notifyId) {
+        
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateSeenNotify}`
+        const urlBody = {
+            notifyId,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            return true;
+        }
+        return false; 
+    }
+    //set list thong bao
+    action_setListNotify(data) {
+        this.listNotify = data;
+    }
+    //lay danh sach thong bao
+    async action_getListNotify(userId){
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getListNotify}`
+        const urlBody = {
+            userId,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            this.action_setListNotify(result.content)
+            return true;
+        }
+        return false; 
+    }
+    //luu thong bao 
+    async action_saveNotify({userId, profilePicture, des}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.saveNotify}`
+        const urlBody = {
+            userId,
+            profilePicture,
+            des,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            return result.content;
+        }
+        return false;
+    }
+    action_setCreateListGroup(data) {
+        this.listCreateGroup = data;
+    }
+    //set list send mess
+    action_setListSendMess(data) {
+        this.listSendMess = [...data];
+    
     }
     //set tra loi join room 
     action_setAnswerJoinRoom() {
@@ -343,7 +485,11 @@ export class ActionStore {
         const result = await Request.post({userId}, DOMAIN);
 
         if(result) {
-            if(!_.isEmpty(result.content)) return result.content;
+            if(!_.isEmpty(result.content)) {
+                this.action_setCreateListGroup(result.content)
+                this.action_setListAddMember(result.content)
+                return result.content;
+            }
             else return [];
         }
     }
@@ -425,10 +571,11 @@ export class ActionStore {
             if(result) {
                 if(!_.isEmpty(result.content)) {
                     const res = getLessProfile(result.content);
+                    console.log("action_searchFriend", res);
                     this.listSearch = res;
                     return res;
                 }
-                else return [];
+                else  this.listSearch = [];
             }
         } else this.listSearch = [];
     }
@@ -475,5 +622,19 @@ export class ActionStore {
             if(!_.isEmpty(result.content)) return result.content;
             
         }
+    }
+
+    //go tin nhan
+    async action_gotinnhan(messId) {
+
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.gotinnhan}`;
+        const urlBody = {
+            messId
+        }
+        const result = await Request.post(urlBody, DOMAIN);
+
+        if(result) {
+            return true;
+        } 
     }
 }
