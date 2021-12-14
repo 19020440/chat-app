@@ -1,22 +1,13 @@
 import {Modal, message} from 'antd'
 import _ from 'lodash';
+import moment from 'moment';
 export const showMessageError = (msg, onOk) => {
     Modal.error({
       content: msg,
       onOk: onOk || null,
     });
   };
-  
-//   export const showModalTimeOut = (msg, onOk) => {
-//     Modal.error({
-//       icon: null,
-//       content: <TimeOut onOk={onOk} msg={msg} />,
-//       className: "modalLogout",
-//       width: 1000,
-//       okButtonProps: {
-//       },
-//     });
-//   };
+
   
   export const showMessageSuccess = (msg, onOk) => {
     Modal.success({
@@ -61,12 +52,21 @@ export const showMessageError = (msg, onOk) => {
     const result =  _.orderBy(conversations.slice(), [(obj) => new Date(obj.updatedAt)], ['desc'])
     return result;
   }
+  export const sortNotify = (notify) => {
+    const result  = notify.sort((a,b) =>  moment(b.createdAt).unix() - moment(a.createdAt).unix())
+    return result;
+  }
   
   export const countTextNotSeen = (conversations, userId) => {
     let count = 0;
     try {
       conversations.map((value) => {
-        if(value?.lastText?.seens.seen === false && value.lastText?.sender != userId) count++;
+        if(value.lastText.sender != userId) {
+          value.lastText.seens.map(user => {
+            if(user.id == userId && !user.seen) count++;
+          })
+        }
+        
       })
     } catch(err) {
       console.log(err);
@@ -93,4 +93,28 @@ export const showMessageError = (msg, onOk) => {
     arr.splice(index,1);
     console.log(arr);
     return arr;
+  }
+
+  export const ValidateListFriend = (userId, listFriend) => {
+    const result =  listFriend.filter(value => value == userId);
+    if(!_.isEmpty(result))  return true;
+    return false;
+  }
+
+  export const searchSendMess = (data, text) => {
+    try {
+      return data.filter(items => {
+        return items?.username.toLowerCase().indexOf(text) != -1 
+      })
+    } catch (er) {
+      console.log(er);
+    }
+   
+  }
+
+  export const FilterTypeConversation = (data, type) => {
+    if(type == 1) return data;
+    else if(type == 2) {
+      return data.filter(items => !items?.name)
+    } else return data.filter(item => item?.name);
   }

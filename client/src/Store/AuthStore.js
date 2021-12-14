@@ -24,8 +24,20 @@ export  class AuthStore {
     cancelImageIndex = null;
     listRoom = [];
     listStatusCov = [];
+    listFollow = [];
+    status_addUser = false;
+    showListNotify = false;
+    doiten = false;
+    showGame = false;
+    listAddFriend = [];
     constructor() {
         makeAutoObservable(this,{
+            doiten: observable,
+            listAddFriend: observable,
+            showGame: observable,
+            showListNotify: observable,
+            listFollow: observable,
+            status_addUser: observable,
             listStatusCov: observable,
             listRoom: observable,
             stt:observable,
@@ -55,13 +67,126 @@ export  class AuthStore {
             action_setCancelImageIndex: action,
             action_setListRoom: action,
             action_addFriend: action,
+            action_resetAllData:action,
+            action_register: action,
+            action_uploadFileHeader: action,
+            action_update_profile: action,
+            action_get_list_invite: action,
+            action_addUser: action,
+            action_showListNotify: action,
+            action_doiten: action,
+            action_editProfile: action,
+            action_selfie: action,
+            action_setShowGame: action,
+            action_setListAddFriend: action,
+            action_deleteAllNotify: action,
+            action_removeFriend: action,
+            action_setListFollow: action,
+            action_removeListFollow:action,
         })
+    }
+    action_removeListFollow(data) {
+        _.remove(this.listFollow, function (value)  {
+            return value  == data;
+        })
+    }
+
+    action_setListFollow(data) {
+        this.listFollow = [...this.listFollow, data];
+    }
+
+    action_setListAddFriend(data) {
+        this.listAddFriend = data;
+    }
+    //set show game
+    action_setShowGame(data) {
+        this.showGame = data;
+    }
+    //action edit profile
+    action_editProfile(type, data) {
+        switch (type) {
+            case "picture" : {
+                this.user = {...this.user, profilePicture: data}
+                break;
+            }
+
+            case "name": {
+                this.user = {...this.user, username: data}
+            }
+
+            default: break;
+        }
+        
+    }
+    action_doiten() {
+        this.doiten = !this.doiten;
+    }
+    //show lít otify
+    action_showListNotify(data) {
+        console.log(data);
+        this.showListNotify = data;
+    }
+    //action add suer
+    action_addUser() {
+        this.status_addUser = !this.status_addUser
+    }
+    //xoa tat ca thong bao
+    async action_deleteAllNotify(userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.deleteAllNotify}`
+        const json = {
+            userId
+        }
+        const result = await Request.post(json,DOMAIN);
+
+        if(result) {
+            return true;
+        } else return false;
+    }
+    //REGISTER
+    async action_register(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.register}`
+        
+        const result = await Request.post(data,DOMAIN);
+
+        if(result) {
+            return true;
+        } else return false;
+    }
+    //ResetAllData
+    action_resetAllData() {
+        this.login = 2;
+        this.user = {};
+        this.socket = null;
+        this.statusSeenText = false;
+        this.themePage = true;
+        this.activeContainer = false;
+        this.CallVideoSocketId = "";
+        this.statusSearchMess = false;
+        this.stt = null;
+        this.textSearch = null;
+        this.textFile = [];
+        this.GifphyList = [];
+        this.textGif = null;
+        this.textFileName = [];
+        this.cancelImageIndex = null;
+        this.listRoom = [];
+        this.listStatusCov = [];
     }
     //ADd Friend and Cancel Friends
     async action_addFriend(status,userId) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/${status?"follow": "unfollow"}`;
         const json = {
             userId: this.user._id,
+        }
+        const result = await Request.post(json, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+    async action_removeFriend(userId, covId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/unfollow`;
+        const json = {
+            userId: this.user._id,
+            covId
         }
         const result = await Request.post(json, DOMAIN);
         if(result) return true;
@@ -137,7 +262,7 @@ export  class AuthStore {
        const result =  await file.map(async (value) => {
 
             const formData = new FormData();
-            const fileName = Date.now() + value.name;
+            const fileName = Date.now() +"_"+ value.name;
             formData.append("name", fileName);
             formData.append("file", value);
             
@@ -146,12 +271,43 @@ export  class AuthStore {
             const result = await Request.post(formData,DOMAIN);
             if(result) {
                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`
-                await this.action_setTextFile(url);
+                this.action_setTextFile(url);
+                console.log(this.textFile);
                 this.textFileName = [...this.textFileName, result.content]
             }
         })
         return result;
        
+    }
+
+    async action_uploadFileHeader({file, userId}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`
+
+ 
+             const formData = new FormData();
+             const fileName = Date.now() +"_"+ file.name;
+             formData.append("name", fileName);
+             formData.append("file", file);
+             formData.append("userId", userId);
+
+             const result = await Request.post(formData,DOMAIN);
+             if(result) {
+                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`;
+                 return url;
+             }
+
+       
+    }
+
+    async action_selfie(data) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.upload}`
+             const formData = new FormData();
+            formData.append('base', data)
+             const result = await Request.post(formData,DOMAIN);
+             if(result) {
+                 const url =  `${CONFIG_URL.SERVICE_TEXT_FILE}/${result.content}`;
+                 return url;
+             }
     }
     action_setTextSearch(data) {
         this.textSearch = data;
@@ -188,6 +344,7 @@ export  class AuthStore {
 
         if(result) {
             this.user = result.content;
+            this.listFollow = result.content.followings;
             this.login  = 1;
             // !_.isEmpty(this.socket) && this.socket?.emit("online",{email: data.email, id :this.socket.id});
             await sessionStorage.setItem("token", result.token);
@@ -202,7 +359,7 @@ export  class AuthStore {
         if(result) {
             if(! _.isEmpty(result.content)) {
                 this.user = result.content;
-                
+                this.listFollow = result.content.followings;
                 
                 this.socket?.emit('validLogin');
                 this.socket?.on('setvalidLogin', (socketId) => {
@@ -223,10 +380,36 @@ export  class AuthStore {
         if(result) {
             this.login = 0;
             await sessionStorage.removeItem("token");
+            this.socket?.emit("userOffline",{arrCov: this.listRoom, userId: this.user?._id})
+            this.action_resetAllData();
             
         }
 
         
     }
+    // update profile
+    async action_update_profile(urlBody) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.update_profile}`;
+        const body = {
+            userId: this.user._id,
+            data: urlBody
+        }
+        const result = await Request.post(body, DOMAIN);
 
+        if(result) return true;
+        return false;
+    }
+    // Get list user invite
+    async action_get_list_invite(userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.listInvite}`;
+        const body = {
+            userId
+        }
+        const result = await Request.post(body, DOMAIN);
+        if(result) {
+                this.action_setListAddFriend(result?.content)
+            
+            return result.content;
+        } else return [];
+    }
 }

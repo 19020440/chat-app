@@ -15,7 +15,7 @@ const  Gifphy = observer(({currentConversation,indexCov})  => {
     const {user} = AuthStore;
     const imageRef = useRef(null);
     const handleSearchGif = (e) => {
-        if(e.which == 13) AuthStore.action_getGifPhyList(e.target.value);
+        AuthStore.action_getGifPhyList(e.target.value);
     }
 
     const handleSendGif = async (e) => {
@@ -52,7 +52,7 @@ const  Gifphy = observer(({currentConversation,indexCov})  => {
                 <Col span={22} offset = {1}>
                     <div className="gifphy_search">
                     <FontAwesomeIcon icon={faSearch} />
-                    <Input placeholder="Basic usage" onKeyPress={handleSearchGif}/>
+                    <Input placeholder="Tìm kiếm" onChange={handleSearchGif}/>
                     </div>
                 </Col>
                 {!_.isEmpty(AuthStore.GifphyList) && 

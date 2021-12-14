@@ -13,9 +13,9 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
     const seenStatus = seen[0].seen;
     useEffect(() => {   
         if(isGroup) {
-            const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=2 ? true : false;
+            const status = _.size(conversation.members.filter(value => value.id != AuthStore.user._id && value.status)) >=1 ? true : false;
             setUser({
-                username: conversation.name,
+                username: `Nhóm ${conversation.name}`,
                 profilePicture: conversation.covImage,
                 status: status
             })
@@ -24,9 +24,8 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
             setUser(userProfile);  
         }
            
-    }, [ActionStore.offlineStatus,conversation]);
+    }, [ActionStore.offlineStatus,conversation, AuthStore?.statusSeenText]);
 
-    
     
     return (
         <div className="status">
@@ -53,9 +52,9 @@ const ProfileRight = observer(({conversation, seen,isGroup}) =>{
                                                     
                                                     
                                                     {conversation?.lastText?.sender === AuthStore.user?._id &&  !_.isEmpty(conversation?.lastText) 
-                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} ảnh` :`You: ${JSON.parse(conversation.lastText?.text)}` 
+                                                ? _.isArray(JSON.parse(conversation.lastText?.text)) ? `You: Bạn vừa gửi  ${lasttextLen} tập tin` :`You: ${JSON.parse(conversation.lastText?.text)}` 
                                                 : !_.isEmpty(conversation?.lastText?.text) 
-                                                ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} ảnh` 
+                                                ?  _.isArray(JSON.parse(conversation.lastText?.text))?`Bạn nhận được ${lasttextLen} tập tin` 
                                                 : `${JSON.parse(conversation?.lastText?.text)}`
                                                 : ""}
 

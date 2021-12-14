@@ -78,6 +78,7 @@
   border-radius: 25px;
   padding: 5px;
   margin-bottom: 15px;
+  height: 45px;
 }
 .main-modal_showGroup-search input {
   flex: 1;
@@ -89,7 +90,7 @@
   padding: 5px;
 }
 .modal-group .ant-modal-footer {
-  display: none;
+  /* display: none; */
 }
 .main-modal_showGroup-row {
   display: flex;
@@ -130,4 +131,10 @@
   .conversationName {
     display: none;
   }
+}
+.currentType {
+  background: #5858ee;
+}
+.bird_modal {
+  width: 320px !important;
 }

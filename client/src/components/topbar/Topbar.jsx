@@ -10,7 +10,6 @@ import { Modal, Button, Space } from 'antd';
 import 'antd/dist/antd.css';
 import _ from 'lodash'
 const Topbar = observer(() =>{
-  // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;

@@ -10,6 +10,7 @@ const authRoute = require("./routes/auth");
 const postRoute = require("./routes/posts");
 const conversationRoute = require("./routes/conversations");
 const messageRoute = require("./routes/messages");
+const notifyRoute = require('./routes/notify')
 const router = express.Router();
 const path = require("path");
 const cors = require('cors');
@@ -18,9 +19,12 @@ const {Server} = require('socket.io');
 const server = http.createServer(app);
 const User = require('./models/User');
 const Messenger = require('./models/Message');
+const Notify = require('./models/Notify')
 const Conversation = require("./models/Conversation");
 const fs = require('fs')
-const { promisify } = require('util')
+
+const { promisify } = require('util');
+const { log } = require("console");
 
 const unlinkAsync = promisify(fs.unlink)
 const io  = new Server(server, {
@@ -64,9 +68,24 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-app.post("/api/upload", upload.single("file"), (req, res) => {
+app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
+    if(req.body.userId) {
+      
+      const result = await User.findByIdAndUpdate(req.body.userId, {profilePicture: `http://localhost:8800/images/${req.body.name}`});
+     
+      return res.status(200).json({content: req.body.name , status: 1});
+    } else if(req.body.base) {
+        const raw = new Buffer.from (req.body.base, 'base64');
+        const nameFile = Date.now();
+        fs.writeFile(`public/images/${nameFile}.png`, raw, function(err) {
+          if (err) throw err;
+
+          res.status(200).json({content: `${nameFile}.png`, status: 1})
+        })
+    } else
     return res.status(200).json({content: req.body.name , status: 1});
+   
   } catch (error) {
     console.error(error);
   }
@@ -82,6 +101,7 @@ app.use("/api/users", userRoute);
 app.use("/api/posts", postRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
+app.use("/api/notifys", notifyRoute);
 
 
 //SOCKETIO
@@ -98,58 +118,145 @@ io.on("connection", (socket) => {
 
   //first_join_room
   socket.on("first_join_room", data => {
-    console.log(data);
     socket.join(data);
+    socket.emit("first_join_room", true);
   })
 
   //join room
   socket.on("join_room", async ({senderId, conversationId}) => { 
     try {
-
-
-            const updateStatusSeen = await Messenger.updateMany(
-              {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
-              {$set: {seen: true,"seens.$.seen": true}});
-
             const updateConversation = await Conversation.update(
               {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
               
                 {
                 $set:  {'lastText.seens.$.seen': true },
               }
-                )
+                ) 
           
     } catch(err) {
-      console.log(err);
+      socket.emit("send_error", "gặp vấn đề khi join phòng!")
     }
     // socket.join(conversationId);
     console.log("conversation join room: ",conversationId);
     socket.to(conversationId).emit("setJoin_room", {senderId, conversationId});
   })
 
-  //invite_join_group
-  socket.on('invite_to_group', async ({from,to}) => {
-      try {
-        const newNotify = {
-          senderId: from._id,
-          senderPicture: from.profilePicture,
-          description: `${from.username} đã gửi lời mời kết bạn`,
-          status: false
-        }
-        // const result = await Conversation.findOne({
-        //   members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
-        // });
-        const [rsNotify, rsCov] = Promise.all([Notify.update({ $push: { listNotify: newNotify } }), Conversation.findOne({
-          members: { $all: [{$elemMatch : {id: from._id}}, {$elemMatch :{'id':to}}] },
-        })]);
-        !rsNotify && socket.emit("send_error", "Không thể update thông báo");
-        !rsCov && socket.emit("send_error", "Không tìm thấy cuộc trò chuyện");
-        socket.to(rsCov._id).emit("answer_invite_group", newNotify);
+  socket.on("answer_join_room", ({conversationId, senderId}) => {
+    socket.to(conversationId).emit("answer_join_room", {conversationId, senderId})
+  })
 
-       
-      } catch(err) {
-        console.log(err);
+  //chinh suar biet danh
+  socket.on("edit_bietdanh", (data) => {
+    socket.to(data.conversationId).emit("edit_bietdanh", data);
+  })
+
+  //sua ten nhom
+  socket.on("edit_tennhom", async data => {
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item, des: data?.des, profilePicture: data?.profilePicture})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        socket.to(data.conversationId).emit("edit_tennhom", result)
       }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
+    }
+    
+  })
+  //xoa thanh vien
+  socket.on("delete_user", async (data) => {
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item,  profilePicture: data?.profilePicture, des: `Quản trị viên đã xóa ${data?.id == item ? "bạn": data?.name} ra khỏi nhóm ${data?.groupName}`})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        console.log(result);
+        socket.to(data.conversationId).emit("delete_user", result);
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
+    }
+    
+ 
+    
+  })
+  //them thanh vien
+  socket.on("add_member_cov", async data => {
+    const user = await User.findById(data?.userId).exec();
+    socket.to(user?.socketId).emit("add_member_cov", data?.notify);
+  })
+  //leave group
+  socket.on("leave_group", async(data) => {
+    
+
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item, des: data?.des, profilePicture: data?.profilePicture})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        socket.to(data.conversationId).emit("leave_group", result);
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
+    }
+  })
+
+  //invite_join_group
+  socket.on('invite_to_group', async ({name,members, listUser, user}) => {
+      try {
+        const newConversation = new Conversation({
+          name: name,
+          members,
+          lastText: {
+            sender: "",
+            text: "",
+            seens: members
+          }
+        });
+        console.log("listUser:", listUser);
+        const result = await newConversation.save();
+        result && socket.emit("status_invite_to_group", true)
+        !result && socket.emit("status_invite_to_group", false)
+        listUser.forEach( (element) => {
+              User.findById(element).then(async res => {
+                // socket.to(res.socketId).emit("invite_to_group", {name, user})
+               
+                const newNotify = new Notify({userId: res?._id, des: `${user.username} đã mời bạn vào nhóm ${name}`, profilePicture: user?.profilePicture});
+                const result = await newNotify.save();
+                if(result) {
+                    socket.to(res.socketId).emit("invite_to_group", result);
+                }
+              })
+        });
+      } catch(err) {
+        socket.emit("send_error", "Gặp vấn đề trong quá trình tạo nhóm!")
+      }
+  })
+  //go tin nhan
+  socket.on("gotinnhan", data => {
+    socket.to(data?.covId).emit('gotinnhan', data);
+  })
+
+  //tu choi tra loi call video
+  socket.on("end_call", data => {
+    socket.to(data?.covId).emit("end_call", data?.notify);
+    socket.to(data?.newRoomId).emit("close_tab", true);
   })
  
 
@@ -169,12 +276,14 @@ io.on("connection", (socket) => {
     }
   });
 
+  // const result  = arr.map(item => {
+  //   return Conversation.findByIdAndUpdate(item, {seen: true});
+  // })
+  // const arrUpdate = await Promise.all(result)
+
   //send and get message
   socket.on("sendMessage", async (res) => {
-    // console.log("sendMessage: ", res.conversationId);
     try {
-      // const user = await User.findById(receiverId).exec();
-      // console.log("this is user: ",user);
       socket.to(res.conversationId).emit("getMessage", res);
     }catch(err) {
 
@@ -185,7 +294,9 @@ io.on("connection", (socket) => {
 //OOFLINE
   socket.on("userOffline", async({userId,arrCov}) => {
     // console.log("this is offline :" ,userId);
+    
     socket.to(arrCov).emit("setUserOffline", {userId, arrCov});
+    // socket.leave(arrCov)
   })
 
   //ONLINE
@@ -209,54 +320,63 @@ io.on("connection", (socket) => {
   })
 
   //call video
-  socket.on("join room", async ({roomID,from}) => {
-      socket.join(roomID)
+  socket.on("join room", async ({roomId,from,newRoomId,status}) => {
+    socket.join(newRoomId)
+    if (users[newRoomId]) {
+      const length = users[newRoomId].length;
+      if (length === 4) {
+          socket.emit("room full");
+          return;
+      }
+      users[newRoomId].push(socket.id);
+      } else {
+          users[newRoomId] = [socket.id];
+      }
+      console.log("user in room: ", users);
+      socketToRoom[socket.id] = newRoomId;
+      const usersInThisRoom = users[newRoomId].filter(id => id !== socket.id);
+      socket.emit("all users", usersInThisRoom);
+
+      
       try {
-        const userF = await User.findById(from).exec();
-      //   if (users[roomID]) {
-      //     const length = users[roomID].length;
-      //     if (length === 4) {
-      //         socket.emit("room full");
-      //         return;
-      //     }
-      //     users[roomID].push(socket.id);
-      //   } else {
-      //         users[roomID] = [socket.id];
-              // const memberInRoom = await Conversation.findById(roomID).exec();
-              
-              // !memberInRoom && socket.emit('log bug', "Conversation not exist");
-              // const membersA = memberInRoom.members.filter(item => item!=from);
-              // membersA.forEach(async (item) => {
-              //   const user = await User.findById(item).exec();
-                socket.to(roomID).emit("callUser", {roomID,from: userF});
-              // })
-              
-        // }
-       
-      // socketToRoom[socket.id] = roomID;
-      // const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
-  
-      // socket.emit("all users", usersInThisRoom);
+        if(status != 1) {
+          const userF = await User.findById(from).exec();
+          socket.to(roomId).emit("callUser", {roomId,from: userF, newRoomId});
+        }
+        
       } catch(err) {
         console.log(err);
       }
-    
-  
 
-   
-    
-});
+  });
 
-socket.on("sending signal", payload => {
-    socket.join(payload.roomID)
-    socket.to(payload.roomID).emit('user joined', { signal: payload.signal, userId: payload.userId});
-});
+  socket.on("sending signal", payload => {
 
-socket.on("returning signal", payload => {
-    socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, userId: payload.userId });
+    socket.to(payload.roomID).emit('user joined', { signal: payload.signal, callerID: payload.callerID });
 });
 
 
+
+  socket.on("returning signal", payload => {
+    socket.to(payload.roomID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
+});
+
+//Gui loi moi ket ban 
+  socket.on("invite_success", async (data) => {
+    try {
+      const user = await User.findById(data.userId).exec();
+      // user && socket.to(user.socketId).emit("invite_success", {username: data.name, profilePicture: data.profilePicture});
+      user && socket.to(user.socketId).emit("invite_success", data);
+    } catch(err) {
+      socket.emit("send_error", "Kết bạn thành công nhưng có thể người dùng sẽ chưa thấy lời mời của bạn!")
+    }
+  })
+  //upload anh
+  socket.on("upload_image", data => {
+    // data.arrCov.forEach(items => {
+      socket.to(data?.covId).emit("upload_image", {src: data?.src, userId: data?.userId, covId: data?.covId})
+    // })
+  })
 
 
   //when disconnect
@@ -265,7 +385,6 @@ socket.on("returning signal", payload => {
     try { 
       
       const removeSocketId = await User.findOneAndUpdate({socketId: socket.id}, {socketId: "",status: false});
-      console.log(removeSocketId);
      const id = removeSocketId._id.toString();
      
       const conversations = await Conversation.find({

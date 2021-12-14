@@ -5,6 +5,10 @@ const MessageSchema = new mongoose.Schema(
     conversationId: {
       type: String,
     },
+    go: {
+      type: Boolean,
+      default: false,
+    },
     sender: {
       type: String,
     },
@@ -19,7 +23,8 @@ const MessageSchema = new mongoose.Schema(
       default: false, 
     }
   },
-  { timestamps: true }
+  { timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("Message", MessageSchema);

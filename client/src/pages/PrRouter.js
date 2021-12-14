@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ROUTE} from '../helper/constant'
 import Home from "../pages/home/Home";
 import Profile from "./profile/Profile";
@@ -46,8 +46,27 @@ const routes = [
 const PrRouter = observer((props) => {
   const ActionStore = useStore('ActionStore')
   const AuthStore = useStore('AuthStore')
- 
 
+    useEffect(() => {
+      ActionStore.action_setListSendMess(ActionStore.conversations.map(value => {
+        if(value?.name) {
+          return {
+            profilePicture: value?.covImage ? value?.covImage : 'https://nld.mediacdn.vn/2021/1/5/d9db633fe9c98429ec9025ca0950f241-16098228091571816318835.jpg',
+            username: value?.name,
+            members: value?.lastText?.seens,
+            id: value?._id,
+          }
+        } else {
+          const [obj] = value?.members.map(items => {
+            if(items?.id != AuthStore?.user?._id) {
+              return {...items, members: value?.lastText?.seens, id: value?._id };
+            }
+          })
+          return obj;
+        }
+      }))
+      
+    },[ActionStore.conversations])
     return (
         <Switch>
             {routes.map((route, idx) => {

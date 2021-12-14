@@ -14,7 +14,6 @@ const Post = observer(({ post }) => {
   const [user, setUser] = useState({});
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const currentUser  = AuthStore.user;
-  // const { user: currentUser } = useContext(AuthContext);
 
   useLayoutEffect(() => {
     setIsLiked(post.likes.includes(currentUser._id));

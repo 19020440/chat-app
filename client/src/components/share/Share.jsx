@@ -7,13 +7,11 @@ import {
   Cancel,
 } from "@material-ui/icons";
 import { useContext, useEffect, useRef, useState } from "react";
-import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook';
 
 const Share = observer(() => {
-  // const { user } = useContext(AuthContext);
   const AuthStore = useStore('AuthStore');
   const ActionStore = useStore('ActionStore');
   const {user} = AuthStore;

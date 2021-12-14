@@ -180,9 +180,10 @@
 }
 .ant-layout-header {
   padding: 0;
-  background-color: #00152959;
+  background-color: #c2cad6;
   padding-left: 10px;
   font-size: 16px;
   font-weight: 500;
   line-height: 25px;
+  font-size: 13px;
 }

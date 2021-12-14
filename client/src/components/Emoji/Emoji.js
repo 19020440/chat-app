@@ -1,12 +1,13 @@
 import React, {useState} from 'react';
 import Picker, { SKIN_TONE_MEDIUM_DARK } from 'emoji-picker-react';
 import { set } from 'lodash';
-function Emoji(props) {
+function Emoji({getText}) {
     const [chosenEmoji, setChosenEmoji] = useState(null);
     const [emoJi,setEmoJi] = useState('');
     const onEmojiClick = (event, emojiObject) => {
-        setEmoJi(prev => prev+emojiObject.emoji)
-        setChosenEmoji(emojiObject);
+        // setEmoJi(prev => prev+emojiObject.emoji)
+        // setChosenEmoji(emojiObject);
+        getText(emojiObject.emoji)
     }
     const handleDelete = (e) => {
         // if(e.which == 8 && emoJi != "" ) {
@@ -14,15 +15,15 @@ function Emoji(props) {
         //         emojisArray = emojisArray.splice(0, emojisArray.length - 1);
         //         setEmoJi(emojisArray.join("") ) 
         // } else 
-        setEmoJi(e.target.value)
+        // setEmoJi(e.target.value)
     }
     return (
             
         <div style={{textAlign: 'center'}}>
             <Picker  onEmojiClick={onEmojiClick} skinTone={SKIN_TONE_MEDIUM_DARK}/>
             {/* { chosenEmoji && <EmojiData chosenEmoji={chosenEmoji}/>} */}
-            <input type="text" value={emoJi} onChange={handleDelete}/>
-            <span>{emoJi}</span>
+            {/* <input type="text" value={emoJi} onChange={handleDelete}/>
+            <span>{emoJi}</span> */}
         </div>
     );
 }

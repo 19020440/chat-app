@@ -7,6 +7,7 @@
 .messageTop {
   display: flex;
   margin-right: 10px;
+  position: relative;
 }
 
 .messageImg {
@@ -36,7 +37,7 @@
   display: flex;
   /* flex-direction: column; */
   align-items: center;
-  width: 200px;
+  max-width: 200px;
   min-height: 0;
 }
 
@@ -47,9 +48,18 @@
   width: 12px;
   height: 12px;
   border-radius: 50px;
+  /* position: absolute;
+  bottom: -10px;
+  right: -5px; */
+}
+.image_text_notseen {
+  width: 15px;
+  height: 15px;
+  border-radius: 50px;
   position: absolute;
   bottom: -10px;
   right: -5px;
+  border: none !important;
 }
 
 .messageBottom {
@@ -98,4 +108,15 @@
 }
 .list_seen_messenger {
   margin-left: auto;
+}
+.attribute_text {
+  text-align: center;
+  padding: 2px;
+}
+.attribute_text:hover {
+  background: rgb(182, 180, 180);
+}
+.ant-popover-inner-content {
+  padding: 0;
+  border-radius: 10px;
 }

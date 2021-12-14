@@ -3,30 +3,30 @@ import { useRef } from "react";
 import {Link} from 'react-router-dom'
 import "./register.css";
 import { useHistory } from "react-router";
-
-export default function Register() {
+import {observer} from 'mobx-react-lite';
+import {useStore} from '../../hook'
+import  {showMessageError} from '../../helper/function'
+ const Register = observer(() =>  {
   const username = useRef();
   const email = useRef();
   const password = useRef();
   const passwordAgain = useRef();
   const history = useHistory();
+  const AuthStore = useStore('AuthStore');
 
   const handleClick = async (e) => {
     e.preventDefault();
+    console.log(passwordAgain.current.value + " " +  password.current.value);
     if (passwordAgain.current.value !== password.current.value) {
-      passwordAgain.current.setCustomValidity("Passwords don't match!");
+      showMessageError("Mật khẩu không trùng nhau!")
     } else {
       const user = {
         username: username.current.value,
         email: email.current.value,
         password: password.current.value,
       };
-      try {
-        await axios.post("/auth/register", user);
-        history.push("/login");
-      } catch (err) {
-        console.log(err);
-      }
+      const result = await AuthStore.action_register(user);
+      result && history.push("/login");
     }
   };
 
@@ -34,7 +34,7 @@ export default function Register() {
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">Lamasocial</h3>
+          <h3 className="loginLogo">Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -70,12 +70,16 @@ export default function Register() {
               type="password"
             />
             <button className="loginButton" type="submit">
-              Sign Up
+              Nhấn để đăng ký
             </button>
-            <button className="loginRegisterButton"><Link to="/login">Log into Account</Link></button>
+            <button className="loginRegisterButton" onClick={(e) => {
+              e.preventDefault();
+              history.push('/login')
+            }}><span>Đăng nhập</span></button>
           </form>
         </div>
       </div>
     </div>
   );
-}
+});
+export default Register;

@@ -13,7 +13,7 @@ router.delete("/:id", UserController.deleteUser);
 router.get("/", UserController.getUser);
 
 //get friends
-router.get("/friends/:userId", UserController.getFriends);
+router.post("/friends/:userId", UserController.getFriends);
 
 //follow a user
 
@@ -25,5 +25,8 @@ router.post("/:id/unfollow", UserController.unFollowUser);
 
 //search user
 router.post('/search', UserController.searchUser)
-
+//
+router.post('/update/profile', UserController.update_profile)
+//get list invite
+router.post('/list/invite', UserController.getListInvite)
 module.exports = router;

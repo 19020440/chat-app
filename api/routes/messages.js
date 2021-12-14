@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const Message = require("../models/Message");
 const Conversation = require('../models/Conversation')
-
+const mongoose = require('mongoose')
 //add
 
 router.post("/", async (req, res) => {
@@ -38,6 +38,28 @@ router.post("/delete", async(req, res) => {
 
   }
 
+})
+
+router.post("/update-last-message", async (req, res, next) => {
+  const { messId, userId } = req.body;
+  try {
+
+    const updatemess = await Message.update(
+      {_id: messId, 'seens.id': userId},
+        {$set:  {seen: true,"seens.$.seen": true} }) 
+       res.status(200).json({content: "Update messenger success!", status: 1});
+
+  } catch(err) {
+      res.status(500).json({content: "Update failds!", status: 0})
+  }
+ 
+})
+
+// Go tin nhawn 
+router.post('/gotinnhan', async (req, res, next) => {
+  const {messId} = req.body;
+  const result = await Message.findByIdAndUpdate({_id: messId}, {go: true});
+  result && res.status(200).json({content: result, status: 1});
 })
 
 module.exports = router;

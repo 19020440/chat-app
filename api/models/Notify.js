@@ -6,8 +6,15 @@ const NotifySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    listNotify: {
-      type: Array
+    profilePicture: {
+      type: String,
+    },
+    des: {
+      type: String,
+    },
+    seen: {
+      type: Boolean,
+      default: false,
     }
   },
   { timestamps: true }

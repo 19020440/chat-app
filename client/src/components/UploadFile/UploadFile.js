@@ -4,10 +4,10 @@ import './upload.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faXbox, faXing, faXingSquare } from '@fortawesome/free-brands-svg-icons'
-import {} from '@fortawesome/free-solid-svg-icons'
+import { faFile } from '@fortawesome/free-solid-svg-icons'
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
-library.add(fab,faXbox,faXingSquare) 
+library.add(fab,faXbox,faXingSquare,faFile) 
 const Upload = observer(({file,cancel,indexs}) => {
     const AuthStore = useStore('AuthStore')
     const [isImage,setIsImage] = useState(false);
@@ -34,14 +34,27 @@ const Upload = observer(({file,cancel,indexs}) => {
             {isImage ?  
             <>
                <img 
-               src="https://img.icons8.com/ios-glyphs/15/000000/macos-close.png" 
+               src="https://img.icons8.com/material-two-tone/24/000000/close-window.png" 
                className="Upload_cancel" 
                onClick={handleCancelImage}
                />
                 
-                <img src={file.preview}/>
+                <img src={file.preview} className="container-image-upload_file"/>
             </>
-            : <span>{file.name}</span>
+            : 
+            <> 
+             <img 
+               src="https://img.icons8.com/material-two-tone/24/000000/close-window.png" 
+               className="Upload_cancel" 
+               onClick={handleCancelImage}
+               />
+               <div className="container_upload-file">
+                <FontAwesomeIcon icon="fa-solid fa-file" />
+                <span>{file.name}</span>
+               </div>
+               
+            </>
+            
             
             }
             

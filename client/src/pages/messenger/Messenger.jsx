@@ -34,7 +34,7 @@ library.add(fab,faPhone,faInfoCircle,faPlusCircle,faPortrait,faAirFreshener,faGi
     <Layout className={`app${AuthStore.themePage?"": " dark"}`}>
       <Sider><Headers /></Sider>
         <Layout className="app-grid">
-          <Header>{`Wilina-${AuthStore.user?.username}`}</Header>
+          <Header>{`Chat App-${AuthStore.user?.username}`}</Header>
           <Content> 
             <Row className="container" gutter={0}>
                 

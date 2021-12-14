@@ -1,26 +1,139 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './containerRight.css'
 import {observer} from 'mobx-react-lite'
 import _ from 'lodash'
 import {useStore} from '../../hook'
+import {Close, CloudDownload} from '@material-ui/icons'
 import { useHistory, useParams } from 'react-router';
-import { Modal,Row,Col,Input } from 'antd';
+import { Modal,Row,Col,Input,Popover,Button, Image, Form, message } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab } from '@fortawesome/free-brands-svg-icons'
+import {People,MoreHoriz} from '@material-ui/icons'
 import { faChevronUp, faBell, faChevronDown, faBan, faUserSlash, faDotCircle, faThumbsUp, faFont, faSearch, faWrench, faCheck, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { showMessageInfo, showMessageSuccess, searchSendMess } from '../../helper/function';
 library.add(fab, faChevronDown, faChevronUp,faBell,faUserSlash,faWrench,faCheck,faSignOutAlt) 
-const ContainerRight = observer(({infoRoom,members}) => {
+const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const AuthStore = useStore('AuthStore')
+    const {Search} = Input;
     const ActionStore = useStore('ActionStore')
     const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+    const [form] = Form.useForm();
     const [activeQVR, setActiveQVR] = useState(false);
     const [active, setActive] = useState(false);
+    const oldNameGroup = useRef(infoRoom.username)
+    const idAmin = useRef();
     const [editNameStatus,setEditNameStatus] = useState(false);
     const [reNameGroup,setReNameGroup] = useState(false);
     const [leaveGroup,setLeaveGroup] = useState(false);
     const {conversationId} = useParams(); 
     const history = useHistory();
+    const fileShareRef = useRef(null);
+    const imageShareRef = useRef(null);
+    const [listImage,setListImage] = useState([]);
+    const [listFile,setListFile] = useState([]);
+    const [member,setMember] = useState(members);
+    const [modalMember,setModalMember] = useState(false);
+    const [showModalImage, setShowModalImage] = useState(false);
+    const imageSrcRef = useRef();
+    const dowloadRef = useRef();
+    const [addMemberGroup ,setAddMemberGroup] = useState(false);
+    const [listAddMember, setListAddMember] = useState([]);
+    //Modal add friend into group
+    const ModalAddMember = (status) => {
+         
+        return (
+            <Modal title="Thêm thành viên" visible={status}  className="modal-group" 
+            footer={false}
+            onCancel={() => {
+                setAddMemberGroup(false);
+            }}
+          >
+            <div className="main-modal_showGroup">
+                <div className="main-modal_showGroup-search">
+                <Form 
+                style={{width: '100%'}}
+                form={form}
+                >
+                    <Form.Item> 
+                      <Search  placeholder="Tìm kiếm" allowClear onChange={(e) => {
+                        // searchSendMess(listSend)
+                        const result = searchSendMess(ActionStore.listCreateGroup, e.target.value);
+                        setListAddMember(result);
+                      }}/>
+                    </Form.Item>
+                   
+                </Form>
+                </div>
+                <span>Bạn bè</span>
+                <div className="main-modal_showGroup-row">
+                    {!_.isEmpty(listAddMember) && listAddMember.map(value => {
+                      return (
+                        <div className="main-modal_showGroup-col">
+                          <div className="main-modal_showGroup-col-info">
+                            <img src={value.profilePicture ? value.profilePicture  : PF + "person/noAvatar.png"} className="main-modal_showGroup-col-img" />
+                            <span>{value.username}</span>
+                          </div>
+                          <button onClick={async(e) => {
+                            // handleInviteGroup(e,value)
+                                const result = await ActionStore.action_addUserMemberCov({covId: conversationId, user: {...value, id: value?._id}});
+                                if(result) {
+                                    value.isAdd = true;
+                                    message.success("Thêm thành công!")
+                                    setListAddMember([...listAddMember]); 
+                                    const saveNotify = await ActionStore.action_saveNotify({userId: value?._id, profilePicture: AuthStore?.user?.profilePicture,
+                                        des: `${AuthStore?.user?.username} đã thêm bạn vào nhóm ${infoRoom.username}`
+                                    })
+                                    if(saveNotify) {
+                                        AuthStore.socket.emit("add_member_cov",  {notify: saveNotify, userId: value?._id});
+                                    }
+                                      
+                                }
+                                
+                            }}
+                            className="modal-group-button_invite"
+                            hidden={value?.isAdd?true:false}
+                            >Thêm vào nhóm</button>
+                            <button onClick={(e) => {
+                            // handleDeleteGroup(e,value)
+                            }}
+                            className="modal-group-button_cancel_invite"
+                            hidden={value?.isAdd?false:true}
+                            >Đã thêm</button>
+                        </div>
+                      )
+                    })}
+                </div>
+                
+            </div>
+          </Modal>
+        )
+    }
+  
+    useEffect(() => {
+        messenger.map(value => {
+            if(_.isArray(JSON.parse(value.text)) && !value?.go) {
+                JSON.parse(value.text).map(file => {
+                    const arr = file.split('.');
+                    const arrName = file.split('_');
+                
+                    if(arr[arr.length -1] == "pdf" || arr[arr.length -1] == "docx") setListFile(prev => [...prev,{link:file,name: arrName[arrName.length-1]}])
+    
+                    else if(arr[arr.length -1] == "mp4" )  setListImage(prev => [...prev,file]);
+                    else setListImage(prev => [...prev,file]);
+                })  
+            }
+        }) 
+        oldNameGroup.current = {...infoRoom}?.username;
+        return () => {
+            setListFile([]);
+            setListImage([]);
+        }
+        
+    },[messenger])
+    useEffect(() => {
+        setMember(members)
+    },[members])
     const handleShow = () => {
         setActive(!active);
     }
@@ -33,18 +146,20 @@ const ContainerRight = observer(({infoRoom,members}) => {
     }
     //EDIT_Name_Modal
     const editName = (isModalVisible) => {
-        
+        const handleCancelEditNameModal = () => {
+            setEditNameStatus(false);
+        }
         return (
             <Modal title="Chỉnh sửa biệt danh" visible={isModalVisible}  onCancel={handleCancelEditNameModal} className="modal-edit_name">
                 <Row>
-                    {!_.isEmpty(members) && members.map(value => {
+                    {!_.isEmpty(member) && member.map(value => {
                         return (
                             <Col span={24} className="modal-edit-profile">
                                 <div className="modal-profile-fix">
                                     <img src={value.profilePicture} alt="" />
-                                    <input disabled placeholder={value.username} onChange={(e) => {
+                                    <input disabled value={value.username} onChange={(e) => {
                                         // e.target.value = e.which
-                                        e.target.placeholder = e.target.value
+                                        value.username = e.target.value;
                                     }}/>
                                 </div>
                                 <img src="https://img.icons8.com/pastel-glyph/35/000000/edit--v1.png" 
@@ -60,7 +175,7 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                 
                                 />
                                 <img src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/35/000000/external-check-basic-ui-elements-flatart-icons-outline-flatarticons.png" hidden
-                                    onClick={(e) => {
+                                    onClick={ async (e) => {
                                         const input = e.target.previousElementSibling.previousElementSibling.children[1];
                                         const edit = e.target.previousElementSibling;
                                         const check = e.target;
@@ -68,10 +183,22 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                         input.style.border = "none"
                                         edit.hidden = false;
                                         input.disabled = true;
-                                        value.username = input.placeholder
-                                        ActionStore.action_changePropertyConversation("members",conversationId,members);
+                                        value.username = input.value
+                                       const result  = await ActionStore.action_changePropertyConversation("members",conversationId,members);
+                                        result && AuthStore?.socket?.emit("edit_bietdanh", {
+                                            conversationId,
+                                            profilePicture: AuthStore?.user?.profilePicture,
+                                            isGroup: _.size(members) > 2 ? true : false,
+                                            id: value?.id,
+                                            newName: input.value,
+                                            name: value?.username,
+                                            userChange: AuthStore?.user?.username,
+                                            nameGroup: oldNameGroup.current,
+                                        })
+                                    
                                     }}
                                 />
+                            
                             </Col>
                         )
                     })}
@@ -116,22 +243,144 @@ const ContainerRight = observer(({infoRoom,members}) => {
     const handleCancelLeaveGroup = () => {
         setLeaveGroup(false);
     }
-    const handleLeaveGroup =(e) => {
-        ActionStore.action_changePropertyConversation('leave',conversationId);
-        history.push('/messenger')
+    const handleLeaveGroup = async (e) => {
+        const arrUser = members.map(item => {
+            if(item?.id != AuthStore?.user?._id) return item?.id;
+        })
+        const result = await ActionStore.action_changePropertyConversation('leave',conversationId, AuthStore.user._id);
+        if(result) {
+            AuthStore.socket?.emit("leave_group", {conversationId, 
+                profilePicture: AuthStore?.user?.profilePicture, 
+                des: `${AuthStore?.user?.username} đã rời khỏi nhóm ${infoRoom?.username}`,
+                arrUser
+            })
+            history.push('/messenger')
+        }
+        
+        
     }   
      
     const handleCancelReName = () => {
         setReNameGroup(false);
     }
-    const handleAcceptReName = (e) => {
+    const handleAcceptReName = async (e) => {
+        const arrUser = members.map(item => {
+            if(item?.id != AuthStore?.user?._id) return item?.id;
+        })
+       const result = await ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
+       if(result)
+       {
+        AuthStore.socket.emit("edit_tennhom", {
+            conversationId, 
+            profilePicture: AuthStore?.user?.profilePicture,
+            des: `${AuthStore?.user?.username} đã đổi tên nhóm ${oldNameGroup.current} thành ${infoRoom.username}`,
+            arrUser
+        });
+       setReNameGroup(false);
+       }
        
-        ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
-        
         
     }
-    const handleCancelEditNameModal = () => {
-        setEditNameStatus(false);
+   
+
+    //Modal Member
+    const modalMembers = (isModalVisible) => {
+        const handleCancelMembers = () => {
+            setModalMember(false);
+        }
+        const handleDeleteUser = async (value) => {
+            const arrUser = members.map(item => {
+                if(item?.id != AuthStore?.user?._id) return item?.id;
+            })
+            if(idAmin.current == AuthStore?.user?._id) {
+                if(value.id != idAmin) {
+                    const result = await ActionStore.action_deleteUserGroup(conversationId,value.id);
+                    if(result) {
+                       
+                        showMessageSuccess("Xoá thành công thành viên ra khỏi nhóm!");
+                                AuthStore.socket?.emit("delete_user", {conversationId, 
+                                    profilePicture: AuthStore?.user?.profilePicture,
+                                    name: value?.username,
+                                    id: value?.id,
+                                    groupName: infoRoom?.username,
+                                    arrUser
+                                    
+                                });      
+                    }
+                    else showMessageInfo("Xóa thành viên thất bại!")
+                } else showMessageInfo(`Bạn có thể ấn "Rời khỏi nhóm" ở dưới cùng của thanh công cụ!`)
+                
+            } 
+            else  {
+              
+                showMessageInfo("Chỉ có quản trị viên mới có quyền xóa thành viên !");
+            }
+        }
+        return (
+            <Modal title="Thành viên" visible={isModalVisible}  
+                onCancel={handleCancelMembers} 
+                
+                footer={false}
+            >
+                <Row>
+                    {!_.isEmpty(member) && member.map(value => {
+                        if(value.isAdmin) idAmin.current = value.id;
+                        return (
+                            <Col span={24} style={{display: "flex", alignItems: "center", justifyContent: "space-between",padding: "10px"}}> 
+                                <div style={{display: "flex", alignItems: "center"}}>
+                                    <img src={value.profilePicture} style={{borderRadius: "50px"}}/>
+                                    <div >
+                                        <span style={{marginLeft: "10px",fontWeight: "550"}}>{value.username}</span>
+                                        {value.isAdmin && <p style={{marginLeft: "10px",fontWeight: "500",color: "#cec3c3",fontSize: "12px"}}>Quản trị viên</p>}
+                                    </div>
+                                   
+                                </div>
+                                <Popover placement="bottom"  content={<><p onClick={() => handleDeleteUser(value)}>Xóa khỏi nhóm</p></>} trigger="click">
+                                    <MoreHoriz style={{fontSize: "20px"}}/>
+                                </Popover>
+                            </Col>
+                        )
+                    })}
+                </Row>
+            </Modal>    
+        )
+    }
+    //Modal image
+    const ModalImage = (isModalVisible) => {
+
+        return (
+            <Modal 
+                style={{width: '1000px', top: '25px'}}
+                bodyStyle={{padding: 0, width: '1000px', height: '720px'}}
+                visible={isModalVisible}  
+                onCancel={() => setShowModalImage(false)}
+                footer={false}
+                width="1000px"
+                destroyOnClose={true}
+                closeIcon={<Row>
+                    <Col span={12}>
+                        <a href={imageSrcRef.current} style={{color: 'black'}} ref={dowloadRef} onClick={(e)=> {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                 console.log(dowloadRef.current);
+                                 dowloadRef.current.download = "asd.png"    
+                            }} download="as.png">
+                            <CloudDownload />
+                        </a>
+                        
+                    </Col>
+                    <Col span={12}>
+                        <Close/>
+                    </Col>
+                </Row>}
+            >
+               <Row style={{width: '100%', height: '100%'}}>
+                   <Col span={24} style={{width: '100%', height: '100%'}}>
+                       <Image preview={false} src={imageSrcRef.current} width="100%" height="100%"/>
+                   </Col>
+               </Row>
+            </Modal> 
+        )
     }
     
     return (
@@ -182,26 +431,36 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                     }
                                
 
-
-                                <li className="dropdown-item">
-                                    <div className="dropdown-item__icon">
-                                        <FontAwesomeIcon icon={faDotCircle} />
-                                    </div>
-                                    <div className="dropdown-item__text">
-                                        Đổi chủ đề
-                                    </div>
-                                </li>
+                                    {infoRoom.isGroup && 
+                                        <li className="dropdown-item" onClick={() => {
+                                            setModalMember(true);
+                                        }}>
+                                            <div className="dropdown-item__icon">
+                                                <People/>
+                                            </div>
+                                            <div className="dropdown-item__text">
+                                                Thành viên trong nhóm
+                                            </div>
+                                        </li>
+                                    }
+                                
 
                                
-                                
-                                <li className="dropdown-item">
+                                {infoRoom.isGroup && 
+                                    <li className="dropdown-item" onClick={async () => {
+                                        setAddMemberGroup(true);
+                                        const result = await ActionStore.action_getListFriend(AuthStore?.user?._id)
+                                        setListAddMember(result);
+                                    }}>
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faThumbsUp} />
                                     </div>
                                     <div className="dropdown-item__text">
-                                        Thay đổi biểu tượng cảm xúc
+                                        Thêm thành viên
                                     </div>
-                                </li>
+                                    </li>
+                                }
+                               
                                 <li className="dropdown-item" onClick={() => setEditNameStatus(true)}>
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faFont} />
@@ -220,8 +479,9 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                 </li>
                             </ul>
                         </div>
-                        <div className="container-right__menu-dropdown" onClick={handleShowQVR}>
-                            <div className="dropdown-head">
+
+                        <div className="container-right__menu-dropdown" >
+                            <div className="dropdown-head" onClick={handleShowQVR}>
                                 <div className="dropdown-head__title">
                                     {`Quyền riêng tư & hỗ trợ`}
                                 </div>
@@ -250,6 +510,7 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                         Bỏ qua tin nhắn
                                     </div>
                                 </li>
+                                {!infoRoom.isGroup && 
                                 <li className="dropdown-item">
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faUserSlash}/>
@@ -258,18 +519,17 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                         Chặn
                                     </div>
                                 </li>
-                                <li className="dropdown-item">
-                                    <div className="dropdown-item__icon">
-                                        <i className="fal fa-search"></i>
-                                    </div>
-                                    <div className="dropdown-item__text">
-                                        Có gì đó không ổn 
-                                    </div>
-                                </li>
+                                }
                             </ul>
                         </div>
-                        <div className="container-right__menu-dropdown">
-                            <div className="dropdown-head">
+
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-file_share">
+                            <div className="dropdown-head"  onClick={(e) => {
+                                const element = fileShareRef.current.getAttribute("class");
+                                if(element.indexOf("hidden_icon") != -1) {
+                                    fileShareRef.current.classList.remove("hidden_icon");
+                                } else fileShareRef.current.classList.add("hidden_icon");
+                            }}>
                                 <div className="dropdown-head__title">
                                     Tệp được chia sẻ
                                 </div>
@@ -277,9 +537,32 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                     <FontAwesomeIcon icon={faChevronDown} />
                                 </div>
                             </div>
+                            <Row ref={fileShareRef} className="hidden_icon">
+                                {!_.isEmpty(listFile)?
+                                    listFile.map(file => {
+                                        return (
+                                            <Col span={24}>
+                                                <a href={file.link} onClick={(e) => {
+                                                    e.preventDefault();
+                                                    window.open(e.target.href)
+                                                    console.log();
+                                                }}>{file.name}</a>
+                                            </Col>
+                                        )
+                                    }):
+                                    <Col span={6} className="file_share-no_data">No files</Col>
+                            
+                                }
+                            </Row>
                         </div>
-                        <div className="container-right__menu-dropdown">
-                            <div className="dropdown-head">
+
+                        <div className="container-right__menu-dropdown container-right__menu-dropdown-image-share" >
+                            <div className="dropdown-head" onClick={() =>{
+                            const element = imageShareRef.current.getAttribute("class");
+                            if(element.indexOf("hidden_icon") != -1) {
+                                imageShareRef.current.classList.remove("hidden_icon");
+                            } else imageShareRef.current.classList.add("hidden_icon");
+                        }}>
                                 <div className="dropdown-head__title">
                                     File phương tiện được chia sẻ
                                 </div>
@@ -287,7 +570,22 @@ const ContainerRight = observer(({infoRoom,members}) => {
                                     <FontAwesomeIcon icon={faChevronDown} />
                                 </div>
                             </div>
+
+                            <Row ref={imageShareRef} className="hidden_icon">
+                               {listImage.map(link => {
+                                   return (
+                                    <Col span={8} onClick={(e) => {
+                                        setShowModalImage(true);
+                                        imageSrcRef.current = e.target.src;
+                                    }}>
+                                        <img src={link} alt="" />
+                                    </Col>
+                                   )
+                               })}
+                            </Row>
                         </div>
+
+
                         {infoRoom.isGroup && 
                             <div className="container-right__menu-dropdown right-bar-out_room" onClick={() => {
                                 setLeaveGroup(true);
@@ -306,6 +604,9 @@ const ContainerRight = observer(({infoRoom,members}) => {
                 {editName(editNameStatus)}
                 {ModalRename(reNameGroup)}
                 {LeaveGroupModal(leaveGroup)}
+                {modalMembers(modalMember)}
+                {ModalImage(showModalImage)}
+                {ModalAddMember(addMemberGroup)}
                 </>
     );
 })

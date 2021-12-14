@@ -1,18 +1,16 @@
 import { useContext, useRef } from "react";
 import "./login.css";
 import {useHistory} from 'react-router-dom'
-import { AuthContext } from "../../context/AuthContext";
 import { CircularProgress } from "@material-ui/core";
 import {Link} from 'react-router-dom'
 import {useStore} from '../../hook'
 import {observer} from 'mobx-react-lite'
 import _, { isEmpty } from 'lodash'
-import { AuthStore } from "../../Store/AuthStore";
 const  Login = observer(() => {
   const AuthStore = useStore('AuthStore');
   const email = useRef();
   const password = useRef();
-  const { isFetching, dispatch } = useContext(AuthContext);
+
   const history = useHistory();
   const handleClick = async (e) => {
     e.preventDefault();
@@ -26,7 +24,7 @@ const  Login = observer(() => {
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">Lamasocial</h3>
+          <h3 className="loginLogo">Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -49,11 +47,14 @@ const  Login = observer(() => {
               ref={password}
             />
             <button className="loginButton" type="submit">
-              Log In
+              Đăng nhập
             </button>
-            <span className="loginForgot">Forgot Password?</span>
-            <button className="loginRegisterButton">
-                <Link to="/register">Create a New Account</Link>
+            <span className="loginForgot">Quên mật khẩu?</span>
+            <button className="loginRegisterButton" onClick={(e) => {
+              e.preventDefault();
+              history.push('/register')
+            }}>
+                <span >Đăng ký</span>
             </button>
           </form>
         </div>

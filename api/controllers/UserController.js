@@ -1,6 +1,7 @@
-const {getLessProfile} = require('../helper/funtion')
+ const {getLessProfile} = require('../helper/funtion')
 const User = require("../models/User");
-
+const bcrypt = require("bcrypt");
+const Conversation = require('../models/Conversation')
 module.exports  = new class UserController {
 
 
@@ -71,10 +72,10 @@ module.exports  = new class UserController {
     //GET FRIEND
     async getFriends(req, res, next) {
             try {
-              const user = await User.findById(req.params.userId);
+              const user = await User.findById(req.body.userId);
               const friends = await Promise.all(
                 user.followings.map((friendId) => {
-                  return User.findById(friendId);
+                  return User.findById(friendId).exec();
                 })
               );
               let friendList = [];
@@ -84,7 +85,7 @@ module.exports  = new class UserController {
               });
               res.status(200).json({content: friendList, status: 1})
             } catch (err) {
-              res.status(500).json(err);
+              res.status(500).json({content: err, status: 0});
             }
     }
 
@@ -93,15 +94,72 @@ module.exports  = new class UserController {
 
             if (req.body.userId !== req.params.id) {
               try {
-                const user = await User.findById(req.params.id);
-                const currentUser = await User.findById(req.body.userId);
-                if (!user.followers.includes(req.body.userId)) {
-                  await user.updateOne({ $push: { followers: req.body.userId } });
-                  await currentUser.updateOne({ $push: { followings: req.params.id } });
+                // const user = await User.findById(req.params.id);
+                // const currentUser = await User.findById(req.body.userId);
+                // const conversation = await Conversation.findOne({
+                //   members: { $all: [{$elemMatch : {id: req.params.firstUserId}}, {$elemMatch :{'id': req.params.secondUserId}}] },
+                // });
+
+                const [user, currentUser, conv] = await Promise.all([ await User.findById(req.params.id),
+                  await User.findById(req.body.userId),
+                  await Conversation.findOne({
+                    members: { $all: [{$elemMatch : {id: req.body.userId }}, {$elemMatch :{'id': req.params.id}}] },
+                  })
+                ])
+                if(!conv) {
+                  const member1 = {
+                    id: req.body.userId,
+                    profilePicture: currentUser.profilePicture,
+                    username: currentUser.username,
+                  }
+
+                  const member2 = {
+                    id: req.params.id,
+                    profilePicture: user.profilePicture,
+                    username: user.username,
+                  }
+
+                  const lastText1 = {
+                    id:req.body.userId,
+                    profilePicture: currentUser.profilePicture,
+                    seen: false,
+                  }
+
+                  const lastText2 = {
+                    id: req.params.id,
+                    profilePicture: user.profilePicture,
+                    seen: false,
+                  }
+
+
+                  const newConversation = new Conversation({
+                    members: [member1, member2],
+                    lastText: {
+                      sender: "",
+                      text: "",
+                      seens: [lastText1,lastText2]
+                    }
+                  });
+
+                  if (!user.followings.includes(req.body.userId)) {
+                 
+                  // await user.updateOne({ $push: { followings: req.body.userId } });
+                  Promise.all([await newConversation.save(), await user.updateOne({ $push: { followings: req.body.userId } }),  await currentUser.updateOne({ $push: { followings: req.params.id } })])
                   res.status(200).json({content: "user has been followed", status: 1});
                 } else {
                   res.status(403).json({content: "you allready follow this user", status: 0});
                 }
+              } else {
+
+                if (!user.followings.includes(req.body.userId)) {
+                 
+                  // await user.updateOne({ $push: { followings: req.body.userId } });
+                  Promise.all([await user.updateOne({ $push: { followings: req.body.userId } }),  await currentUser.updateOne({ $push: { followings: req.params.id } })])
+                  res.status(200).json({content: "user has been followed", status: 1});
+                } else {
+                  res.status(403).json({content: "you allready follow this user", status: 0});
+                }
+              }
               } catch (err) {
                 res.status(500).json({content: err, status: 0});
               }
@@ -112,14 +170,19 @@ module.exports  = new class UserController {
 //unfollow a user
 
           async unFollowUser(req, res, next){
+            const {covId} = req.body;
                 if (req.body.userId !== req.params.id) {
                   try {
                     const user = await User.findById(req.params.id);
                     const currentUser = await User.findById(req.body.userId);
-                    if (user.followers.includes(req.body.userId)) {
-                      await user.updateOne({ $pull: { followers: req.body.userId } });
-                      await currentUser.updateOne({ $pull: { followings: req.params.id } });
-                      res.status(200).json({status: 1,content: "user has been unfollowed"});
+                    if (currentUser.followings.includes(req.params.id) || user.followings.includes(req.body.userId) ) {
+                      // await user.updateOne({ $pull: { followers: req.body.userId } }); 
+                      const [deleteCov, deleteUser, deleteUserFriend] = await Promise.allSettled([await Conversation.findByIdAndDelete(covId),  
+                        await currentUser.updateOne({ $pull: { followings: req.params.id }}), 
+                        await user.updateOne({ $pull: { followings: req.body.userId }})
+                      ])
+                      deleteCov && deleteUser && deleteUserFriend && res.status(200).json({status: 1,content: "user has been unfollowed"});
+                      
                     } else {
                       res.status(403).json({content: "you dont follow this user", status: 0});
                     }
@@ -142,5 +205,47 @@ module.exports  = new class UserController {
             }T
             
           }
-   
+
+          //get List invite
+          async getListInvite(req, res, next) {
+            const {userId} = req.body;
+            try {
+              const [allUser, user] = await Promise.all([ User.find(),  User.findById(userId).exec()])
+              const result = allUser.filter(value => user.followings.includes(value._id.toString()) == 0 && userId != value._id.toString() );
+              res.status(200).json({content: result, status: 1})
+            } catch(err) {
+              res.json(err)
+            }
+          }
+            //Update Profile
+            async update_profile(req, res, next) {
+              const {userId, data} = req.body;
+              try {
+                const user = await User.findById(userId).exec();
+                
+                const validPassword = await bcrypt.compare(data.password, user.password);
+                !validPassword && res.status(200).json({content: "Mật khẩu sai !",status:0});
+                // res.status(200).json({content: user.password,status: 1})
+                const salt = await bcrypt.genSalt(10);
+               const hashedPassword = await bcrypt.hash(data.newpassword, salt);
+                const newPass = await User.findByIdAndUpdate(userId, {$set: {password: hashedPassword,username: data.username } });
+                // if(data.username) User.findOneAndUpdate(userId, {username: data.username});
+                newPass && res.status(200).json({content: "Cập nhật thông tin thành công", status: 1})
+              } catch(err) {
+
+                res.status(500).json({content: err, status: 0})
+
+              }
+              // const {listUser} = req.body;
+              // const arr = [];
+              // try {
+              //  const arr = await Promise.all(listUser.map((element) => {
+              //       return User.findById(element).then(res => res.socketId)
+              //   }))
+              //   res.json(arr);
+              // } catch(err) {
+              //   res.json(err);
+              // }
+              
+            }
 }

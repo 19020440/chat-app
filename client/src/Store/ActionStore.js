@@ -18,10 +18,21 @@ export class ActionStore {
     countTextNotSeen = 0;
     currentConversation = null;
     listMess = [];
-
+    answerJoinRoom = [];
+    listSendMess = [];
+    listSendMessCopy = [];
+    listCreateGroup = [];
+    listAddMembers = [];
+    listNotify = [];
     constructor() {
         makeAutoObservable(this, {
             listMess: observable,
+            listAddMembers: observable,
+            listNotify: observable,
+            listCreateGroup: observable,
+            listSendMessCopy: observable,
+            listSendMess: observable,
+            answerJoinRoom: observable,
             profileOfFriend: observable,
             currentConversation: observable,
             countTextNotSeen: observable,
@@ -58,29 +69,252 @@ export class ActionStore {
             action_setCurrentConversation: action,
             action_resetListSearchFriend: action,
             action_changePropertyConversation: action,
+            action_resetAllData:action,
+            action_deleteUserGroup: action,
+            action_updateLastMess: action,
+            action_setAnswerJoinRoom: action,
+            action_gotinnhan:action,
+            action_setListSendMess: action,
+            action_setCreateListGroup: action,
+            action_saveNotify: action,
+            action_getListNotify: action,
+            action_setListNotify: action,
+            action_updateSeenNotify: action,
+            action_uploadImageInCov: action,
+            action_callApiUploadImageCov: action,
+            action_setListAddMember: action,
+            action_addUserMemberCov: action,
+            action_deleteConversation:action,
         })
     }
+    //them nguoi vao nhom
+    async action_addUserMemberCov({covId, user}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.addUserCov}`
+        const urlBody = {
+            covId,
+            user
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            this.conversations[index].members = [...this.conversations[index].members, user]
+            return true;
+        }
+        else return false;
+    }
 
+    action_setListAddMember(data){
+        this.listAddMembers = data;
+    }
+    async action_callApiUploadImageCov({covId, src,userId}) {
+
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateImage}`
+        const urlBody = {
+            covId,
+            userId,
+            src
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+
+
+     action_uploadImageInCov({covId, src,userId}) {
+       
+        // const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateImage}`
+        // const urlBody = {
+        //     covId,
+        //     userId,
+        //     src
+        // } 
+        // const result = await Request.post(urlBody, DOMAIN);
+        // if(result) {
+            const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            
+            // this.conversations[index] = this.conversations.map(items => {
+            //     items.members = items.members.map(member => {
+            //          if(member?.id == userId) member.profilePicture = src;
+            //          return member;
+            //      })
+            //      items.lastText.seens = items?.lastText?.seens.map(seen => {
+            //          if(seen?.id == userId) seen.profilePicture = src;
+            //          return seen;
+            //      })
+            //      return items;
+            //  });
+            const members = this.conversations[index].members.map(member => {
+                if(member?.id == userId) member.profilePicture = src;
+                return member;
+            })
+            const seens = this.conversations[index].lastText.seens.map(seen => {
+                         if(seen?.id == userId) seen.profilePicture = src;
+                         return seen;
+                        })
+            this.conversations[index] = {...this.conversations[index], members, lastText: {...this.conversations[index].lastText, seens}}
+            // return true;
+        // }
+        // return false; 
+        
+        
+
+
+        
+    }   
+    //cap nhat trang thai thong bao
+    async action_updateSeenNotify(notifyId) {
+        
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateSeenNotify}`
+        const urlBody = {
+            notifyId,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            return true;
+        }
+        return false; 
+    }
+    //set list thong bao
+    action_setListNotify(data) {
+        this.listNotify = data;
+    }
+    //lay danh sach thong bao
+    async action_getListNotify(userId){
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getListNotify}`
+        const urlBody = {
+            userId,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            this.action_setListNotify(result.content)
+            return true;
+        }
+        return false; 
+    }
+    //luu thong bao 
+    async action_saveNotify({userId, profilePicture, des}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.saveNotify}`
+        const urlBody = {
+            userId,
+            profilePicture,
+            des,
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            return result.content;
+        }
+        return false;
+    }
+    action_setCreateListGroup(data) {
+        this.listCreateGroup = data;
+    }
+    //set list send mess
+    action_setListSendMess(data) {
+        this.listSendMess = [...data];
+    
+    }
+    //set tra loi join room 
+    action_setAnswerJoinRoom() {
+        this.answerJoinRoom = ! this.answerJoinRoom;
+    }
+    //update last Mess
+    async action_updateLastMess({messId, userId}) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateLastMess}`
+        const urlBody = {
+            messId,
+            userId
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) return true;
+        return false;
+
+    }
+    //action_deleteUserGroup
+
+    async action_deleteUserGroup(covId, userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.leaveGroup}`
+        const urlBody = {
+            covId,
+            userId
+        } 
+        const result = await Request.post(urlBody, DOMAIN);
+        if(result) {
+            const indexCov = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            _.remove(this.conversations[indexCov].members, function (value)  {
+                return value.id  == userId;
+            })
+            return true;
+        }
+         
+        else return false;
+    }
+    //delete conversation
+    action_deleteConversation(covId) {
+        const result = _.remove(this.conversations, function (value)  {
+            return value._id  == covId;
+        })
+        if(result) return true;
+    }
+    //Restet All DAta 
+    action_resetAllData() {
+        this.profileOfFriend = {};
+        this.posts = [];
+        this.statusPost = false;
+        this.listSearch = [];
+        this.lastText = [];
+        this.offlineStatus = false;
+        this.conversations = [];
+        this.preventCallApi=true;
+        this.currentStatus = {};
+        this.countTextNotSeen = 0;
+        this.currentConversation = null;
+        this.listMess = [];
+    }
     //chang-property-conversation
-    action_changePropertyConversation(type,covId,data) {
+    async action_changePropertyConversation(type,covId,data) {
         switch(type) {
             case "members": {
                 const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
                 this.conversations[covIndex].members = [...data];
-                break;
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateConversation}`
+                const urlBody = {
+                    data,
+                    text: "members",
+                    covId
+                }
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) return true;
+                return false;
             }    
 
             case "name": {
                 const covIndex = findIndexFromArrayLodash(this.conversations, {_id: covId});
                 this.conversations[covIndex] = {...this.conversations[covIndex],name: data};
-                break;
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.updateConversation}`
+                const urlBody = {
+                    data,
+                    text: "name",
+                    covId
+                }
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) return true;
+                return false;
             }
 
             case 'leave': {
-                _.remove(this.conversations, function (value)  {
-                    return value._id  == covId;
-                })
-                break;
+                const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.leaveGroup}`
+                const urlBody = {
+                    covId,
+                    userId: data,
+                } 
+                const result = await Request.post(urlBody, DOMAIN);
+                if(result) {
+                    _.remove(this.conversations, function (value)  {
+                        return value._id  == covId;
+                    })
+                    return true;
+                }
+               else return false;
             }
             default: break;
         }
@@ -260,10 +494,14 @@ export class ActionStore {
     async action_getListFriend(userId) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.getListFriend}/${userId}`
 
-        const result = await Request.get({}, DOMAIN);
+        const result = await Request.post({userId}, DOMAIN);
 
         if(result) {
-            if(!_.isEmpty(result.content)) return result.content;
+            if(!_.isEmpty(result.content)) {
+                this.action_setCreateListGroup(result.content)
+                this.action_setListAddMember(result.content)
+                return result.content;
+            }
             else return [];
         }
     }
@@ -345,10 +583,11 @@ export class ActionStore {
             if(result) {
                 if(!_.isEmpty(result.content)) {
                     const res = getLessProfile(result.content);
+                    console.log("action_searchFriend", res);
                     this.listSearch = res;
                     return res;
                 }
-                else return [];
+                else  this.listSearch = [];
             }
         } else this.listSearch = [];
     }
@@ -395,5 +634,19 @@ export class ActionStore {
             if(!_.isEmpty(result.content)) return result.content;
             
         }
+    }
+
+    //go tin nhan
+    async action_gotinnhan(messId) {
+
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.gotinnhan}`;
+        const urlBody = {
+            messId
+        }
+        const result = await Request.post(urlBody, DOMAIN);
+
+        if(result) {
+            return true;
+        } 
     }
 }
