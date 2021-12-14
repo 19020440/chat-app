@@ -80,7 +80,14 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                 if(result) {
                                     value.isAdd = true;
                                     message.success("Thêm thành công!")
-                                    setListAddMember([...listAddMember]);   
+                                    setListAddMember([...listAddMember]); 
+                                    const saveNotify = await ActionStore.action_saveNotify({userId: value?._id, profilePicture: AuthStore?.user?.profilePicture,
+                                        des: `${AuthStore?.user?.username} đã thêm bạn vào nhóm ${infoRoom.username}`
+                                    })
+                                    if(saveNotify) {
+                                        AuthStore.socket.emit("add_member_cov",  {notify: saveNotify, userId: value?._id});
+                                    }
+                                      
                                 }
                                 
                             }}
@@ -191,6 +198,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                     
                                     }}
                                 />
+                            
                             </Col>
                         )
                     })}
@@ -236,25 +244,41 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
         setLeaveGroup(false);
     }
     const handleLeaveGroup = async (e) => {
+        const arrUser = members.map(item => {
+            if(item?.id != AuthStore?.user?._id) return item?.id;
+        })
         const result = await ActionStore.action_changePropertyConversation('leave',conversationId, AuthStore.user._id);
-        result && AuthStore.socket?.emit("leave_group", {conversationId, 
-            profilePicture: AuthStore?.user?.profilePicture, 
-            des: `${AuthStore?.user?.username} đã rời khỏi nhóm ${infoRoom?.username}`})
-        history.push('/messenger')
+        if(result) {
+            AuthStore.socket?.emit("leave_group", {conversationId, 
+                profilePicture: AuthStore?.user?.profilePicture, 
+                des: `${AuthStore?.user?.username} đã rời khỏi nhóm ${infoRoom?.username}`,
+                arrUser
+            })
+            history.push('/messenger')
+        }
+        
+        
     }   
      
     const handleCancelReName = () => {
         setReNameGroup(false);
     }
     const handleAcceptReName = async (e) => {
-       
+        const arrUser = members.map(item => {
+            if(item?.id != AuthStore?.user?._id) return item?.id;
+        })
        const result = await ActionStore.action_changePropertyConversation("name",conversationId,infoRoom.username);
-       result && AuthStore.socket.emit("edit_tennhom", {
-        conversationId, 
-        profilePicture: AuthStore?.user?.profilePicture,
-        des: `${AuthStore?.user?.username} đã đổi tên nhóm ${oldNameGroup.current} thành ${infoRoom.username}`
-    });
+       if(result)
+       {
+        AuthStore.socket.emit("edit_tennhom", {
+            conversationId, 
+            profilePicture: AuthStore?.user?.profilePicture,
+            des: `${AuthStore?.user?.username} đã đổi tên nhóm ${oldNameGroup.current} thành ${infoRoom.username}`,
+            arrUser
+        });
        setReNameGroup(false);
+       }
+       
         
     }
    
@@ -265,13 +289,14 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
             setModalMember(false);
         }
         const handleDeleteUser = async (value) => {
+            const arrUser = members.map(item => {
+                if(item?.id != AuthStore?.user?._id) return item?.id;
+            })
             if(idAmin.current == AuthStore?.user?._id) {
                 if(value.id != idAmin) {
                     const result = await ActionStore.action_deleteUserGroup(conversationId,value.id);
                     if(result) {
-                        const arrUser = members.map(item => {
-                            if(item?.id != AuthStore?.user?._id) return item?._id;
-                        })
+                       
                         showMessageSuccess("Xoá thành công thành viên ra khỏi nhóm!");
                                 AuthStore.socket?.emit("delete_user", {conversationId, 
                                     profilePicture: AuthStore?.user?.profilePicture,
@@ -295,8 +320,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
             <Modal title="Thành viên" visible={isModalVisible}  
                 onCancel={handleCancelMembers} 
                 
-                okText="Có"
-                cancelText="Hủy"
+                footer={false}
             >
                 <Row>
                     {!_.isEmpty(member) && member.map(value => {

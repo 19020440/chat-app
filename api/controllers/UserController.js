@@ -141,7 +141,7 @@ module.exports  = new class UserController {
                     }
                   });
 
-                  if (!user.followers.includes(req.body.userId)) {
+                  if (!user.followings.includes(req.body.userId)) {
                  
                   // await user.updateOne({ $push: { followings: req.body.userId } });
                   Promise.all([await newConversation.save(), await user.updateOne({ $push: { followings: req.body.userId } }),  await currentUser.updateOne({ $push: { followings: req.params.id } })])
@@ -151,7 +151,7 @@ module.exports  = new class UserController {
                 }
               } else {
 
-                if (!user.followers.includes(req.body.userId)) {
+                if (!user.followings.includes(req.body.userId)) {
                  
                   // await user.updateOne({ $push: { followings: req.body.userId } });
                   Promise.all([await user.updateOne({ $push: { followings: req.body.userId } }),  await currentUser.updateOne({ $push: { followings: req.params.id } })])
@@ -170,14 +170,19 @@ module.exports  = new class UserController {
 //unfollow a user
 
           async unFollowUser(req, res, next){
+            const {covId} = req.body;
                 if (req.body.userId !== req.params.id) {
                   try {
                     const user = await User.findById(req.params.id);
                     const currentUser = await User.findById(req.body.userId);
-                    if (user.followers.includes(req.body.userId)) {
+                    if (currentUser.followings.includes(req.params.id) || user.followings.includes(req.body.userId) ) {
                       // await user.updateOne({ $pull: { followers: req.body.userId } }); 
-                      await currentUser.updateOne({ $pull: { followings: req.params.id } });
-                      res.status(200).json({status: 1,content: "user has been unfollowed"});
+                      const [deleteCov, deleteUser, deleteUserFriend] = await Promise.allSettled([await Conversation.findByIdAndDelete(covId),  
+                        await currentUser.updateOne({ $pull: { followings: req.params.id }}), 
+                        await user.updateOne({ $pull: { followings: req.body.userId }})
+                      ])
+                      deleteCov && deleteUser && deleteUserFriend && res.status(200).json({status: 1,content: "user has been unfollowed"});
+                      
                     } else {
                       res.status(403).json({content: "you dont follow this user", status: 0});
                     }

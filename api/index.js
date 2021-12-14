@@ -23,7 +23,8 @@ const Notify = require('./models/Notify')
 const Conversation = require("./models/Conversation");
 const fs = require('fs')
 
-const { promisify } = require('util')
+const { promisify } = require('util');
+const { log } = require("console");
 
 const unlinkAsync = promisify(fs.unlink)
 const io  = new Server(server, {
@@ -124,12 +125,6 @@ io.on("connection", (socket) => {
   //join room
   socket.on("join_room", async ({senderId, conversationId}) => { 
     try {
-
-
-            // const updateStatusSeen = await Messenger.update(
-            //   {$and:[{conversationId},{'seens.id': senderId}, {'seens.seen': false}]},
-            //   {$set: {seen: true,"seens.$.seen": true}});
-
             const updateConversation = await Conversation.update(
               {$and: [{_id: conversationId}, {'lastText.seens.id': senderId}]},
               
@@ -156,26 +151,70 @@ io.on("connection", (socket) => {
   })
 
   //sua ten nhom
-  socket.on("edit_tennhom", data => {
-    socket.to(data.conversationId).emit("edit_tennhom", data)
+  socket.on("edit_tennhom", async data => {
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item, des: data?.des, profilePicture: data?.profilePicture})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        socket.to(data.conversationId).emit("edit_tennhom", result)
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
+    }
+    
   })
   //xoa thanh vien
   socket.on("delete_user", async (data) => {
-    const arrPromise = data?.arrUser.map(item => {
-      const newNotify = new Notify({userId: item,  profilePicture: data?.profilePicture, des: `Quản trị viên đã xóa ${data?.id == item ? "bạn": name} ra khỏi nhóm ${groupName}`})
-      return newNotify.save();
-    })
-    const result = await Promise.allSettled(arrPromise);
-    if(result) {
-      socket.to(data.conversationId).emit("delete_user", data);
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item,  profilePicture: data?.profilePicture, des: `Quản trị viên đã xóa ${data?.id == item ? "bạn": data?.name} ra khỏi nhóm ${data?.groupName}`})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        console.log(result);
+        socket.to(data.conversationId).emit("delete_user", result);
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
     }
+    
  
     
   })
+  //them thanh vien
+  socket.on("add_member_cov", async data => {
+    const user = await User.findById(data?.userId).exec();
+    socket.to(user?.socketId).emit("add_member_cov", data?.notify);
+  })
   //leave group
-  socket.on("leave_group", (data) => {
-    console.log("leave_room");
-    socket.to(data.conversationId).emit("leave_group", data);
+  socket.on("leave_group", async(data) => {
+    
+
+    try {
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item, des: data?.des, profilePicture: data?.profilePicture})
+          return  newNotify.save();
+        }
+        
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        socket.to(data.conversationId).emit("leave_group", result);
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thông báo tới người bị xóa!")
+    }
   })
 
   //invite_join_group
@@ -216,7 +255,7 @@ io.on("connection", (socket) => {
 
   //tu choi tra loi call video
   socket.on("end_call", data => {
-    socket.to(data?.covId).emit("end_call", data?.user);
+    socket.to(data?.covId).emit("end_call", data?.notify);
     socket.to(data?.newRoomId).emit("close_tab", true);
   })
  

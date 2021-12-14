@@ -84,6 +84,7 @@ export class ActionStore {
             action_callApiUploadImageCov: action,
             action_setListAddMember: action,
             action_addUserMemberCov: action,
+            action_deleteConversation:action,
         })
     }
     //them nguoi vao nhom
@@ -94,7 +95,11 @@ export class ActionStore {
             user
         } 
         const result = await Request.post(urlBody, DOMAIN);
-        if(result) return true;
+        if(result) {
+            const index = findIndexFromArrayLodash(this.conversations, {_id: covId});
+            this.conversations[index].members = [...this.conversations[index].members, user]
+            return true;
+        }
         else return false;
     }
 
@@ -242,6 +247,13 @@ export class ActionStore {
         }
          
         else return false;
+    }
+    //delete conversation
+    action_deleteConversation(covId) {
+        const result = _.remove(this.conversations, function (value)  {
+            return value._id  == covId;
+        })
+        if(result) return true;
     }
     //Restet All DAta 
     action_resetAllData() {

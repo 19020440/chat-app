@@ -46,7 +46,17 @@ router.post('/update-seen-notify', async (req, res, next) => {
 })
 
 
-
+//delete all notify
+router.post('/delete-all', async (req, res, next) => {
+    const {userId} = req.body;
+    try {
+        const deleteAll = await Notify.deleteMany({userId});
+        deleteAll && res.status(200).json({content: deleteAll, status: 1});
+    } catch(err) {
+        res.status(500).json({content: "Xóa thất bại!", status: 0})
+    }
+   
+})
 
 
 

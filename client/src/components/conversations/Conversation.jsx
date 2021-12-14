@@ -271,10 +271,7 @@ const Conversation = observer(() => {
           const  saveNotify = await ActionStore.action_saveNotify({userId: userId?._id, profilePicture: AuthStore?.user?.profilePicture, 
             des: `${AuthStore?.user?.username} đã kết bạn với bạn`});
           if(saveNotify) {
-            AuthStore?.socket?.emit("invite_success", {userId: userId._id, 
-              name: AuthStore?.user?.username,
-              profilePicture: AuthStore?.user?.profilePicture,
-            })
+            AuthStore?.socket?.emit("invite_success", saveNotify)
           }
           
         } catch(err) {

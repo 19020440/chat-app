@@ -79,7 +79,20 @@ export  class AuthStore {
             action_selfie: action,
             action_setShowGame: action,
             action_setListAddFriend: action,
+            action_deleteAllNotify: action,
+            action_removeFriend: action,
+            action_setListFollow: action,
+            action_removeListFollow:action,
         })
+    }
+    action_removeListFollow(data) {
+        _.remove(this.listFollow, function (value)  {
+            return value  == data;
+        })
+    }
+
+    action_setListFollow(data) {
+        this.listFollow = [...this.listFollow, data];
     }
 
     action_setListAddFriend(data) {
@@ -117,6 +130,18 @@ export  class AuthStore {
     action_addUser() {
         this.status_addUser = !this.status_addUser
     }
+    //xoa tat ca thong bao
+    async action_deleteAllNotify(userId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.deleteAllNotify}`
+        const json = {
+            userId
+        }
+        const result = await Request.post(json,DOMAIN);
+
+        if(result) {
+            return true;
+        } else return false;
+    }
     //REGISTER
     async action_register(data) {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.register}`
@@ -152,6 +177,16 @@ export  class AuthStore {
         const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/${status?"follow": "unfollow"}`;
         const json = {
             userId: this.user._id,
+        }
+        const result = await Request.post(json, DOMAIN);
+        if(result) return true;
+        else return false;
+    }
+    async action_removeFriend(userId, covId) {
+        const DOMAIN = `${CONFIG_URL.SERVICE_URL}/${WsCode.follow}/${userId}/unfollow`;
+        const json = {
+            userId: this.user._id,
+            covId
         }
         const result = await Request.post(json, DOMAIN);
         if(result) return true;

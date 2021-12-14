@@ -9,7 +9,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fab, faFacebookMessenger } from '@fortawesome/free-brands-svg-icons'
 import _ from 'lodash'
 import {sortNotify} from '../../helper/function'
-import {Modal,Row,Col,Tooltip,  Form, Input, Button, Popover, Image} from 'antd'
+import {Modal,Row,Col,Tooltip,  Form, Input, Button, Popover, Image, message} from 'antd'
 import {countTextNotSeen, showMessageSuccess} from '../../helper/function'
 import {CameraAlt} from '@material-ui/icons'
 import { faBell, faChevronRight, faCog, faExclamation, faGamepad, faGem, faMoon, faQuestionCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
@@ -28,7 +28,6 @@ const header = observer((props) => {
     const [srcImage, setSrcImage] = useState(user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png");
     const [hidden, setHidden] = useState(true);
     const [statusBackGr, setStatusBackGr] = useState(1);
-    const [renferNotify, setRenderNotify] = useState(false);
     const handleLogOut = async () => {
         !_.isEmpty(AuthStore.socket) && AuthStore.socket.emit("userOffline", {userId: AuthStore.user._id, arrCov: ActionStore.conversations});
         
@@ -59,45 +58,42 @@ const header = observer((props) => {
       useEffect(() => {
         if(!_.isEmpty(AuthStore?.socket)) {
           AuthStore?.socket.on('invite_to_group', async (result) => {
-            // const updateSave = await ActionStore.action_saveNotify({userId: AuthStore?.user?._id, profilePicture: user?.profilePicture, 
-            //   des: `${user.username} đã mời bạn vào nhóm ${name}`});
-            //   if(updateSave) {
                 setListNotify(prev => [...prev,result]);
-            //   }
-            // setListNotify(prev => [...prev,{profilePicture: user?.profilePicture, 
-            //   des: `${user.username} đã mời bạn vào nhóm ${name}`, 
-            //   createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY")}]);
           })
     
           AuthStore?.socket.on("invite_success", (data) => {
-              // setListNotify(prev => [...prev,{profilePicture, 
-              //   des: `${username} đã kết bạn với bạn`,
-              //   createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-              // }])
+            console.log(data);
               setListNotify(prev => [...prev, data])
           })
         }
 
-        AuthStore.socket?.on("delete_user", async ({profilePicture, name, groupName, id, _id}) => {
-          // const saveNotify = await ActionStore.action_saveNotify({userId: id, profilePicture, 
-          //   des: `Quản trị viên đã xóa ${id == user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`})
-          //   if(saveNotify) {
-              setListNotify(prev => [...prev,{profilePicture, 
-                des: `Quản trị viên đã xóa ${id == AuthStore?.user?._id ? "bạn": name} ra khỏi nhóm ${groupName}`,
-                createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-                _id
-              }])
-              // setListNotify(prev => [...prev, saveNotify]);
-            // }
-         
+
+        AuthStore.socket?.on("add_member_cov", (data) => {
+          console.log("addasdasd", data);
+          setListNotify(prev => [...prev, data])
+        })
+
+        AuthStore.socket?.on("delete_user", async (data) => {
+            data.map(item => {
+              if(item?.value?.userId == AuthStore?.user?._id) {
+                setListNotify(prev => [...prev, item?.value]);
+              }
+            })
         })
 
         AuthStore.socket?.on("edit_tennhom", (data) => {
-          console.log("edit_tennhom edit_tennhom");
-          setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
-            des: data.des,
-            createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-          }])
+          console.log(data);
+          data.map(item => {
+            if(item?.value?.userId == AuthStore?.user?._id) {
+              setListNotify(prev => [...prev, item?.value]);
+            }
+          })
+
+
+          // setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
+          //   des: data.des,
+          //   createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
+          // }])
         })
 
         AuthStore.socket?.on("edit_bietdanh", (data) => {
@@ -109,15 +105,16 @@ const header = observer((props) => {
         })
        
         AuthStore.socket?.on("leave_group", (data) => {
-          setListNotify(prev => [...prev,{profilePicture: data.profilePicture, 
-            des: data.des,
-            createdAt: moment(Date.now()).format("hh:mm DD-MM-YYYY"),
-          }])
+          data.map(item => {
+            if(item?.value?.userId == AuthStore?.user?._id) {
+              setListNotify(prev => [...prev, item?.value]);
+            }
+          })
         })
 
         //tu choi tra loi 
       AuthStore.socket.on("end_call", data => {
-        setListNotify(prev => [...prev, {profilePicture: data?.profilePicture, des: `${data?.username} đã từ chối trả lời`, createdAt:  moment(Date.now()).format("hh:mm DD-MM-YYYY"),}])
+        setListNotify(prev => [...prev, data])
       })
 
       },[])
@@ -276,9 +273,9 @@ const header = observer((props) => {
       }
      const renderNotify = () => {
        return (
-          <Row style={{width: '311px', height: '270px', overflowY: 'scroll'}}>
+          <Row style={{width: '311px', height: '270px', overflowY: 'scroll', position: 'relative', minHeight: '70px'}}>
               
-                      <Col span={24} style={{height: '45px'}}>
+                      <Col span={24} style={{height: '90%', overflowY: 'scroll'}}>
                       {sortNotify(listNotify).map(value => {
                         return (
                           <Row justify="space-between" align="middle" style={{boxShadow: "rgb(0 0 0 / 15%) 1.95px 1.95px 2.6px", border: '1px solid #e0d8d8'}}
@@ -308,6 +305,23 @@ const header = observer((props) => {
                      
                   )
               })}
+               </Col>
+
+               <Col span={24} style={{position: 'absolute', bottom: 0, right: 0, left: 0, textAlign: 'center', background: 'white', borderTop: '1px solid #d8c8c8', height: '10%', cursor: 'pointer'}}
+                onClick={async () => {
+                  if(_.isEmpty(listNotify)) {
+                    message.info("Làm gì có gì mà xóa ?")
+                  } else {
+                    const result = await AuthStore.action_deleteAllNotify(AuthStore?.user?._id);
+                    if(result) {
+                      message.success("Xoá hết luôn rồi :)");
+                      setListNotify([])
+                    }
+                  }
+                  
+                }}
+               >
+                  <span>Xóa tất cả thông báo</span>
                </Col>
           </Row>
        )

@@ -76,8 +76,8 @@ const App = observer(() => {
   //lay thong bao 
 
   useEffect(() => {
-    getlistNotify();
-  }, [])
+    if(login==1) getlistNotify();
+  }, [login])
   const getlistNotify = async () => {
     const listNotify = await ActionStore.action_getListNotify(AuthStore?.user?._id);
   }
@@ -89,7 +89,8 @@ const App = observer(() => {
     });
   },[]);
   useEffect(() => {
-
+    
+    
     //upload_image
     AuthStore.socket?.on("upload_image", ({covId, userId, src}) => {
       console.log("okeee");
@@ -103,6 +104,10 @@ const App = observer(() => {
     })
     //CHinh sua biet danh
     AuthStore.socket?.on("edit_bietdanh", () => {
+      AuthStore.action_doiten();
+    })
+    //them thanh vien vao nhom 
+    AuthStore.socket?.on("add_member_cov", () => {
       AuthStore.action_doiten();
     })
 
@@ -248,9 +253,14 @@ const App = observer(() => {
   }
 
  // tu choi call video
- const handleCancel = () => {
+ const handleCancel = async () => {
   setVisible(false);
-   AuthStore.socket.emit("end_call", {user: AuthStore?.user, covId: from.current, newRoomId: newRoomId.current});
+  const saveNotify = await ActionStore.action_saveNotify({userId: userCall?._id, profilePicture: AuthStore?.user?.profilePicture, 
+    des: `${AuthStore?.user?.username} đã từ chối trả lời`});
+    if(saveNotify) {
+      AuthStore.socket.emit("end_call", {notify: saveNotify, covId: from.current, newRoomId: newRoomId.current});
+    }
+   
    
  }
   return (

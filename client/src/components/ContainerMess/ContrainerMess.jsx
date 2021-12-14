@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import {useParams,useHistory} from "react-router-dom";
 import {useStore} from '../../hook';
 import {observer} from 'mobx-react-lite'
-import {Modal, Tooltip} from 'antd'
+import {message, Modal, Tooltip} from 'antd'
 import _ from 'lodash';
 import ContainerRight from '../containerRight/ContainerRight'
 import SearchMess from '../searchMess/searchMess'
@@ -474,7 +474,33 @@ const ContrainerMess = observer((props) => {
           {profileFriend.isGroup && <h2><a href="#"><span>{profileFriend.size}</span><small>Thành viên</small></a></h2> }
         </div>
         <div class="follow-btn">
-          {!profileFriend.isGroup &&<button>{ValidateListFriend(profileFriend.id, AuthStore.listFollow) ? "UnFollow" : "Follow"}</button>}
+          {!profileFriend.isGroup &&<button onClick={async () => {
+            if(ValidateListFriend(profileFriend.id, AuthStore.listFollow)) {
+              const result = await AuthStore.action_removeFriend(profileFriend.id, covId);
+
+              if(result) {
+                const status = ActionStore.action_deleteConversation(covId);
+                status && message.success("Đã hủy kết bạn!");
+                AuthStore.action_removeListFollow(profileFriend.id)
+                history.push('/messenger')
+              }
+            } else {
+              try {
+                const res = await AuthStore.action_addFriend(true, profileFriend.id);
+                if(res) {
+                  const  saveNotify = await ActionStore.action_saveNotify({userId: profileFriend.id, profilePicture: AuthStore?.user?.profilePicture, 
+                    des: `${AuthStore?.user?.username} đã kết bạn với bạn`});
+                  if(saveNotify) {
+                    AuthStore?.socket?.emit("invite_success", saveNotify)
+                    AuthStore.action_setListFollow(profileFriend.id)
+                    AuthStore.action_addUser();
+                  }
+                }
+              } catch(err) {
+                console.log(err);
+              }
+            }
+          }}>{ValidateListFriend(profileFriend.id, AuthStore.listFollow) ? "Hủy kết bạn" : "Kết bạn"}</button>}
           {profileFriend.isGroup && <button>Thông tin nhóm</button>}
         </div>
       </div>

@@ -1307,9 +1307,9 @@ function Square(props) {
       this.in_check = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_king.png" className="piece"></img>
+          <img src="/images/white_king.png" className="piece"></img>
         ) : (
-          <img src="./images/black_king.png" className="piece"></img>
+          <img src="/images/black_king.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "k" : "K";
     }
@@ -1355,9 +1355,9 @@ function Square(props) {
       this.possible = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_queen.png" className="piece"></img>
+          <img src="/images/white_queen.png" className="piece"></img>
         ) : (
-          <img src="./images/black_queen.png" className="piece"></img>
+          <img src="/images/black_queen.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "q" : "Q";
     }
@@ -1395,9 +1395,9 @@ function Square(props) {
       this.possible = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_knight.png" className="piece"></img>
+          <img src="/images/white_knight.png" className="piece"></img>
         ) : (
-          <img src="./images/black_knight.png" className="piece"></img>
+          <img src="/images/black_knight.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "n" : "N";
     }
@@ -1439,9 +1439,9 @@ function Square(props) {
       this.possible = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_bishop.png" className="piece"></img>
+          <img src="/images/white_bishop.png" className="piece"></img>
         ) : (
-          <img src="./images/black_bishop.png" className="piece"></img>
+          <img src="/images/black_bishop.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "b" : "B";
     }
@@ -1471,9 +1471,9 @@ function Square(props) {
       this.possible = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_pawn.png" className="piece"></img>
+          <img src="/images/white_pawn.png" className="piece"></img>
         ) : (
-          <img src="./images/black_pawn.png" className="piece"></img>
+          <img src="/images/black_pawn.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "p" : "P";
     }
@@ -1511,9 +1511,9 @@ function Square(props) {
       this.possible = 0;
       this.icon =
         player == "w" ? (
-          <img src="./images/white_rook.png" className="piece"></img>
+          <img src="/images/white_rook.png" className="piece"></img>
         ) : (
-          <img src="./images/black_rook.png" className="piece"></img>
+          <img src="/images/black_rook.png" className="piece"></img>
         );
       this.ascii = player == "w" ? "r" : "R";
     }

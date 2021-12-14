@@ -24,7 +24,7 @@ const  Login = observer(() => {
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">DBMS Chat App</h3>
+          <h3 className="loginLogo">Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -50,8 +50,11 @@ const  Login = observer(() => {
               Đăng nhập
             </button>
             <span className="loginForgot">Quên mật khẩu?</span>
-            <button className="loginRegisterButton">
-                <Link to="/register">Đăng ký</Link>
+            <button className="loginRegisterButton" onClick={(e) => {
+              e.preventDefault();
+              history.push('/register')
+            }}>
+                <span >Đăng ký</span>
             </button>
           </form>
         </div>

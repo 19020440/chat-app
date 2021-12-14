@@ -34,7 +34,7 @@ import  {showMessageError} from '../../helper/function'
     <div className="login">
       <div className="loginWrapper">
         <div className="loginLeft">
-          <h3 className="loginLogo">DBMS Chat App</h3>
+          <h3 className="loginLogo">Chat App</h3>
           <span className="loginDesc">
             Connect with friends and the world around you on Lamasocial.
           </span>
@@ -72,7 +72,10 @@ import  {showMessageError} from '../../helper/function'
             <button className="loginButton" type="submit">
               Nhấn để đăng ký
             </button>
-            <button className="loginRegisterButton"><Link to="/login">Đăng nhập</Link></button>
+            <button className="loginRegisterButton" onClick={(e) => {
+              e.preventDefault();
+              history.push('/login')
+            }}><span>Đăng nhập</span></button>
           </form>
         </div>
       </div>

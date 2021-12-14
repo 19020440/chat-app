@@ -28,5 +28,6 @@ export const WsCode = {
     getListNotify: 'notifys/get-list-notify',
     updateSeenNotify: 'notifys/update-seen-notify',
     updateImage: 'conversations/update-image',
-    addUserCov: 'conversations/add-member'
+    addUserCov: 'conversations/add-member',
+    deleteAllNotify: 'notifys/delete-all',
 }

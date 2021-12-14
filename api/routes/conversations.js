@@ -46,7 +46,7 @@ router.post('/add-member', async (req, res, next) => {
     const {covId, user} = req.body;
     try{
         const currentCov = await Conversation.findById(covId).exec();
-        const addMember = await currentCov.updateOne({$push: {members: user}});
+        const addMember = await currentCov.updateOne({$push: {members: user, 'lastText.seens': {...user, seen: false}}});
         addMember && res.status(200).json({content: addMember, status: 1});
     } catch(err) {
         res.status(500).json({content: err, status: 0})
