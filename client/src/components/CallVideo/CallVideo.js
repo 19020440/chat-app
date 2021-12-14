@@ -5,13 +5,8 @@ import {observer} from 'mobx-react-lite'
 import {useStore} from '../../hook'
 import { useLocation } from 'react-router';
 import _ from 'lodash';
-<<<<<<< HEAD
-library.add(fab,faPhone,faMicrophone) 
-
-=======
 import {Row, Col} from 'antd';
 import {ChevronRight, PhoneDisabled, DuoOutlined, Mic, MicOff} from '@material-ui/icons'
->>>>>>> FE
 
 const  CallVideo = observer((props) => {
     const search = useLocation().search;
