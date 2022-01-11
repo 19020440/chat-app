@@ -15,6 +15,7 @@ import ContainerRight from '../containerRight/ContainerRight'
 import SearchMess from '../searchMess/searchMess'
 import UploadFile from '../UploadFile/UploadFile';
 import { format } from "timeago.js";
+import {PhotoCamera} from '@material-ui/icons'
 import './containermess.css'
 import Gifphy from '../Gifphy/Gifphy';
 import Emoji from '../Emoji/Emoji';
@@ -606,7 +607,7 @@ const ContrainerMess = observer((props) => {
                               setShowSelfie(true)}
                             }>
                                 <Tooltip title="Chụp ảnh"> 
-                                  <FontAwesomeIcon icon={faPortrait} />
+                                  <PhotoCamera />
                                 </Tooltip>
                             </div>
                             <label for="upload_files" className="container-main__bottom-left-icon hide container-upload-label">

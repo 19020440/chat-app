@@ -85,7 +85,7 @@ module.exports  = new class ConversationController {
                 members: { $all: [{$elemMatch : {id: req.params.firstUserId}}, {$elemMatch :{'id': req.params.secondUserId}}] },
               });
               if(conversation) {
-                res.status(200).json({content: conversation, status: 1});
+                res.status(200).json({content: conversation, status: 1, exist: true});
               } else {
                 const [sender1, receive1] = await Promise.all([await User.findById(req.params.firstUserId).exec(), await User.findById(req.params.secondUserId).exec()])
                 const newCov = new Conversation({

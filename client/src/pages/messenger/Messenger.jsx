@@ -34,7 +34,7 @@ const Messenger = observer(() => {
     <Layout className={`app${AuthStore.themePage?"": " dark"}`}>
       <Sider><Headers /></Sider>
         <Layout className="app-grid">
-          <Header>{`Chat App-${AuthStore.user?.username}`}</Header>
+          <Header>{`Social App-${AuthStore.user?.username}`}</Header>
           <Content> 
             <Row className="container" gutter={0}>
                 

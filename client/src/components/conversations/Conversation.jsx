@@ -60,6 +60,7 @@ const Conversation = observer(() => {
   const [playHuman, setplayHuman] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [typeConversation, setTypeConversation] = useState(1);
+  const searchPeopleRef = useRef();
   //Modal Chess
   const ModalChess = (status) => {
     return (
@@ -139,6 +140,7 @@ const Conversation = observer(() => {
   const handlenewConversation = async (user) => {
     const result = await ActionStore.action_getCovBySearch(AuthStore?.user._id,user?._id);
     setActionSearchPeople(false);
+    searchPeopleRef.current.value = ""
     history.push(`/messenger/${result._id}`);
   }
 
@@ -267,6 +269,7 @@ const Conversation = observer(() => {
       const res = await AuthStore.action_addFriend(true, userId._id);
       
       if(res && !_.isEmpty(AuthStore?.socket)) {
+        AuthStore.action_setListFollow(userId._id)
         try {
           const  saveNotify = await ActionStore.action_saveNotify({userId: userId?._id, profilePicture: AuthStore?.user?.profilePicture, 
             des: `${AuthStore?.user?.username} đã kết bạn với bạn`});
@@ -368,6 +371,8 @@ const Conversation = observer(() => {
                                     className="container-left__search-box-input" 
                                     placeholder="Tìm kiếm cuộc hội thoại"
                                     onChange={(e) => handleSearchPeople(e)}
+                                    ref={searchPeopleRef}
+
                                     />
                                 </div>
                               </div>

@@ -48,6 +48,7 @@ const PrRouter = observer((props) => {
   const AuthStore = useStore('AuthStore')
 
     useEffect(() => {
+      console.log(2165);
       ActionStore.action_setListSendMess(ActionStore.conversations.map(value => {
         if(value?.name) {
           return {

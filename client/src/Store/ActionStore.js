@@ -617,11 +617,16 @@ export class ActionStore {
         const result = await Request.get({}, DOMAIN);
 
         if(result) {
-            if(!_.isEmpty(result.content)) {
-                this.action_setConversations([...this.conversations,result.content]);
+            if(result?.exist) {
                 return result.content;
+            } else {
+                if(!_.isEmpty(result.content)) {
+                    this.action_setConversations([...this.conversations,result.content]);
+                    return result.content;
+                }
+                else return {};
             }
-            else return {};
+             
         }
     }
     //Update Conversation 

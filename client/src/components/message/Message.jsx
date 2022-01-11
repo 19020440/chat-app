@@ -59,7 +59,7 @@ const modalSendText = (status) => {
                
             </Form>
             <span style={{fontSize: '18px', fontWeight: '550'}}>Bạn bè</span>
-            <Row style={{overflowY: 'scroll', height: '350px'}}>
+            <Row style={{overflowY: 'scroll', maxHeight: '350px'}}>
                 {!_.isEmpty(listSend) && listSend.map(value => {
                   if(value && value?.id != currentCov) return (
                       <Col span={24} style={{padding: '8px', borderBottom: '1px solid #eee3e3'}}>

@@ -41,7 +41,9 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
     const [listAddMember, setListAddMember] = useState([]);
     //Modal add friend into group
     const ModalAddMember = (status) => {
-         
+         const arrMember = members.map(item => {
+            if(item?.id != AuthStore?.user?._id) return item?.id;
+        })
         return (
             <Modal title="Thêm thành viên" visible={status}  className="modal-group" 
             footer={false}
@@ -68,7 +70,8 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 <span>Bạn bè</span>
                 <div className="main-modal_showGroup-row">
                     {!_.isEmpty(listAddMember) && listAddMember.map(value => {
-                      return (
+                        if(!arrMember.includes(value?._id)) return (
+                     
                         <div className="main-modal_showGroup-col">
                           <div className="main-modal_showGroup-col-info">
                             <img src={value.profilePicture ? value.profilePicture  : PF + "person/noAvatar.png"} className="main-modal_showGroup-col-img" />
@@ -76,19 +79,29 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                           </div>
                           <button onClick={async(e) => {
                             // handleInviteGroup(e,value)
-                                const result = await ActionStore.action_addUserMemberCov({covId: conversationId, user: {...value, id: value?._id}});
-                                if(result) {
-                                    value.isAdd = true;
-                                    message.success("Thêm thành công!")
-                                    setListAddMember([...listAddMember]); 
-                                    const saveNotify = await ActionStore.action_saveNotify({userId: value?._id, profilePicture: AuthStore?.user?.profilePicture,
-                                        des: `${AuthStore?.user?.username} đã thêm bạn vào nhóm ${infoRoom.username}`
-                                    })
-                                    if(saveNotify) {
-                                        AuthStore.socket.emit("add_member_cov",  {notify: saveNotify, userId: value?._id});
-                                    }
-                                      
-                                }
+                            const arrUser = members.map(item => {
+                                if(item?.id != AuthStore?.user?._id) return item?.id;
+                            })
+                            const result = await ActionStore.action_addUserMemberCov({covId: conversationId, user: {...value, id: value?._id}});
+                            if(result) {
+                                value.isAdd = true;
+                                message.success("Thêm thành công!")
+                                setListAddMember([...listAddMember]); 
+                                // const saveNotify = await ActionStore.action_saveNotify({userId: value?._id, profilePicture: AuthStore?.user?.profilePicture,
+                                //     des: `${AuthStore?.user?.username} đã thêm bạn vào nhóm ${infoRoom.username}`
+                                // })
+                                // if(saveNotify) {
+                                    AuthStore.socket.emit("add_member_cov",  {
+                                        profilePicture: AuthStore?.user?.profilePicture,
+                                        arrUser, 
+                                        userId: value?._id, 
+                                        name: value?.username, 
+                                        groupName: infoRoom?.username, 
+                                        inviteName: AuthStore?.user?.username, 
+                                        conversationId});
+                                // }
+                                    
+                            }
                                 
                             }}
                             className="modal-group-button_invite"
@@ -360,11 +373,9 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 closeIcon={<Row>
                     <Col span={12}>
                         <a href={imageSrcRef.current} style={{color: 'black'}} ref={dowloadRef} onClick={(e)=> {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                 console.log(dowloadRef.current);
-                                 dowloadRef.current.download = "asd.png"    
-                            }} download="as.png">
+                                // e.stopPropagation();
+                                // e.preventDefault();  
+                            }} download>
                             <CloudDownload />
                         </a>
                         
@@ -448,9 +459,10 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                                
                                 {infoRoom.isGroup && 
                                     <li className="dropdown-item" onClick={async () => {
-                                        setAddMemberGroup(true);
+                                      
                                         const result = await ActionStore.action_getListFriend(AuthStore?.user?._id)
                                         setListAddMember(result);
+                                        setAddMemberGroup(true);
                                     }}>
                                     <div className="dropdown-item__icon">
                                         <FontAwesomeIcon icon={faThumbsUp} />
@@ -606,7 +618,7 @@ const ContainerRight = observer(({infoRoom,members,messenger}) => {
                 {LeaveGroupModal(leaveGroup)}
                 {modalMembers(modalMember)}
                 {ModalImage(showModalImage)}
-                {ModalAddMember(addMemberGroup)}
+                {addMemberGroup && ModalAddMember(addMemberGroup)}
                 </>
     );
 })

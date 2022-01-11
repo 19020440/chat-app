@@ -193,8 +193,25 @@ io.on("connection", (socket) => {
   })
   //them thanh vien
   socket.on("add_member_cov", async data => {
-    const user = await User.findById(data?.userId).exec();
-    socket.to(user?.socketId).emit("add_member_cov", data?.notify);
+    
+    try {
+      const user = await User.findById(data?.userId).exec();
+      const newNotifys = new Notify({userId: data?.userId,  profilePicture: data?.profilePicture, des: `${data?.inviteName} đã thêm bạn vào nhóm ${data?.groupName}`});
+      const saveNotify =  await newNotifys.save();
+      socket.to(user?.socketId).emit("add_member_cov", [{value: saveNotify}]);
+      const arrPromise = data?.arrUser.map(async item => {
+        if(item) {
+          const newNotify = new Notify({userId: item,  profilePicture: data?.profilePicture, des: `${data?.inviteName} đã thêm ${data?.name} vào nhóm ${data?.groupName}`})
+          return  newNotify.save();
+        }
+      })
+      const result = await Promise.allSettled(arrPromise);
+      if(result) {
+        socket.to(data.conversationId).emit("add_member_cov", result);
+      }
+    } catch(err) {
+      socket.emit("send_error", "Gặp vấn đề trong quá trình thêm thành viên!")
+    }
   })
   //leave group
   socket.on("leave_group", async(data) => {

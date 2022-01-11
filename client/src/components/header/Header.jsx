@@ -69,8 +69,12 @@ const header = observer((props) => {
 
 
         AuthStore.socket?.on("add_member_cov", (data) => {
-          console.log("addasdasd", data);
-          setListNotify(prev => [...prev, data])
+          console.log(data);
+          data.map(item => {
+            if(item?.value?.userId == AuthStore?.user?._id) {
+              setListNotify(prev => [...prev, item?.value]);
+            }
+          })
         })
 
         AuthStore.socket?.on("delete_user", async (data) => {
@@ -142,6 +146,7 @@ const header = observer((props) => {
         const onChange = async file => {
            const src = await  AuthStore.action_uploadFileHeader({file: file.target.files[0],userId: AuthStore.user?._id, arrCov: AuthStore?.listRoom})
           if(src) {
+            AuthStore.action_editProfile('picture', src)
             AuthStore?.listRoom.forEach(async item => {
               const result = await ActionStore.action_callApiUploadImageCov({covId: item, src,userId: AuthStore.user?._id});
               if (result) AuthStore.socket.emit("upload_image", {covId: item, src, userId: AuthStore.user?._id})
@@ -250,7 +255,7 @@ const header = observer((props) => {
                             }}
                           >
                             <Button type="primary" htmlType="submit" hidden hidden={hidden} style={{borderRadius: '10px', border: "none", background: '#ffd01a', color: 'black'}}>
-                              Submit
+                              Cập nhật
                             </Button>
                             <Button hidden={!hidden} style={{borderRadius: '10px', border: "none", background: '#ffd01a', color: 'black'}} onClick={() => {
                               setHidden(false);
